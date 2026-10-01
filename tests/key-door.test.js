@@ -36,3 +36,15 @@ test('다음 복도에서는 열쇠 절차가 없고 새 게임은 초기화',()
   const reset=createKeyDoor();
   assert.deepEqual(reset,{tutorial:true,hasKey:false,doorOpen:false});
 });
+
+test('문 앞과 열쇠 획득 범위가 겹쳐도 열쇠를 먼저 획득한다',()=>{
+  for (const player of [{x:2,z:6}, {x:2,z:7.2}, {x:0,z:6}]) {
+    const state=createKeyDoor();
+    assert.equal(keyDoorAction(player,state),'pickup');
+    const acquired=interactKeyDoor(player,state);
+    assert.equal(acquired.hasKey,true);
+    assert.equal(acquired.doorOpen,false);
+    assert.equal(keyDoorAction(player,acquired),'open');
+  }
+  assert.equal(keyDoorAction({x:2,z:7.21},createKeyDoor()),'locked');
+});
