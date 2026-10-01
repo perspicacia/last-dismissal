@@ -1,12 +1,13 @@
 export const CLASSROOM_NOTE = { x: 1.2, z: 5 };
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
+export const CLASSROOM_TEACHER_DESK = { x: -.5, z: 8.7, width: 2, depth: .65, height: .72 };
 export const CLASSROOM_DESKS = [-2.5, 1.2, 2.8].flatMap(x => [3.2, 5, 6.8].map(z => ({x,z,width:1.1,depth:.65,height:.76})));
 export function moveClassroomPlayer(player, keys, dt) {
   const step=Math.max(0,Math.min(.05,dt));
   const angle=player.angle+(Number(keys.has('right'))-Number(keys.has('left')))*1.65*step;
   const walk=(Number(keys.has('forward'))-Number(keys.has('back')))*3.8*step;
   const result={...player,angle};
-  const blocked=(x,z)=>CLASSROOM_DESKS.some(d=>Math.abs(x-d.x)<d.width/2+.22 && Math.abs(z-d.z)<d.depth/2+.22)||CLASSROOM_DESKS.some(d=>Math.abs(x-d.x)<.45 && Math.abs(z-(d.z-.72))<.42);
+  const blocked=(x,z)=>[...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK].some(d=>Math.abs(x-d.x)<d.width/2+.22 && Math.abs(z-d.z)<d.depth/2+.22)||CLASSROOM_DESKS.some(d=>Math.abs(x-d.x)<.45 && Math.abs(z-(d.z-.72))<.42);
   const x=Math.max(-4,Math.min(4,player.x+Math.sin(angle)*walk));
   if(!blocked(x,result.z))result.x=x;
   const z=Math.max(.8,Math.min(9.2,player.z+Math.cos(angle)*walk));
@@ -35,7 +36,7 @@ export function drawClassroom(c,w,h,p,time,noteTaken=false) {
   const box=(x,y,z,width,height,depth,colors)=>{const l=x-width/2,r=x+width/2,n=z-depth/2,f=z+depth/2,t=y+height;polygon([[l,t,n],[r,t,n],[r,t,f],[l,t,f]],colors[0]);polygon([[l,y,n],[r,y,n],[r,t,n],[l,t,n]],colors[1]);polygon([[l,y,f],[r,y,f],[r,t,f],[l,t,f]],colors[1]);polygon([[l,y,n],[l,y,f],[l,t,f],[l,t,n]],colors[2]);polygon([[r,y,n],[r,y,f],[r,t,f],[r,t,n]],colors[2]);};
   for(const desk of CLASSROOM_DESKS){const {x,z,width,depth}=desk;for(const dx of [-.43,.43])for(const dz of [-.22,.22])box(x+dx,0,z+dz,.045,.72,.045,['#95a6a2','#65736e','#3d504d']);box(x,.71,z,width,.06,depth,[x===CLASSROOM_NOTE.x&&z===CLASSROOM_NOTE.z?'#c5a66c':'#9c8360','#6d563c','#7a644a']);box(x,.53,z,.96,.08,.48,['#4c4739','#554936','#4a3c2f']);box(x,.38,z-.72,.55,.055,.46,['#897854','#5d533d','#746548']);box(x,.43,z-.96,.55,.43,.065,['#8f7d56','#716247','#514b3b']);for(const dx of [-.2,.2])for(const dz of [-.15,.15])box(x+dx,0,z-.72+dz,.035,.4,.035,['#8a9992','#5f7168','#34493d']);}
   // Teacher's desk anchors the classroom front.
-  box(-.5,0,8.7,2,.72,.65,['#948064','#51493a','#685b47']);
+  const teacher=CLASSROOM_TEACHER_DESK;box(teacher.x,0,teacher.z,teacher.width,teacher.height,teacher.depth,['#948064','#51493a','#685b47']);
   if(!noteTaken){
     polygon([[.85,.779,4.83],[1.47,.779,4.83],[1.47,.779,5.16],[.85,.779,5.16]],'#eee1b5');
     polygon([[.92,.78,4.88],[1.38,.78,4.88],[1.38,.78,4.91],[.92,.78,4.91]],'#555c4d');
