@@ -128,7 +128,7 @@ export class Corridor {
   }
   draw(time) {
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
-    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time);return;}
+    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.noteTaken);return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;

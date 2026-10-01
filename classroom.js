@@ -15,7 +15,7 @@ export function moveClassroomPlayer(player, keys, dt) {
 }
 
 // Geometry uses the same world units as movement; desks cannot be walked through.
-export function drawClassroom(c,w,h,p,time) {
+export function drawClassroom(c,w,h,p,time,noteTaken=false) {
   const horizon=h*.48,lens=w*.68;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
   c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
@@ -36,8 +36,10 @@ export function drawClassroom(c,w,h,p,time) {
   for(const desk of CLASSROOM_DESKS){const {x,z,width,depth}=desk;for(const dx of [-.43,.43])for(const dz of [-.22,.22])box(x+dx,0,z+dz,.045,.72,.045,['#95a6a2','#65736e','#3d504d']);box(x,.71,z,width,.06,depth,[x===CLASSROOM_NOTE.x&&z===CLASSROOM_NOTE.z?'#c5a66c':'#9c8360','#6d563c','#7a644a']);box(x,.53,z,.96,.08,.48,['#4c4739','#554936','#4a3c2f']);box(x,.38,z-.72,.55,.055,.46,['#897854','#5d533d','#746548']);box(x,.43,z-.96,.55,.43,.065,['#8f7d56','#716247','#514b3b']);for(const dx of [-.2,.2])for(const dz of [-.15,.15])box(x+dx,0,z-.72+dz,.035,.4,.035,['#8a9992','#5f7168','#34493d']);}
   // Teacher's desk anchors the classroom front.
   box(-.5,0,8.7,2,.72,.65,['#948064','#51493a','#685b47']);
-  polygon([[.85,.779,4.83],[1.47,.779,4.83],[1.47,.779,5.16],[.85,.779,5.16]],'#eee1b5');
-  polygon([[.92,.78,4.88],[1.38,.78,4.88],[1.38,.78,4.91],[.92,.78,4.91]],'#555c4d');
+  if(!noteTaken){
+    polygon([[.85,.779,4.83],[1.47,.779,4.83],[1.47,.779,5.16],[.85,.779,5.16]],'#eee1b5');
+    polygon([[.92,.78,4.88],[1.38,.78,4.88],[1.38,.78,4.91],[.92,.78,4.91]],'#555c4d');
+  }
   faces.sort((a,b)=>b.d-a.d);for(const face of faces){c.fillStyle=face.color;c.strokeStyle='#10202980';c.lineWidth=.7;c.beginPath();face.pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.stroke();}
   for(let z of [2.3,5.3,8.3]){const pts=[project(-1,2.98,z),project(1,2.98,z),project(1,2.98,z+.22),project(-1,2.98,z+.22)];if(pts.every(Boolean)){c.fillStyle='#bddbd9';c.shadowColor='#8eccc7';c.shadowBlur=10;c.beginPath();pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.shadowBlur=0;}}
   const shade=c.createRadialGradient(w/2,h/2,w*.15,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#000915c0');c.fillStyle=shade;c.fillRect(0,0,w,h);
