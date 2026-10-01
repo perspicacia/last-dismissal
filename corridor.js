@@ -100,7 +100,7 @@ export class Corridor {
     this.end=this.texture(c=>{
       // Recessed openings; the stair flights are projected in world space.
       for(const x of [30,311]){
-        c.fillStyle='#071310';c.fillRect(x,0,171,256);
+        c.fillStyle='#2b403c';c.fillRect(x,0,171,256);
       }
     });
   }
@@ -169,7 +169,7 @@ export class Corridor {
       const offset=Math.atan((x-w/2)/lens),angle=p.angle+offset;
       const dx=Math.sin(angle),dz=Math.cos(angle);
       const tx=Math.abs(dx)<1e-9?Infinity:((dx>0?3:-3)-p.x)/dx;
-      const tz=Math.abs(dz)<1e-9?Infinity:((dz>0?26:0)-p.z)/dz;
+      const tz=Math.abs(dz)<1e-9?Infinity:((dz>0?24.6:0)-p.z)/dz;
       const side=tx<tz,dist=side?tx:tz,perp=Math.max(.02,dist*Math.cos(offset));depth[x/2]=perp;
       let tex=this.wall,u;
       if(side){const z=p.z+dz*dist;u=((z%2)+2)%2/2;
@@ -182,7 +182,7 @@ export class Corridor {
     }
     // Ceiling fixtures projected into the same world as the walls.
     const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z;const d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.12?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon-(y-1.5)*lens/d,d}:null;};
-    drawStairs(c,project,{tutorial:this.tutorial});
+    drawStairs(c,project);
     drawSceneDepth(c,project,p);
     drawWallClock(c,project,this.clockFace);
     if(this.tutorial){
