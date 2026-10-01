@@ -1,11 +1,11 @@
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=classroom-doll';
+import { ThreeSchoolView } from './three-school.js?v=sliding-doors-2';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=classroom-doll';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=sliding-doors-2';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
@@ -72,19 +72,20 @@ export class Corridor {
   buildTextures() {
     this.wall=this.texture(()=>{});
     this.door=this.texture(c=>{
-      c.fillStyle='#33362c';c.fillRect(57,27,398,229);c.fillStyle='#79664b';c.fillRect(69,35,374,221);
-      c.fillStyle='#a28d69';c.fillRect(69,35,9,221);c.fillStyle='#413d31';c.fillRect(433,35,10,221);
-      // Narrow vertical grain in weathered sliding wooden classroom doors.
-      for(let i=0;i<48;i++){c.strokeStyle=i%2?'#dcc89e18':'#201b141a';c.beginPath();c.moveTo(82+i*7.3,39);c.bezierCurveTo(74+i*7.3,112,89+i*7.3,199,82+i*7.3,255);c.stroke();}
-      c.fillStyle='#273d3d';c.fillRect(96,54,320,87);c.fillStyle='#112734';c.fillRect(103,59,306,77);
-      const glass=c.createLinearGradient(103,59,409,136);glass.addColorStop(0,'#486369');glass.addColorStop(.45,'#1d343d');glass.addColorStop(1,'#0b1e2a');c.fillStyle=glass;c.fillRect(103,59,306,77);
-      if(this.anomaly==='doll'){c.fillStyle='#ddd8b28c';for(const x of [175,320]){c.beginPath();c.ellipse(x,102,13,12,-.2,0,Math.PI*2);c.fill();for(let i=0;i<5;i++){c.beginPath();c.ellipse(x-13+i*6,85-(i%3)*3,3,10,.1,0,Math.PI*2);c.fill();}}}
-      c.fillStyle='#aaa486';c.fillRect(248,54,8,87);c.fillRect(96,93,320,4);
-      c.fillStyle='#d2d4bd20';c.beginPath();c.moveTo(115,60);c.lineTo(152,60);c.lineTo(245,135);c.lineTo(205,135);c.fill();
-      c.fillStyle='#eee4c6';c.fillRect(198,153,116,35);c.strokeStyle='#998c68';c.strokeRect(198,153,116,35);
-      c.fillStyle='#283931';c.font='bold 27px sans-serif';c.textAlign='center';c.fillText(this.anomaly==='door'?'404':'3-2',256,180);
-      c.fillStyle='#383e36';c.fillRect(385,203,17,25);c.fillStyle='#b0ad8e';c.fillRect(390,207,6,18);
-      c.fillStyle='#334a4520';c.fillRect(86,238,338,18);
+      c.fillStyle='#34271f';c.fillRect(57,27,398,229);c.fillStyle='#986546';c.fillRect(66,31,380,225);
+      for(const left of [78,258]){
+        c.fillStyle='#ae7e58';c.fillRect(left,41,176,213);
+        for(let i=0;i<32;i++){c.strokeStyle=i%2?'#efc19722':'#43251226';c.beginPath();c.moveTo(left+i*5.4,41);c.bezierCurveTo(left+i*5.4+2,112,left+i*5.4-3,199,left+i*5.4,254);c.stroke();}
+        for(const y of [123,157,191,225]){c.strokeStyle='#71462e';c.strokeRect(left+17,y,140,26);c.strokeStyle='#d19b6a66';c.strokeRect(left+19,y+2,136,22);}
+        c.fillStyle='#6d432c';c.fillRect(left+28,65,116,45);c.fillStyle='#183440';c.fillRect(left+35,71,102,33);
+        c.fillStyle='#c2d2cd28';c.fillRect(left+35,71,102,3);
+        if(this.anomaly==='doll'){const x=left+85;c.fillStyle='#ddd8b2ad';c.beginPath();c.ellipse(x,93,7,6,0,0,Math.PI*2);c.fill();for(let i=0;i<5;i++){c.beginPath();c.ellipse(x-7+i*3.5,82-(i%3),1.8,5,0,0,Math.PI*2);c.fill();}}
+      }
+      c.fillStyle='#402c21';c.fillRect(253,41,5,215);c.fillRect(78,37,355,4);
+      for(const x of [86,419]){c.fillStyle='#acaba2';c.fillRect(x,165,9,23);c.fillStyle='#302b27';c.fillRect(x+3,168,3,17);}
+      c.fillStyle='#afa99a';c.fillRect(77,252,357,3);
+      c.fillStyle='#eee4c6';c.fillRect(219,7,74,18);c.fillStyle='#283931';c.font='bold 15px sans-serif';c.textAlign='center';c.fillText(this.anomaly==='door'?'404':'3-2',256,21);
+
     });
     this.board=this.texture(c=>{
       c.fillStyle='#171e15';c.fillRect(45,38,422,168);c.fillStyle='#7b7150';c.fillRect(52,44,408,155);

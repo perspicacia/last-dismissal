@@ -45,18 +45,13 @@ export class ThreeSchoolView {
     if(classroom){wall(half,0,end);wall(-half,0,1.8);wall(-half,8.9,end);for(let a=1.8;a<8.9;a+=1.45)window(-half,a,Math.min(a+1.45,8.9));}
     else {wall(-half,0,end);for(const [a,b] of [[0,4],[8,12],[16,end]])wall(half,a,b);for(const [a,b] of [[4,6],[6,8],[12,14],[14,16]])window(half,a,b);}
     box(g,0,1.5,-.1,half*2,3,.2,plaster);
-    if(classroom){box(g,0,1.5,end,half*2,3,.2,plaster);box(g,-.2,1.65,end-.13,6,.99,.07,material('#736948'));box(g,-.2,1.66,end-.18,5.8,.85,.03,material('#153d36'));const chalk=material('#bec9b0');for(let i=0;i<5;i++)box(g,-1.7+i*.23,1.6,end-.205,.09,.007,.005,chalk);for(const desk of [...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK])this.desk(g,desk);for(const desk of CLASSROOM_DESKS)this.chair(g,desk.x,desk.z-.72);for(let x=-3.5;x<-.5;x+=.72){box(g,x,.48,.18,.68,.96,.45,material('#64745c'));box(g,x,.49,-.06,.012,.08,.013,trim);}}
+    if(classroom){box(g,0,1.5,end,half*2,3,.2,plaster);box(g,-.2,1.65,end-.13,6,.99,.07,material('#736948'));box(g,-.2,1.66,end-.18,5.8,.85,.03,material('#153d36'));const chalk=material('#bec9b0');for(let i=0;i<5;i++)box(g,-1.7+i*.23,1.6,end-.205,.09,.007,.005,chalk);for(const desk of [...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK])this.desk(g,desk);for(const desk of CLASSROOM_DESKS)this.chair(g,desk.x,desk.z-.72);for(let x=-3.5;x<-1.4;x+=.72){box(g,x,.48,.18,.68,.96,.45,material('#64745c'));box(g,x,.49,-.06,.012,.08,.013,trim);}}
     else {
       this.stairs(g,plaster,lower);this.refs.doors=[];
       this.doorLabels={};for(const text of ['3-2','404']){const label=document.createElement('canvas');label.width=256;label.height=112;const ctx=label.getContext('2d');ctx.fillStyle='#e1dcc5';ctx.fillRect(0,0,256,112);ctx.strokeStyle='#8c8166';ctx.lineWidth=6;ctx.strokeRect(3,3,250,106);ctx.fillStyle='#233b32';ctx.font='bold 66px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,128,58);this.doorLabels[text]=label;}
       for(const z of [5,15]){
-        box(g,-2.84,1.33,z,.14,2.66,2.06,material('#4e4231'));
-        box(g,-2.74,1.32,z,.06,2.6,1.96,material('#847254',{map:woodTexture(),roughness:.66}));
-        box(g,-2.694,1.9,z,.025,.77,1.61,material('#203b43',{metalness:.22,roughness:.18}));
-        for(const zz of [z-.83,z+.83,z])box(g,-2.668,1.9,zz,.05,.85,.045,trim);
-        for(const yy of [1.48,1.9,2.32])box(g,-2.668,yy,z,.05,.04,1.7,trim);
-        box(g,-2.65,.67,z+.73,.08,.22,.05,material('#b0aea1',{metalness:.75,roughness:.3}));
-        const d=this.picture(g,null,.62,.27,[-2.68,1.12,z],Math.PI/2);this.refs.doors.push(d);
+        this.slidingDoor(g,-2.84,z);
+        const d=this.picture(g,null,.62,.27,[-2.61,2.81,z],Math.PI/2);this.refs.doors.push(d);
       }
       box(g,-2.81,1.61,9,.16,1.1,1.9,material('#65513a'));box(g,-2.7,1.61,9,.08,.98,1.78,material('#97865d'));
       this.refs.photo=this.picture(g,null,1.6,1.067,[-2.646,1.65,9],Math.PI/2);
@@ -67,20 +62,47 @@ export class ThreeSchoolView {
       this.desk(g,{x:2,z:3.2,width:1.1,depth:.7,height:.85});
     }
     if(classroom){
+      this.slidingDoor(g,0,.02,-Math.PI/2);
       const root=new THREE.Group(),tilt=new THREE.Group();root.position.set(DOLL.x,.035,DOLL.z);root.rotation.y=Math.PI;root.add(tilt);g.add(root);
       this.refs.dollRoot=root;this.refs.dollTilt=tilt;this.refs.doll=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);
       Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;
       tilt.rotation.x=Math.PI/2;
     }else{
-      const print=document.createElement('canvas');print.width=512;print.height=256;const pc=print.getContext('2d');pc.fillStyle='#e9e1c9b0';
-      for(const x of [138,366]){pc.beginPath();pc.ellipse(x,160,40,43,-.1,0,Math.PI*2);pc.fill();for(let i=0;i<5;i++){pc.beginPath();pc.ellipse(x-40+i*20,94-(i%3)*14,9,42,.08,0,Math.PI*2);pc.fill();}}
-      this.refs.dollPrint=this.picture(g,print,1.45,.68,[-2.643,1.9,5],Math.PI/2);Object.assign(this.refs.dollPrint.material,{transparent:true,alphaTest:.1,depthWrite:false});this.refs.dollPrint.visible=false;this.refs.dollPrintBack=this.refs.dollPrint.clone();this.refs.dollPrintBack.position.z=15;g.add(this.refs.dollPrintBack);
+      const print=document.createElement('canvas');print.width=512;print.height=112;const pc=print.getContext('2d');pc.fillStyle='#e9e1c9b0';
+      for(const x of [92,420]){pc.beginPath();pc.ellipse(x,78,24,22,-.1,0,Math.PI*2);pc.fill();for(let i=0;i<5;i++){pc.beginPath();pc.ellipse(x-24+i*12,43-(i%3)*5,5,20,.08,0,Math.PI*2);pc.fill();}}
+      this.refs.dollPrint=this.picture(g,print,1.45,.32,[-2.643,1.96,5],Math.PI/2);Object.assign(this.refs.dollPrint.material,{transparent:true,alphaTest:.1,depthWrite:false});this.refs.dollPrint.visible=false;this.refs.dollPrintBack=this.refs.dollPrint.clone();this.refs.dollPrintBack.position.z=15;g.add(this.refs.dollPrintBack);
     }
     const ambient=new THREE.HemisphereLight('#baceda','#756751',.85);scene.add(ambient);
     const moon=new THREE.DirectionalLight('#b7cfdf',1.1);moon.position.set(classroom?-16:16,24,12);moon.target.position.set(0,0,end/2);scene.add(moon,moon.target);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);Object.assign(moon.shadow.camera,{left:-30,right:30,top:40,bottom:-40,near:.5,far:90});moon.shadow.bias=-.0004;moon.shadow.normalBias=.035;
     const fixture=material('#d1d6c7',{emissive:'#dfedcf',emissiveIntensity:1.3}),housing=material('#65726d');
     for(let z=classroom?2:3;z<end;z+=classroom?4:5){box(g,0,2.94,z,1.25,.085,.43,housing);box(g,0,2.88,z,1.13,.035,.34,fixture);const light=new THREE.PointLight('#e0e5c8',13,11,2);light.position.set(0,2.65,z);scene.add(light);}
     scene.add(buildOutdoors({side:kind}));
+  }
+  slidingDoor(parent,x,z,angle=0){
+    const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=angle;g.name='sliding-classroom-door';parent.add(g);
+    const grain=document.createElement('canvas');grain.width=grain.height=256;const ctx=grain.getContext('2d');ctx.fillStyle='#c4936d';ctx.fillRect(0,0,256,256);
+    for(let i=0;i<110;i++){ctx.strokeStyle=i%3?'#62351f20':'#f4cea32a';ctx.beginPath();ctx.moveTo(i*2.37,0);ctx.bezierCurveTo(i*2.37+3,80,i*2.37-3,190,i*2.37,256);ctx.stroke();}
+    const wood=material('#cda182',{map:canvasTexture(grain),roughness:.65}),edge=material('#865335'),groove=material('#39291f'),metal=material('#989993',{metalness:.75,roughness:.38}),glass=material('#2b4549',{metalness:.25,roughness:.2});
+    box(g,.07,1.33,0,.13,2.66,2.1,groove);
+    for(const side of [-1,1]){
+      const center=side*.465;
+      box(g,.12,1.29,center,.065,2.52,.91,wood).name='sliding-leaf';
+      // Small glazed opening and its proud wooden surround.
+      box(g,.164,1.96,center,.025,.36,.55,glass).name='door-glass';
+      for(const yy of [1.735,2.185])box(g,.183,yy,center,.055,.07,.69,edge);
+      for(const zz of [center-.31,center+.31])box(g,.183,1.96,zz,.055,.45,.07,edge);
+      for(const yy of [.35,.74,1.13,1.52]){
+        box(g,.157,yy,center,.015,.30,.69,edge);box(g,.171,yy,center,.022,.27,.66,wood);
+      }
+      const handleZ=side*.81;
+      box(g,.18,.98,handleZ,.03,.27,.063,metal).name='recessed-handle';
+      box(g,.198,.98,handleZ,.01,.20,.029,groove);
+    }
+    for(const zz of [-1.02,1.02])box(g,.15,1.33,zz,.22,2.66,.12,wood);
+    box(g,.15,2.625,0,.22,.13,2.16,wood);box(g,.235,2.54,0,.035,.035,1.91,groove).name='upper-slide-rail';
+    box(g,.19,.027,0,.18,.035,1.98,metal).name='lower-slide-rail';
+    box(g,.17,1.285,0,.025,2.5,.016,groove);
+    return g;
   }
   picture(group,image,w,h,position,angle=0){const mat=material('#ffffff',{side:THREE.DoubleSide});const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(...position);m.rotation.y=angle;m.scale.x=-1;group.add(m);if(image)mat.map=canvasTexture(image);return m;}
   sprite(group,h,y,position){const m=new THREE.Sprite(new THREE.SpriteMaterial({color:'#c2c8ba',transparent:true,alphaTest:.06}));m.position.set(...position);m.scale.set(h*2/3,h,1);group.add(m);return m;}
