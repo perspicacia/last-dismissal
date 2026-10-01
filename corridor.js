@@ -10,6 +10,12 @@ export class Corridor {
     this.mascot.src = new URL('./assets/mascot-rabbit.png', import.meta.url).href;
     this.mascotOpen = new Image();
     this.mascotOpen.src = new URL('./assets/mascot-rabbit-open.png', import.meta.url).href;
+    this.boardPhoto = new Image();
+    this.boardPhotoErased = new Image();
+    for (const [image, path] of [[this.boardPhoto, './assets/school-group-photo.png'], [this.boardPhotoErased, './assets/school-group-photo-erased.png']]) {
+      image.onload = () => this.buildTextures();
+      image.src = new URL(path, import.meta.url).href;
+    }
     this.mouthOpen = false; this.onReveal = onReveal;
     this.buildTextures(); this.resize();
     new ResizeObserver(()=>this.resize()).observe(canvas);
@@ -42,11 +48,14 @@ export class Corridor {
     });
     this.board=this.texture(c=>{
       c.fillStyle='#171e15';c.fillRect(45,38,422,168);c.fillStyle='#7b7150';c.fillRect(52,44,408,155);
-      c.fillStyle='#ded3ab';c.fillRect(80,70,200,104);c.fillStyle='#243728';
-      for(let i=0;i<5;i++){const x=99+i*35;c.beginPath();c.arc(x,109,12,0,Math.PI*2);c.fill();c.fillRect(x-12,123,24,35);}
-      if(this.anomaly!=='board'){c.fillStyle='#c2ab81';for(let i=0;i<5;i++){c.beginPath();c.arc(99+i*35,109,9,0,Math.PI*2);c.fill();}}
-      c.fillStyle='#ded3ab';c.fillRect(300,73,130,74);c.fillStyle='#3b4631';c.font='15px sans-serif';c.fillText('야간 자율학습',304,96);c.fillText('23:00 종료',304,121);
-      c.fillStyle='#dfd6b5';c.font='13px sans-serif';c.fillText('수학여행 단체사진',80,190);
+      // A side wall maps 512px to 2m horizontally, 256px to 3m vertically.
+      // Compensate for that mapping so the 3:2 photograph keeps its proportions.
+      c.fillStyle='#ded3ab';c.fillRect(73,65,366,86);
+      const photo=this.anomaly==='board'?this.boardPhotoErased:this.boardPhoto;
+      if(photo.complete && photo.naturalWidth) c.drawImage(photo,76,68,360,80);
+      else {c.fillStyle='#697363';c.fillRect(76,68,360,80);}
+      c.fillStyle='#ded3ab';c.fillRect(285,158,145,36);c.fillStyle='#3b4631';c.font='13px sans-serif';c.fillText('야간 자율학습',290,173);c.fillText('23:00 종료',290,189);
+      c.fillStyle='#dfd6b5';c.font='13px sans-serif';c.fillText('수학여행 단체사진',76,173);
     });
     this.window=this.texture(c=>{
       c.fillStyle='#9cad95';c.fillRect(35,30,442,163);c.fillStyle='#06151b';c.fillRect(42,37,428,149);

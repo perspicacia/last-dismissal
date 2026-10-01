@@ -1,4 +1,18 @@
-# 학교 토끼 마스코트
+# 게임 이미지
+
+## 게시판 단체사진
+
+`school-group-photo.png`와 `school-group-photo-erased.png`는 내장 image_gen 도구로 생성·편집한 1536×1024 PNG다. 실제 인물을 촬영한 사진이 아니라 가상의 학생들을 실사 느낌으로 표현한 이미지다. 정상·이상 사진은 같은 구도를 사용한다.
+
+정상 사진 최종 프롬프트:
+
+Use case: photorealistic-natural. Asset type: landscape school group photograph texture for a Korean school horror game's bulletin board. Create an ordinary realistic camera photograph of 10 fictional Korean high-school students in navy school uniforms on a school trip, two clear rows of five, standing and seated in front of leafy trees and a modest school courtyard. All look directly at camera, natural subtle smiles, distinct realistic human faces, realistic skin hair fabric, softly overcast daylight. Composition: straight-on horizontal 3:2 group photo, heads well separated and all fully visible, no overlap, face centers roughly aligned in two regular rows. Upper row faces approximately 25% image height; lower row faces approximately 56% image height; five columns around 14%,32%,50%,68%,86% width. Slightly faded consumer-camera printed photograph from early 2000s, believable candid school-trip keepsake. Fill entire image with the photo itself, no frame, no bulletin board, no writing, no watermarks. No cartoon, no illustration, no 3D render, no horror, no distorted faces. These are fictional people, not identifiable real students.
+
+이상 사진 최종 편집 프롬프트:
+
+Use case: precise-object-edit. Edit this exact school group photograph for an anomaly in a horror game. Change ONLY the ten faces: obscure every face from hairline to chin, including eyes nose and mouth, with an opaque uneven pitch-black rubbed ink/smudged charcoal patch as if somebody scribbled over the faces on the printed photograph. Each patch must cover all facial features completely, with no eyes or smiles visible. Preserve everything else exactly: all ten students, same head shapes, hair, uniforms, hands, poses, seating, background trees and building, lighting, image framing and dimensions. No new people, no gore, no text, no change in photo style. All ten faces must be noticeably black and erased, including the five upper row and five lower row faces.
+
+## 학교 토끼 마스코트
 
 `mascot-rabbit-open.png`는 같은 캐릭터의 입을 벌린 대체 이미지다. 내장 image_gen 편집 도구를 사용했으며 원본을 별도로 보존했다.
 
