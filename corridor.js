@@ -1,6 +1,7 @@
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
+import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
 import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
@@ -81,8 +82,8 @@ export class Corridor {
       c.fillStyle='#ded3ab';c.fillRect(285,158,145,36);
       c.fillStyle='#73715c';for(let line=0;line<4;line++)c.fillRect(298,165+line*6,line===3?65:112,1);
     });
-    this.exterior=document.createElement('canvas');this.exterior.width=428;this.exterior.height=447;
-    drawWindowView(this.exterior.getContext('2d'),{x:0,y:0,width:428,height:447},{verticalScale:1});
+    this.exterior=document.createElement('canvas');this.exterior.width=CAMPUS_WIDTH;this.exterior.height=447;
+    drawCampusView(this.exterior.getContext('2d'));
     this.windowTexture=(haunted,viewOffset=0)=>this.texture(c=>{
       c.fillStyle='#244e4a';c.fillRect(29,25,454,173);c.fillStyle='#507d6c';c.fillRect(35,30,442,163);
       drawWindowView(c,{x:42,y:37,width:428,height:149},{ghost:this.windowGhost,haunted,viewOffset});
@@ -112,7 +113,7 @@ export class Corridor {
     if(this.scene==='classroom'){
       const viewOffset=Math.round(offset(4.5)*20)/20;
       if(viewOffset!==this.exteriorOffset){
-        drawWindowView(this.exterior.getContext('2d'),{x:0,y:0,width:428,height:447},{verticalScale:1,viewOffset});
+        drawCampusView(this.exterior.getContext('2d'),{viewOffset});
         this.exteriorOffset=viewOffset;
       }
     } else for(const start of [4,6,12,14]){
