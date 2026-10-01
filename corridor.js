@@ -24,7 +24,7 @@ export class Corridor {
     document.addEventListener('visibilitychange',()=>this.keys.clear());
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
-  resize() { this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*.57); }
+  resize() { this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
   enterClassroom() {if(this.scene==='classroom')return;this.corridorPlayer={...this.player};this.scene='classroom';this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
   leaveClassroom() {if(this.scene!=='classroom')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
   move(keys,dt) {return this.scene==='classroom'?moveClassroomPlayer(this.player,keys,dt):constrainKeyDoor(movePlayer(this.player,keys,dt),this.keyDoor);}
@@ -99,10 +99,11 @@ export class Corridor {
       c.fillStyle='#c5b989';c.fillRect(181,192,150,8);
     });
     this.end=this.texture(c=>{
-      for(const [x,title,hint] of [[35,'위층 계단','이상이 있다면'],[290,'아래층 계단','이상이 없다면']]){
+      for(const [x,title] of [[35,'↑'],[290,'↓']]){
         c.fillStyle='#070f0b';c.fillRect(x,46,185,210);c.strokeStyle='#738c71';c.lineWidth=3;c.strokeRect(x,46,185,210);
-        c.fillStyle='#b9d598';c.font='bold 20px sans-serif';c.textAlign='center';c.fillText(title,x+92,30);c.font='14px sans-serif';c.fillText(hint,x+92,74);
+        c.fillStyle='#b9d598';c.font='bold 28px sans-serif';c.textAlign='center';c.fillText(title,x+92,30);
         c.strokeStyle='#617361';for(let i=0;i<7;i++){c.beginPath();c.moveTo(x+18,120+i*20);c.lineTo(x+168,120+i*20);c.stroke();}
+        if(x===35 && this.tutorial){c.strokeStyle='#6f766c';c.lineWidth=6;for(let bar=0;bar<5;bar++){c.beginPath();c.moveTo(x+15+bar*38,46);c.lineTo(x+15+bar*38,256);c.stroke();}}
       }
     });
   }
@@ -134,9 +135,9 @@ export class Corridor {
     const horizon=h*.48+bob, lens=w*.68;
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
     const floor=c.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#252d2b');floor.addColorStop(1,'#584b3e');c.fillStyle=floor;c.fillRect(0,horizon,w,h);
-    for(let y=Math.ceil(horizon)+1;y<h;y+=2){
+    for(let y=Math.ceil(horizon)+1;y<h;y+=4){
       const d=1.5*lens/(y-horizon);if(d>40)continue;
-      for(let x=0;x<w;x+=2){
+      for(let x=0;x<w;x+=4){
         const across=(x-w/2)*d/lens;
         const wx=p.x+Math.sin(p.angle)*d+Math.cos(p.angle)*across;
         const wz=p.z+Math.cos(p.angle)*d-Math.sin(p.angle)*across;
@@ -145,7 +146,7 @@ export class Corridor {
         const light=Math.max(.38,1-d*.018);
         c.fillStyle=`rgb(${(wood+23)*light},${(wood+12)*light},${(wood+6)*light})`;
         if(d<8&&(gx<.015||gz<.02))c.fillStyle=`rgb(${(wood+15)*light},${(wood+4)*light},${(wood-2)*light})`;
-        c.fillRect(x,y,2,2);
+        c.fillRect(x,y,4,4);
       }
     }
     const depth=new Float64Array(Math.ceil(w/2));
