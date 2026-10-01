@@ -1,0 +1,4 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>계단 렌더링 검증</title><style>body{margin:0;background:#0b1518;color:#dce3d2;font:14px sans-serif}main{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}canvas{width:100%;height:760px}h2{font-size:16px}</style><main><section><h2>올라가는 계단</h2><canvas id="up" aria-label="상승 계단판과 금속 난간"></canvas></section><section><h2>내려가는 계단</h2><canvas id="down" aria-label="하강 계단판과 금속 난간"></canvas></section></main><script type="module">
+import {Corridor} from '../../corridor.js';
+for(const id of ['up','down']){const c=new Corridor(document.getElementById(id),()=>{},()=>{});c.player={x:id==='up'?-1.6:1.6,z:22,angle:0};c.tutorial=false;c.buildTextures();c.draw(0);new ResizeObserver(()=>c.draw(0)).observe(c.canvas);}
+</script></html>

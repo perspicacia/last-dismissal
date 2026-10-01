@@ -1,3 +1,4 @@
+import { drawStairs } from './stairs.js';
 import { drawWindowView } from './window-view.js';
 import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
@@ -96,14 +97,13 @@ export class Corridor {
       c.lineWidth=4;c.beginPath();c.moveTo(256,86);c.lineTo(this.anomaly==='clock'?256:241,this.anomaly==='clock'?114:62);c.moveTo(256,86);c.lineTo(this.anomaly==='clock'?258:291,this.anomaly==='clock'?123:93);c.stroke();
     });
     this.end=this.texture(c=>{
-      for(const [x,title] of [[35,'↑'],[290,'↓']]){
-        c.fillStyle='#070f0b';c.fillRect(x,46,185,210);c.strokeStyle='#738c71';c.lineWidth=3;c.strokeRect(x,46,185,210);
-        c.fillStyle='#b9d598';c.font='bold 28px sans-serif';c.textAlign='center';c.fillText(title,x+92,30);
-        c.strokeStyle='#617361';for(let i=0;i<7;i++){c.beginPath();c.moveTo(x+18,120+i*20);c.lineTo(x+168,120+i*20);c.stroke();}
-        if(x===35 && this.tutorial){c.strokeStyle='#6f766c';c.lineWidth=6;for(let bar=0;bar<5;bar++){c.beginPath();c.moveTo(x+15+bar*38,46);c.lineTo(x+15+bar*38,256);c.stroke();}}
+      // Recessed openings; the stair flights are projected in world space.
+      for(const x of [30,311]){
+        c.fillStyle='#071310';c.fillRect(x,0,171,256);
       }
     });
   }
+
   notify() {
     if(this.scene==='classroom'){this.item=null;this.atStairs=false;this.onPosition({item:null,stairs:false,names,player:this.player,scene:this.scene});return;}
     const open=revealsTeeth(this.player,this.anomaly,this.mouthOpen);
@@ -164,6 +164,7 @@ export class Corridor {
     }
     // Ceiling fixtures projected into the same world as the walls.
     const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z;const d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.12?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon-(y-1.5)*lens/d,d}:null;};
+    drawStairs(c,project,{tutorial:this.tutorial});
     for(let z=24;z>=2;z-=4){
       const points=[project(-.6,2.96,z),project(.6,2.96,z),project(.6,2.96,z+.6),project(-.6,2.96,z+.6)];
       if(points.every(Boolean)){c.fillStyle='#d0e2d2';c.shadowColor='#accac3';c.shadowBlur=9;c.beginPath();points.forEach((a,i)=>i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y));c.closePath();c.fill();c.shadowBlur=0;}
