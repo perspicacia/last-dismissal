@@ -5,7 +5,7 @@ import { SchoolAudio } from '../audio.js';
 
 test('presentation events run once per corridor and reset independently', () => {
   const events = createHorrorEvents();
-  for (const name of ['key-pickup', 'door-unlock', 'mascot-reveal']) {
+  for (const name of ['key-pickup', 'door-unlock', 'mascot-reveal', 'doll-rise']) {
     assert.equal(events.takeEvent(name), true);
     assert.equal(events.takeEvent(name), false);
   }
@@ -37,11 +37,11 @@ test('soft cues use the master output and respect mute/volume', () => {
   audio.muted = true;
   audio.update();
   assert.equal(targets.at(-1)[0], 0);
-  for (const name of ['key-pickup', 'door-unlock', 'mascot-reveal']) assert.equal(audio.cue(name), true);
-  assert.equal(outputs.length, 8);
+  for (const name of ['key-pickup', 'door-unlock', 'mascot-reveal', 'doll-rise']) assert.equal(audio.cue(name), true);
+  assert.equal(outputs.length, 11);
   assert.ok(outputs.every(output => output === audio.master));
   assert.equal(audio.cue('unknown'), false);
-  assert.equal(outputs.length, 8);
+  assert.equal(outputs.length, 11);
 });
 
 test('unsupported or suspended audio never blocks presentation events', () => {

@@ -9,11 +9,11 @@ import {Corridor} from '../corridor.js';
 test('classroom entry/return restore corridor position and never expose stairs',()=>{
   const positions=[];const c=Object.create(Corridor.prototype);
   Object.assign(c,{scene:'corridor',player:{x:-1,z:5.1,angle:-1.5},keys:new Set(['forward']),keyDoor:{tutorial:false},onPosition:p=>positions.push(p),canvas:{dataset:{}},anomaly:null,mouthOpen:false});
-  const original={...c.player};c.enterClassroom();assert.deepEqual(c.player,CLASSROOM_SPAWN);assert.equal(c.scene,'classroom');assert.equal(c.keys.size,0);assert.equal(positions.at(-1).stairs,false);assert.equal(positions.at(-1).item,null);
-  c.player={x:0,z:8,angle:1};c.leaveClassroom();assert.deepEqual(c.player,original);assert.equal(c.scene,'corridor');
+  c.dollState={phase:'standing',gaze:0,elapsed:.55};const original={...c.player};c.enterClassroom();assert.deepEqual(c.player,CLASSROOM_SPAWN);assert.equal(c.scene,'classroom');assert.equal(c.keys.size,0);assert.equal(positions.at(-1).stairs,false);assert.equal(positions.at(-1).item,null);
+  c.player={x:0,z:8,angle:1};c.leaveClassroom();assert.deepEqual(c.player,original);assert.equal(c.scene,'corridor');assert.equal(c.dollState.phase,'standing');c.enterClassroom();assert.equal(c.dollState.phase,'standing');
 });
 test('reset from classroom removes stored return state and restores corridor spawn',()=>{
-  const c=Object.create(Corridor.prototype);Object.assign(c,{scene:'classroom',corridorPlayer:{x:2,z:9},keys:new Set(),buildTextures(){},notify(){}});c.reset(null);assert.equal(c.scene,'corridor');assert.equal(c.corridorPlayer,null);assert.equal(c.player.z,1.8);
+  const c=Object.create(Corridor.prototype);Object.assign(c,{scene:'classroom',corridorPlayer:{x:2,z:9},keys:new Set(),buildTextures(){},notify(){}});c.reset(null);assert.equal(c.scene,'corridor');assert.equal(c.corridorPlayer,null);assert.equal(c.player.z,1.8);assert.equal(c.dollState.phase,'lying');
 });
 
 test('teacher desk blocks repeated steps toward front wall and leaves side passage',()=>{

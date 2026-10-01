@@ -1,4 +1,4 @@
-export const anomalies = ['door', 'board', 'window', 'clock', 'figure'];
+export const anomalies = ['door', 'board', 'window', 'clock', 'figure', 'doll'];
 export const demoSequence = [null, 'door', 'board', null, 'figure'];
 export function newGame(demo = false) { return { demo, tutorial: true, progress: 0, attempts: 0, anomaly: null, previous: null, ended: false }; }
 export function nextAnomaly(state, random = Math.random) {

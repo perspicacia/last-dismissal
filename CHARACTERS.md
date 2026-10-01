@@ -9,13 +9,13 @@
 
 ## 최신 공포 표정: 세로 동공
 
-최신 수정안은 `assets/doll-student-open-slit-eyes.png`다. 사용자가 눈이 너무 요정처럼 보인다고 피드백하여, 입을 벌린 표정의 눈을 가늘고 긴 검은 세로 동공과 탁한 옅은 홍채로 변경하고 반짝임을 줄였다. 기본 모습(`doll-student-concept.png`)과 이전 시안을 보존했다. 내장 image_gen 편집 도구 사용. 아직 게임에 적용하지 않았다.
+최신 수정안은 `assets/doll-student-open-slit-eyes.png`다. 사용자가 눈이 너무 요정처럼 보인다고 피드백하여, 입을 벌린 표정의 눈을 가늘고 긴 검은 세로 동공과 탁한 옅은 홍채로 변경하고 반짝임을 줄였다. 기본 모습(`doll-student-concept.png`)과 이전 시안을 보존했다. 내장 image_gen 편집 도구 사용. 교실의 doll 이상현상에서 기립하며 이 표정으로 전환한다.
 
 ### 세로 동공 버전 최종 편집 프롬프트
 
 Use case: precise-object-edit. The supplied image is the edit target, an original blond porcelain school doll with a wide open sharp-toothed grin. Change ONLY the eyes to give the scary expression an unmistakably menacing predator gaze instead of cute sparkly fairy eyes. In BOTH eyes replace the large round black pupils with very thin, long, jet-black VERTICAL SLIT pupils, pointed at top and bottom, aligned with the tilted face. Make the irises muted pale desaturated amber-gray, reduce the glossy catchlights to almost none, remove sparkling jewel-like reflections, add subtly dark upper eyelid shadows. Keep the doll staring directly at the viewer with wide open eyes; not sleepy, not smiling with the eyes. The slit pupil shape must be very legible in both eyes. Preserve the existing eye outline, eye placement, head shape, facial skin and nose, exact existing wide open mouth and sharp teeth. Keep the hair, head tilt, uniform, ribbon, body, pose, hands, ball joints, socks, shoes and all non-eye areas unchanged as closely as possible. Exact original 1024x1536 full-body framing and character scale. Preserve transparent alpha background and original lighting outside the eyes. No blood, no gore, no glowing eyes, no eye beams, no new cracks or accessories, no text, no comparisons. ONE alternate full-body game sprite of the same doll.
 
-이름과 추가 캐릭터는 제안 단계다. 기존 토끼는 게임에 적용되어 있다. 학생 인형의 기존 외형은 사용자가 기본 모습으로 확정했으며, 기본 표정과 기괴한 미소 버전을 저장했다. 학생 인형은 아직 게임에 적용하지 않았다. 부엉이는 아직 이미지와 구현이 없는 후보다.
+이름과 추가 캐릭터는 제안 단계다. 기존 토끼는 게임에 적용되어 있다. 학생 인형의 기존 외형은 사용자가 기본 모습으로 확정했으며, 기본 표정과 기괴한 미소 버전을 저장했다. 학생 인형은 교실의 doll 이상현상에서 기립하며 이 표정으로 전환한다. 부엉이는 아직 이미지와 구현이 없는 후보다.
 
 ## 공통 방향
 
@@ -24,7 +24,7 @@ Use case: precise-object-edit. The supplied image is the edit target, an origina
 | 캐릭터 / 가칭 | 외형 | 평소 위치 제안 | 공포 연출 제안 | 현재 상태 |
 | --- | --- | --- | --- | --- |
 | 모루 / 토끼 | 민트색 봉제 털, 검은 단추 눈, 목도리 | 계단 옆 | 가까이서 보면 입을 벌려 날카로운 이빨을 드러낸다 | 게임 적용 완료 |
-| 루미 / 학생 인형 | 금발 단발, 남색 세일러복, 유리 눈, 구체 관절 | 도서실 앞 전시 의자 | 기본 표정에서 기괴한 미소로 변한다. 시선 추적과 의자에서 내려오는 행동은 후속 제안 | 기본 외형 확정, 기본·미소 이미지 완료, 게임 미적용 |
+| 루미 / 학생 인형 | 금발 단발, 남색 세일러복, 유리 눈, 구체 관절 | 3-2 교실 뒤쪽 바닥 | 평소 누워 있다가 doll 이상에서 접근·응시하면 일어나 이빨·세로 동공 표정으로 변한다 | 기존 이미지 게임 연결 완료, 관절형 3D 모델은 미구현 |
 | 또각 / 부엉이 | 둥근 갈색 몸, 큰 눈, 작은 교모 | 방송실 앞 | 낮에는 안내 마스코트. 밤에는 주인공의 마지막 말을 방송으로 되풀이한다 | 후보, 미제작 |
 
 ## 학생 인형 외형
@@ -37,7 +37,7 @@ Use case: precise-object-edit. The supplied image is the edit target, an origina
 
 - 기본: `assets/doll-student-concept.png`. 사용자가 확정한 외형이며 기존 파일을 보존한다.
 - 기괴한 미소: `assets/doll-student-smile.png`. 과도하게 올라간 입꼬리와 길게 벌어진 웃음선, 웃지 않는 유리 눈을 강조했다. 머리·옷·자세·전신 구도를 기본 이미지에 맞췄다. 내장 image_gen 편집 도구 사용.
-- 두 파일 모두 1024×1536 투명 PNG다. 실제 게임에서 표정 전환하는 동작은 아직 연결하지 않았다.
+- 두 파일 모두 1024×1536 투명 PNG다. 게임에서는 기본 이미지와 최신 세로 동공 표정을 사용하며, 닫힌 입 미소는 이전 시안으로 보존한다.
 
 ### 미소 버전 최종 편집 프롬프트
 
@@ -47,7 +47,7 @@ Use case: precise-object-edit. Input image is the edit target: an original blond
 
 ## 입을 크게 벌린 공포 표정 — 최신 수정안
 
-`assets/doll-student-open.png`는 기본 인형을 내장 image_gen 편집 도구로 수정한 투명 PNG다. 크게 벌어진 어두운 입 안과 위아래 날카로운 이빨을 강조했다. 기본 파일은 그대로 보존하며, 이전의 닫힌 입 미소(`doll-student-smile.png`)는 이전 시안으로 남긴다. 최신 수정안도 아직 게임에는 연결하지 않았다.
+`assets/doll-student-open.png`는 기본 인형을 내장 image_gen 편집 도구로 수정한 투명 PNG다. 크게 벌어진 어두운 입 안과 위아래 날카로운 이빨을 강조했다. 기본 파일은 그대로 보존하며, 이전의 닫힌 입 미소(`doll-student-smile.png`)는 이전 시안으로 남긴다. 게임의 공포 표정은 이 이미지에서 눈을 보완한 세로 동공 버전을 사용한다.
 
 ### 최신 최종 편집 프롬프트
 
@@ -56,3 +56,7 @@ Use case: precise-object-edit. The provided image is the edit target, an origina
 ## 학생 인형 최종 생성 프롬프트
 
 Use case: stylized-concept. Asset type: original character concept and transparent full-body doll sprite for a school observation horror game. The supplied image is a mood and wardrobe reference only, NOT an edit target: take inspiration from its softly curled short blond bob, large thoughtful eyes, dark navy sailor school uniform with a broad cream collar, and quiet melancholic atmosphere. Create ONE original human-shaped school doll that is initially cute, with a subtle unsettling doll quality, compatible with a tactile rendered plush mascot horror game. Full-body upright front view, neutral arms hanging loosely, centered with feet and hair fully visible and small transparent margins. Short honey-blond softly curled bob, large amber glass doll eyes looking at the viewer, pale matte porcelain face with a barely perceptible fixed polite smile, small visible ball-jointed wrists and knees, navy sailor uniform with cream collar and ribbon, knee-length skirt, cream socks and dark rounded shoes. Gentle stylized doll proportions with moderately oversized head, not a realistic human child. Real textile weave in clothes, subtle scuffed porcelain and fine hair fibers, muted aged colors. Sweet collectible-doll face, unsettling lifeless stillness, one slightly lowered shoulder and a slight natural head tilt. Soft overhead light suitable for compositing into a greenish dark school corridor. No open mouth, no sharp teeth, no gore, no wounds, no extra characters, no props, no text or watermark. True transparent alpha background, no floor or scene, no cast background shadow. The subject is an original doll and must not reproduce any identifiable anime character or exact costume insignia from the reference.
+
+## 교실 기립 이벤트
+
+[specs/classroom-doll.md](specs/classroom-doll.md)에 따라 정상에서는 누워 있고, doll 이상에서 1.9m 이내 접근·0.3초 응시 후 0.55초 동안 일어난다. 교실 문 손자국이 복도 단서다. 재입장은 기립을 유지하고 새 복도·재시작은 초기화한다. 기존 투명 이미지 평면을 기울여 세우며 추가 이미지 제작은 하지 않았다.

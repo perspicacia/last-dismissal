@@ -1,13 +1,14 @@
-import { ThreeSchoolView } from './three-school.js';
+import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
+import { ThreeSchoolView } from './three-school.js?v=classroom-doll';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=classroom-doll';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
-const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트'};
+const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
 export class Corridor {
   constructor(canvas, onPosition, onStep, onReveal = () => {}) {
     this.canvas=canvas;this.use3D=canvas.dataset.renderer==='three'; this.ctx=this.use3D?null:canvas.getContext('2d'); this.onPosition=onPosition;this.onStep=onStep;
@@ -25,7 +26,9 @@ export class Corridor {
       image.onload = () => this.buildTextures();
       image.src = new URL(path, import.meta.url).href;
     }
-    this.mouthOpen = false; this.onReveal = onReveal;
+    this.mouthOpen = false; this.onReveal = onReveal;this.dollState=newDollState();
+    this.dollImage=new Image();this.dollScary=new Image();
+    for(const [image,path] of [[this.dollImage,'./assets/doll-student-concept.png'],[this.dollScary,'./assets/doll-student-open-slit-eyes.png']]){image.onload=()=>this.view3D?.syncTextures(this);image.src=new URL(path,import.meta.url).href;}
     this.buildTextures();
     if(this.use3D){
       try {this.view3D=new ThreeSchoolView(canvas,this);for(const image of [this.mascot,this.mascotOpen])image.addEventListener('load',()=>this.view3D.syncTextures(this));}
@@ -46,7 +49,7 @@ export class Corridor {
   enterClassroom() {if(this.scene==='classroom')return;this.corridorPlayer={...this.player};this.scene='classroom';this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
   leaveClassroom() {if(this.scene!=='classroom')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
   move(keys,dt) {return this.scene==='classroom'?moveClassroomPlayer(this.player,keys,dt):movePlayer(this.player,keys,dt);}
-  reset(anomaly) {this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
+  reset(anomaly) {this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
   setActive(value) {this.active=value;this.keys.clear();}
   nudge(action) {
     if(!this.active) return;
@@ -75,6 +78,7 @@ export class Corridor {
       for(let i=0;i<48;i++){c.strokeStyle=i%2?'#dcc89e18':'#201b141a';c.beginPath();c.moveTo(82+i*7.3,39);c.bezierCurveTo(74+i*7.3,112,89+i*7.3,199,82+i*7.3,255);c.stroke();}
       c.fillStyle='#273d3d';c.fillRect(96,54,320,87);c.fillStyle='#112734';c.fillRect(103,59,306,77);
       const glass=c.createLinearGradient(103,59,409,136);glass.addColorStop(0,'#486369');glass.addColorStop(.45,'#1d343d');glass.addColorStop(1,'#0b1e2a');c.fillStyle=glass;c.fillRect(103,59,306,77);
+      if(this.anomaly==='doll'){c.fillStyle='#ddd8b28c';for(const x of [175,320]){c.beginPath();c.ellipse(x,102,13,12,-.2,0,Math.PI*2);c.fill();for(let i=0;i<5;i++){c.beginPath();c.ellipse(x-13+i*6,85-(i%3)*3,3,10,.1,0,Math.PI*2);c.fill();}}}
       c.fillStyle='#aaa486';c.fillRect(248,54,8,87);c.fillRect(96,93,320,4);
       c.fillStyle='#d2d4bd20';c.beginPath();c.moveTo(115,60);c.lineTo(152,60);c.lineTo(245,135);c.lineTo(205,135);c.fill();
       c.fillStyle='#eee4c6';c.fillRect(198,153,116,35);c.strokeStyle='#998c68';c.strokeRect(198,153,116,35);
@@ -135,7 +139,7 @@ export class Corridor {
     }
   }
   notify() {
-    if(this.scene==='classroom'){this.item=null;this.atStairs=false;this.onPosition({item:null,stairs:false,names,player:this.player,scene:this.scene});return;}
+    if(this.scene==='classroom'){this.item=facingDoll(this.player)?'doll':null;this.atStairs=false;this.onPosition({item:this.item,stairs:false,names,player:this.player,scene:this.scene});return;}
     const open=revealsTeeth(this.player,this.anomaly,this.mouthOpen);
     if(open && !this.mouthOpen) this.onReveal();
     this.mouthOpen=open;
@@ -144,13 +148,14 @@ export class Corridor {
     this.item=item;this.atStairs=stairs;
     this.onPosition({item,stairs,names,player:this.player,scene:this.scene});
   }
+  updateDoll(dt){const before=this.dollState?.phase;this.dollState=advanceDoll(this.dollState||newDollState(),{scene:this.scene,anomaly:this.anomaly,player:this.player,dt,ready:Boolean(this.dollImage?.naturalWidth&&this.dollScary?.naturalWidth)});if(before==='lying'&&this.dollState.phase==='rising')this.onReveal('doll');this.canvas.dataset.dollPhase=this.dollState.phase;}
   frame(time) {
     const dt=Math.min((time-this.last)/1000,.05);this.last=time;
     if(this.active && !document.hidden){
       const before=this.player;this.player=this.move(this.keys,dt);
       const distance=Math.hypot(this.player.x-before.x,this.player.z-before.z);this.steps+=distance;
       if(this.steps>.95){this.steps=0;this.onStep();}
-      this.notify();this.draw(time);
+      this.updateDoll(dt);this.notify();this.draw(time);
     }
     requestAnimationFrame(t=>this.frame(t));
   }
@@ -158,7 +163,7 @@ export class Corridor {
     if(this.view3D){this.view3D.draw(this,time);return;}
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
     this.updateExterior(time);
-    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.exterior);return;}
+    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary});return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
