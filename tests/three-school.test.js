@@ -24,6 +24,6 @@ test('실외 풍경은 창 밖의 서로 다른 실제 깊이와 결정적인 �
 test('상행 마지막 발판 위에는 사람이 설 여유가 있고 하강 입구에서는 아래 발판으로 시선이 내려간다',()=>{
   const v=buildView(),scene=v.scenes.corridor,top=scene.getObjectByName('stair-up-11'),ceiling=scene.getObjectByName('stair-ceiling-up');
   const headroom=ceiling.position.y-ceiling.geometry.parameters.height/2-(top.position.y+top.geometry.parameters.height/2);assert.ok(headroom>1.8);
-  v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.lastState='null|false';const old=globalThis.window;globalThis.window={matchMedia:()=>({matches:true})};
+  v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.lastState='null|false|false';const old=globalThis.window;globalThis.window={matchMedia:()=>({matches:true})};
   try{const source={anomaly:null,mouthOpen:false,player:{x:1.6,z:23.6,angle:0},scene:'corridor',keys:new Set()};v.draw(source,0);assert.ok(v.camera.getWorldDirection(new THREE.Vector3()).y<-.4);source.scene='classroom';v.draw(source,0);assert.ok(Math.abs(v.camera.getWorldDirection(new THREE.Vector3()).y)<.01);}finally{globalThis.window=old;}
 });

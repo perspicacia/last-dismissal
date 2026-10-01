@@ -1,3 +1,4 @@
+import {DOLL, dollRise} from './doll-event.js';
 import { classroomWindowColumn } from './campus-view.js';
 import { drawSceneDepth } from './scene-depth.js';
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
@@ -17,7 +18,7 @@ export function moveClassroomPlayer(player, keys, dt) {
 }
 
 // Geometry uses the same world units as movement; desks cannot be walked through.
-export function drawClassroom(c,w,h,p,time,exterior=null) {
+export function drawClassroom(c,w,h,p,time,exterior=null,doll=null) {
   const horizon=h*.48,lens=w*.68;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
   c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
@@ -40,5 +41,6 @@ export function drawClassroom(c,w,h,p,time,exterior=null) {
   const teacher=CLASSROOM_TEACHER_DESK;box(teacher.x,0,teacher.z,teacher.width,teacher.height,teacher.depth,['#948064','#51493a','#685b47']);
   faces.sort((a,b)=>b.d-a.d);for(const face of faces){c.fillStyle=face.color;c.strokeStyle='#10202980';c.lineWidth=.7;c.beginPath();face.pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.stroke();}
   drawSceneDepth(c,project,p,{classroom:true});
+  if(doll){const rise=dollRise(doll.state),image=rise>.25?doll.scary:doll.image;const pos=project(DOLL.x,rise>.2?.04:.16,DOLL.z-.6);if(pos&&image?.naturalWidth){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2*(1-rise));c.drawImage(image,-DOLL.height*unit/3,-DOLL.height*unit,DOLL.height*unit*2/3,DOLL.height*unit);c.restore();}}
   const shade=c.createRadialGradient(w/2,h/2,w*.15,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#000915c0');c.fillStyle=shade;c.fillRect(0,0,w,h);
 }

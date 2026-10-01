@@ -1,3 +1,4 @@
+import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js';
@@ -65,6 +66,16 @@ export class ThreeSchoolView {
       this.refs.ghost.visible=false;
       this.desk(g,{x:2,z:3.2,width:1.1,depth:.7,height:.85});
     }
+    if(classroom){
+      const root=new THREE.Group(),tilt=new THREE.Group();root.position.set(DOLL.x,.035,DOLL.z);root.rotation.y=Math.PI;root.add(tilt);g.add(root);
+      this.refs.dollRoot=root;this.refs.dollTilt=tilt;this.refs.doll=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);
+      Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;
+      tilt.rotation.x=Math.PI/2;
+    }else{
+      const print=document.createElement('canvas');print.width=512;print.height=256;const pc=print.getContext('2d');pc.fillStyle='#e9e1c9b0';
+      for(const x of [138,366]){pc.beginPath();pc.ellipse(x,160,40,43,-.1,0,Math.PI*2);pc.fill();for(let i=0;i<5;i++){pc.beginPath();pc.ellipse(x-40+i*20,94-(i%3)*14,9,42,.08,0,Math.PI*2);pc.fill();}}
+      this.refs.dollPrint=this.picture(g,print,1.45,.68,[-2.643,1.9,5],Math.PI/2);Object.assign(this.refs.dollPrint.material,{transparent:true,alphaTest:.1,depthWrite:false});this.refs.dollPrint.visible=false;this.refs.dollPrintBack=this.refs.dollPrint.clone();this.refs.dollPrintBack.position.z=15;g.add(this.refs.dollPrintBack);
+    }
     const ambient=new THREE.HemisphereLight('#baceda','#756751',.85);scene.add(ambient);
     const moon=new THREE.DirectionalLight('#b7cfdf',1.1);moon.position.set(classroom?-16:16,24,12);moon.target.position.set(0,0,end/2);scene.add(moon,moon.target);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);Object.assign(moon.shadow.camera,{left:-30,right:30,top:40,bottom:-40,near:.5,far:90});moon.shadow.bias=-.0004;moon.shadow.normalBias=.035;
     const fixture=material('#d1d6c7',{emissive:'#dfedcf',emissiveIntensity:1.3}),housing=material('#65726d');
@@ -94,14 +105,21 @@ export class ThreeSchoolView {
     assign(this.refs.clock,source.clockFace);
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
     assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);
-    assign(this.refs.ghost,source.windowGhost);this.lastState='';
+    assign(this.refs.ghost,source.windowGhost);
+    const scary=dollRise(source.dollState)>.25;assign(this.refs.doll,scary?source.dollScary:source.dollImage);this.refs.doll.visible=Boolean(this.refs.doll.material.map);this.lastState='';
   }
   draw(source,time){
-    const state=`${source.anomaly}|${source.mouthOpen}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
-    this.refs.rabbit.position.z=source.anomaly==='figure'?16:22;this.refs.ghost.visible=source.anomaly==='window';
+    const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
+    this.refs.rabbit.position.z=source.anomaly==='figure'?16:22;this.refs.ghost.visible=source.anomaly==='window';this.refs.dollPrint.visible=source.anomaly==='doll';this.refs.dollPrintBack.visible=source.anomaly==='doll';
+    const rise=dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI+(source.scene==='classroom'?source.player.angle*ease:0);
     const p=source.player;const walking=source.keys.has('forward')||source.keys.has('back');const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const nearDoll=source.scene==='classroom'&&facingDoll(p,3.8);const dollDistance=Math.hypot(DOLL_GAZE.x-p.x,DOLL_GAZE.z-p.z);
+    const targetDollLook=nearDoll?-.95*THREE.MathUtils.clamp((3.8-dollDistance)/1.5,0,1)*(1-ease):0;
+    const viewDt=Math.min(.05,Math.max(0,(time-(this.lastViewTime??time-50))/1000));this.lastViewTime=time;
+    this.dollLook=(this.dollLook??targetDollLook)+(targetDollLook-(this.dollLook??targetDollLook))*(1-Math.exp(-viewDt*12));
+    const dollLook=source.scene==='classroom'?this.dollLook:0;
     const descent=source.scene==='corridor'&&p.x>.65?-.65*THREE.MathUtils.clamp((p.z-21.5)/2,0,1)*Math.max(0,Math.cos(p.angle)):0;
-    this.camera.position.set(p.x,1.5+(!reduced&&walking?Math.sin(time/130)*.012:0),-p.z);this.camera.lookAt(p.x+Math.sin(p.angle),this.camera.position.y+descent,-p.z-Math.cos(p.angle));
+    this.camera.position.set(p.x,1.5+(!reduced&&walking?Math.sin(time/130)*.012:0),-p.z);this.camera.lookAt(p.x+Math.sin(p.angle),this.camera.position.y+descent+dollLook,-p.z-Math.cos(p.angle));
     this.renderer.render(this.scenes[source.scene],this.camera);
   }
 }
