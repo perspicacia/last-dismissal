@@ -26,7 +26,7 @@
 
 ## 실행·검증 명령
 
-프로젝트 루트에서 실행한다. Node.js/npm과 Python 3가 필요하며 외부 패키지 설치는 필요 없다.
+프로젝트 루트에서 실행한다. Node.js/npm과 Python 3가 필요하며 일반 실행은 로컬 vendor 모듈을 사용한다. Three.js 의존성을 재설치할 때는 `npm ci`를 실행한다.
 
 ```sh
 npm start

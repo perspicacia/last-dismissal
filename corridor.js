@@ -1,3 +1,4 @@
+import { ThreeSchoolView } from './three-school.js';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
@@ -9,7 +10,7 @@ import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트'};
 export class Corridor {
   constructor(canvas, onPosition, onStep, onReveal = () => {}) {
-    this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.onPosition=onPosition;this.onStep=onStep;
+    this.canvas=canvas;this.use3D=canvas.dataset.renderer==='three'; this.ctx=this.use3D?null:canvas.getContext('2d'); this.onPosition=onPosition;this.onStep=onStep;
     this.scene="corridor";this.corridorPlayer=null;this.keys=new Set();this.player={...SPAWN};this.active=false;this.anomaly=null;this.steps=0;
     this.windowGhost = new Image();
     this.windowGhost.onload = () => this.buildTextures();
@@ -25,13 +26,23 @@ export class Corridor {
       image.src = new URL(path, import.meta.url).href;
     }
     this.mouthOpen = false; this.onReveal = onReveal;
-    this.buildTextures(); this.resize();
+    this.buildTextures();
+    if(this.use3D){
+      try {this.view3D=new ThreeSchoolView(canvas,this);for(const image of [this.mascot,this.mascotOpen])image.addEventListener('load',()=>this.view3D.syncTextures(this));}
+      catch(error){
+        console.warn('3D 화면 초기화 실패, Canvas 호환 화면으로 전환합니다.',error);
+        const fallback=canvas.cloneNode();canvas.replaceWith(fallback);canvas=fallback;this.canvas=fallback;
+        this.use3D=false;this.view3D=null;this.ctx=fallback.getContext('2d');fallback.dataset.rendererReady='canvas';
+        const intro=document.getElementById('intro');if(intro){const notice=document.createElement('p');notice.textContent='이 환경에서는 3D 대신 호환 화면으로 실행합니다.';intro.append(notice);}
+      }
+    }
+    this.resize();
     new ResizeObserver(()=>this.resize()).observe(canvas);
     window.addEventListener('blur',()=>this.keys.clear());
     document.addEventListener('visibilitychange',()=>this.keys.clear());
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
-  resize() { this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
+  resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
   enterClassroom() {if(this.scene==='classroom')return;this.corridorPlayer={...this.player};this.scene='classroom';this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
   leaveClassroom() {if(this.scene!=='classroom')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
   move(keys,dt) {return this.scene==='classroom'?moveClassroomPlayer(this.player,keys,dt):movePlayer(this.player,keys,dt);}
@@ -104,6 +115,7 @@ export class Corridor {
         c.fillStyle='#2b403c';c.fillRect(x,0,171,256);
       }
     });
+    this.view3D?.syncTextures(this);
   }
 
   updateExterior(time) {
@@ -143,6 +155,7 @@ export class Corridor {
     requestAnimationFrame(t=>this.frame(t));
   }
   draw(time) {
+    if(this.view3D){this.view3D.draw(this,time);return;}
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
     this.updateExterior(time);
     if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.exterior);return;}
