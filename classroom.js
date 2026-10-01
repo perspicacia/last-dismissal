@@ -15,7 +15,7 @@ export function moveClassroomPlayer(player, keys, dt) {
 }
 
 // Geometry uses the same world units as movement; desks cannot be walked through.
-export function drawClassroom(c,w,h,p,time) {
+export function drawClassroom(c,w,h,p,time,exterior=null) {
   const horizon=h*.48,lens=w*.68;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
   c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
@@ -25,7 +25,7 @@ export function drawClassroom(c,w,h,p,time) {
   for(let sx=0;sx<w;sx+=3){const offset=Math.atan((sx-w/2)/lens),a=p.angle+offset,dx=Math.sin(a),dz=Math.cos(a),tx=Math.abs(dx)<1e-9?Infinity:((dx>0?4.4:-4.4)-p.x)/dx,tz=Math.abs(dz)<1e-9?Infinity:((dz>0?9.8:0)-p.z)/dz,side=tx<tz,dist=side?tx:tz,depth=dist*Math.cos(offset),wx=p.x+dx*dist,wz=p.z+dz*dist;const height=3*lens/depth,top=horizon-height*.5;
     const drawBand=(from,to,color)=>{c.fillStyle=color;c.fillRect(sx,top+from*height,3,(to-from)*height+1);};
     drawBand(0,.57,'#738e90');drawBand(.57,.97,'#234650');drawBand(.56,.58,'#adb3a1');drawBand(.97,1,'#14262b');
-    if(side&&dx<0&&wz>1.8&&wz<8.9){drawBand(.15,.5,'#384b47');drawBand(.17,.48,'#091d2a');const frame=((wz-1.8)%1.45);if(frame<.085)drawBand(.15,.5,'#847e64');drawBand(.31,.325,'#938e76');drawBand(.49,.515,'#a1a591');if(frame>.15&&frame<.6)drawBand(.19,.28,'#1d3c51');}
+    if(side&&dx<0&&wz>1.8&&wz<8.9){drawBand(.15,.5,'#384b47');drawBand(.17,.48,'#091d2a');const frame=((wz-1.8)%1.45);if(exterior)c.drawImage(exterior,Math.floor(frame/1.45*(exterior.width-1)),0,1,exterior.height,sx,top+.17*height,3,.31*height);if(frame<.085)drawBand(.15,.5,'#847e64');drawBand(.31,.325,'#938e76');drawBand(.49,.515,'#a1a591');}
     if(!side&&dz>0&&wx>-3.2&&wx<2.8){drawBand(.18,.53,'#bdb6a0');drawBand(.2,.505,'#123631');drawBand(.50,.53,'#817256');if(wx>-.8&&wx<1.2)drawBand(.32,.326,'#9dad99');}
     if(!side&&dz<0){if(wx<-2.7){drawBand(.23,.92,'#6e7561');if((wx+4.4)%.55<.035)drawBand(.23,.92,'#354637');drawBand(.49,.51,'#394b3c');drawBand(.72,.74,'#394b3c');}if(wx>-.75&&wx<.75){drawBand(.13,1,'#76654d');drawBand(.18,.44,'#112b39');drawBand(.6,.62,'#b7b29b');}}
     c.fillStyle=`rgba(0,8,18,${Math.min(.7,depth*.045)})`;c.fillRect(sx,top,3,height);
