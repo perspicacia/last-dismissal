@@ -91,7 +91,7 @@ const corridor = new Corridor($('corridor'), ({item, stairs, names, player, scen
   if(state && !state.ended && direction!==null) {
     if(!canChoose || (state.tutorial && direction)) {
       corridor.player={...player,z:23.3};
-      $('feedback').textContent='위층은 닫혀 있다.';
+      $('feedback').textContent='먼저 아래층으로 내려가 정상 복도를 기억하자.';
     } else decide(direction);
   }
 }, () => audio.tone(105,.12,.06), () => {
