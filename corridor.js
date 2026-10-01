@@ -134,18 +134,18 @@ export class Corridor {
     const horizon=h*.48+bob, lens=w*.68;
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
     const floor=c.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#252d2b');floor.addColorStop(1,'#584b3e');c.fillStyle=floor;c.fillRect(0,horizon,w,h);
-    for(let y=Math.ceil(horizon)+1;y<h;y+=4){
+    for(let y=Math.ceil(horizon)+1;y<h;y+=2){
       const d=1.5*lens/(y-horizon);if(d>40)continue;
-      for(let x=0;x<w;x+=4){
+      for(let x=0;x<w;x+=2){
         const across=(x-w/2)*d/lens;
         const wx=p.x+Math.sin(p.angle)*d+Math.cos(p.angle)*across;
         const wz=p.z+Math.cos(p.angle)*d-Math.sin(p.angle)*across;
         const row=Math.floor(wx/.25),gx=((wx%.25)+.25)%.25,gz=((wz+row*.51)%2+2)%2;
-        const wood=42+Math.sin(row*21)*8+Math.sin(wz*49+row*7)*3;
+        const wood=42+Math.sin(row*21)*8+Math.sin(wz*10+row*7)*3;
         const light=Math.max(.38,1-d*.018);
         c.fillStyle=`rgb(${(wood+23)*light},${(wood+12)*light},${(wood+6)*light})`;
-        if(gx<.015||gz<.02)c.fillStyle='#151c1b';
-        c.fillRect(x,y,4,4);
+        if(d<8&&(gx<.015||gz<.02))c.fillStyle=`rgb(${(wood+15)*light},${(wood+4)*light},${(wood-2)*light})`;
+        c.fillRect(x,y,2,2);
       }
     }
     const depth=new Float64Array(Math.ceil(w/2));
