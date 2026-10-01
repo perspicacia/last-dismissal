@@ -1,4 +1,5 @@
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
+import {volumeFromImage} from './doll-volume.js?v=rounded-3';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js';
@@ -54,7 +55,7 @@ export class ThreeSchoolView {
         const d=this.picture(g,null,.62,.27,[-2.61,2.81,z],Math.PI/2);this.refs.doors.push(d);
       }
       box(g,-2.81,1.61,9,.16,1.1,1.9,material('#65513a'));box(g,-2.7,1.61,9,.08,.98,1.78,material('#97865d'));
-      this.refs.photo=this.picture(g,null,1.6,1.067,[-2.646,1.65,9],Math.PI/2);
+      this.refs.photo=this.picture(g,null,1.32,.88,[-2.646,1.61,9],Math.PI/2);
       const clockFrame=new THREE.Mesh(new THREE.CylinderGeometry(.405,.405,.13,64),material('#38251d',{roughness:.4}));clockFrame.rotation.z=Math.PI/2;clockFrame.position.set(2.83,2.08,19);clockFrame.castShadow=true;g.add(clockFrame);
       this.refs.clock=this.picture(g,null,.79,.79,[2.755,2.08,19],-Math.PI/2);this.refs.clock.material.transparent=true;this.refs.clock.material.alphaTest=.05;
       this.refs.rabbit=this.sprite(g,2.1,1.05,[1.6,1.05,22]);this.refs.ghost=this.sprite(g,2.35,1.175,[7, .875,6.5]);
@@ -65,7 +66,7 @@ export class ThreeSchoolView {
       this.slidingDoor(g,0,.02,-Math.PI/2);
       const root=new THREE.Group(),tilt=new THREE.Group();root.position.set(DOLL.x,.035,DOLL.z);root.rotation.y=Math.PI;root.add(tilt);g.add(root);
       this.refs.dollRoot=root;this.refs.dollTilt=tilt;this.refs.doll=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);
-      Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;
+      Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;this.refs.doll.receiveShadow=true;
       tilt.rotation.x=Math.PI/2;
     }else{
       const print=document.createElement('canvas');print.width=512;print.height=112;const pc=print.getContext('2d');pc.fillStyle='#e9e1c9b0';
@@ -129,7 +130,11 @@ export class ThreeSchoolView {
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
     assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);
     assign(this.refs.ghost,source.windowGhost);
-    const scary=dollRise(source.dollState)>.25;assign(this.refs.doll,scary?source.dollScary:source.dollImage);this.refs.doll.visible=Boolean(this.refs.doll.material.map);this.lastState='';
+    if(!this.dollVolumeReady&&source.dollImage?.naturalWidth){
+      const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;}
+    }
+    const scary=dollRise(source.dollState)>.25;const face=this.refs.dollFace||this.refs.doll.material;
+    assign({material:face},scary?source.dollScary:source.dollImage);this.refs.doll.visible=Boolean(face.map)&&Boolean(this.dollVolumeReady);this.lastState='';
   }
   draw(source,time){
     const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
