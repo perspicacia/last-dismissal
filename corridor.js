@@ -73,8 +73,8 @@ export class Corridor {
       const photo=this.anomaly==='board'?this.boardPhotoErased:this.boardPhoto;
       if(photo.complete && photo.naturalWidth) c.drawImage(photo,76,68,360,80);
       else {c.fillStyle='#697363';c.fillRect(76,68,360,80);}
-      c.fillStyle='#ded3ab';c.fillRect(285,158,145,36);c.fillStyle='#3b4631';c.font='13px sans-serif';c.fillText('야간 자율학습',290,173);c.fillText('23:00 종료',290,189);
-      c.fillStyle='#dfd6b5';c.font='13px sans-serif';c.fillText('수학여행 단체사진',76,173);
+      c.fillStyle='#ded3ab';c.fillRect(285,158,145,36);
+      c.fillStyle='#73715c';for(let line=0;line<4;line++)c.fillRect(298,165+line*6,line===3?65:112,1);
     });
     this.window=this.texture(c=>{
       c.fillStyle='#7e7055';c.fillRect(29,25,454,173);c.fillStyle='#ac9b75';c.fillRect(35,30,442,163);c.fillStyle='#06151b';c.fillRect(42,37,428,149);
@@ -94,8 +94,6 @@ export class Corridor {
       c.fillStyle='#30464b';c.fillRect(0,0,512,256);
       c.strokeStyle='#849194';c.lineWidth=5;c.strokeRect(5,5,502,246);c.beginPath();c.moveTo(256,0);c.lineTo(256,256);c.stroke();
       c.fillStyle='#111d25';c.fillRect(48,35,164,70);c.fillRect(300,35,164,70);
-      c.fillStyle='#dfcd98';c.font='bold 25px sans-serif';c.textAlign='center';c.fillText('夜間通行 · 방화문',256,138);
-      c.font='18px sans-serif';c.fillText('열쇠는 오른쪽 당직 책상',256,173);
       c.fillStyle='#c5b989';c.fillRect(181,192,150,8);
     });
     this.end=this.texture(c=>{
@@ -179,8 +177,6 @@ export class Corridor {
         const unit=lens/desk.d,top=desk.y-.85*unit;
         c.fillStyle='#3b2822';c.fillRect(desk.x-.6*unit,top,.95*unit,.7*unit);
         c.fillStyle='#a08a68';c.fillRect(desk.x-.67*unit,top-.09*unit,1.1*unit,.13*unit);
-        c.fillStyle='#e8ddbe';c.fillRect(desk.x-.49*unit,top+.1*unit,.72*unit,.22*unit);
-        c.fillStyle='#302e28';c.font=`${Math.max(10,.12*unit)}px sans-serif`;c.textAlign='center';c.fillText('당직 책상',desk.x-.12*unit,top+.26*unit);
         if(!this.keyDoor.hasKey){
           c.save();c.strokeStyle='#ffe3a0';c.lineWidth=Math.max(3,.045*unit);c.shadowColor='#ffd75c';c.shadowBlur=12;
           c.beginPath();c.arc(desk.x-.18*unit,top-.15*unit,.08*unit,0,Math.PI*2);c.moveTo(desk.x-.1*unit,top-.15*unit);c.lineTo(desk.x+.2*unit,top-.15*unit);c.lineTo(desk.x+.2*unit,top-.06*unit);c.stroke();c.restore();
