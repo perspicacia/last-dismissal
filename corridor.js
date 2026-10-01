@@ -1,3 +1,4 @@
+import { drawWindowView } from './window-view.js';
 import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
@@ -6,6 +7,9 @@ export class Corridor {
   constructor(canvas, onPosition, onStep, onReveal = () => {}) {
     this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.onPosition=onPosition;this.onStep=onStep;
     this.scene="corridor";this.corridorPlayer=null;this.keys=new Set();this.player={...SPAWN};this.active=false;this.anomaly=null;this.steps=0;
+    this.windowGhost = new Image();
+    this.windowGhost.onload = () => this.buildTextures();
+    this.windowGhost.src = new URL('./assets/window-ghost.png', import.meta.url).href;
     this.mascot = new Image();
     this.mascot.src = new URL('./assets/mascot-rabbit.png', import.meta.url).href;
     this.mascotOpen = new Image();
@@ -74,15 +78,18 @@ export class Corridor {
       c.fillStyle='#ded3ab';c.fillRect(285,158,145,36);
       c.fillStyle='#73715c';for(let line=0;line<4;line++)c.fillRect(298,165+line*6,line===3?65:112,1);
     });
-    this.window=this.texture(c=>{
-      c.fillStyle='#7e7055';c.fillRect(29,25,454,173);c.fillStyle='#ac9b75';c.fillRect(35,30,442,163);c.fillStyle='#06151b';c.fillRect(42,37,428,149);
-      if(this.anomaly==='window'){
-        c.fillStyle='#425c47';c.fillRect(42,37,428,149);c.fillStyle='#162c20';c.beginPath();c.moveTo(42,37);c.lineTo(220,90);c.lineTo(292,90);c.lineTo(470,37);c.fill();
-        c.fillStyle='#738575';c.beginPath();c.moveTo(42,186);c.lineTo(220,128);c.lineTo(292,128);c.lineTo(470,186);c.fill();
-        c.fillStyle='#08150d';c.fillRect(235,91,40,39);c.fillRect(82,65,50,85);c.fillRect(364,65,50,85);
-      } else {c.fillStyle='#8eaa9d';for(let i=0;i<10;i++)c.fillRect(55+i*40,55+(i%3)*17,2,2);c.fillStyle='#303f2b';c.fillRect(42,160,428,26);c.fillStyle='#d8c79e';c.fillRect(370,123,5,40);c.fillRect(361,121,23,4);}
-      c.fillStyle='#82795e';c.fillRect(251,37,10,149);c.fillRect(42,111,428,7);c.fillStyle='#bac1a433';c.beginPath();c.moveTo(55,40);c.lineTo(82,40);c.lineTo(225,180);c.lineTo(194,180);c.fill();c.fillStyle='#a99f83';c.fillRect(24,195,464,5);c.fillStyle='#233833';c.fillRect(24,200,464,5);
+    this.exterior=document.createElement('canvas');this.exterior.width=428;this.exterior.height=447;
+    drawWindowView(this.exterior.getContext('2d'),{x:0,y:0,width:428,height:447},{verticalScale:1});
+    const windowTexture=haunted=>this.texture(c=>{
+      c.fillStyle='#244e4a';c.fillRect(29,25,454,173);c.fillStyle='#507d6c';c.fillRect(35,30,442,163);
+      drawWindowView(c,{x:42,y:37,width:428,height:149},{ghost:this.windowGhost,haunted});
+      // The exterior is behind both crossbars and faint glass reflections.
+      c.fillStyle='#345e52';c.fillRect(251,37,10,149);c.fillRect(42,111,428,7);
+      c.fillStyle='#aac1ad';c.fillRect(251,37,2,149);c.fillRect(42,111,428,1);
+      c.fillStyle='#bac1a41a';c.beginPath();c.moveTo(55,40);c.lineTo(72,40);c.lineTo(208,180);c.lineTo(191,180);c.fill();
+      c.fillStyle='#aaa68b';c.fillRect(24,195,464,5);c.fillStyle='#233833';c.fillRect(24,200,464,5);
     });
+    this.window=windowTexture(false);this.hauntedWindow=windowTexture(this.anomaly==='window');
     this.clock=this.texture(c=>{
       c.fillStyle='#0b1a13';c.beginPath();c.arc(256,86,53,0,Math.PI*2);c.fill();c.fillStyle='#d1d7bd';c.beginPath();c.arc(256,86,46,0,Math.PI*2);c.fill();
       c.strokeStyle='#253d2b';c.lineWidth=2;for(let i=0;i<12;i++){let a=i*Math.PI/6;c.beginPath();c.moveTo(256+Math.sin(a)*36,86-Math.cos(a)*36);c.lineTo(256+Math.sin(a)*42,86-Math.cos(a)*42);c.stroke();}
@@ -119,7 +126,7 @@ export class Corridor {
   }
   draw(time) {
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
-    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time);return;}
+    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.exterior);return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
@@ -149,7 +156,7 @@ export class Corridor {
       let tex=this.wall,u;
       if(side){const z=p.z+dz*dist;u=((z%2)+2)%2/2;
         if(dx<0){if(z>=4&&z<6)tex=this.door;else if(z>=8&&z<10)tex=this.board;else if(z>=14&&z<16)tex=this.door;}
-        else {if((z>=4&&z<8)||(z>=12&&z<16))tex=this.window;else if(z>=18&&z<20)tex=this.clock;}
+        else {if((z>=4&&z<8)||(z>=12&&z<16))tex=this.anomaly==='window'&&z>=6&&z<8?this.hauntedWindow:this.window;else if(z>=18&&z<20)tex=this.clock;}
       } else {u=(p.x+dx*dist+3)/6;if(dz>0)tex=this.end;}
       const height=3*lens/perp,top=horizon-height*.5;
       c.drawImage(tex,Math.max(0,Math.min(511,Math.floor(u*512))),0,1,256,x,top,2,height);

@@ -1,0 +1,18 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>창밖 렌더링 검증</title>
+<style>body{margin:0;background:#071416;color:#d8e4dc;font:14px sans-serif}main{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px}h2{font-size:16px}canvas{width:100%;height:680px;display:block}p{padding:0 10px}</style>
+<p>개발 검증 화면 · 실제 게임 렌더러의 정상/이상/교실 비교</p><main>
+<section><h2>정상 · 숲과 가로등</h2><canvas id="normal" aria-label="정상 창밖 숲과 가로등"></canvas></section>
+<section><h2>이상 · 창밖 귀신</h2><canvas id="haunted" aria-label="창틀 뒤 가로등 아래 귀신"></canvas></section>
+<section><h2>교실 · 같은 외부 풍경</h2><canvas id="classroom" aria-label="교실 창밖 숲과 가로등"></canvas></section>
+</main><script type="module">
+import {Corridor} from '../../corridor.js';
+for(const id of ['normal','haunted','classroom']) {
+  const view=new Corridor(document.getElementById(id),()=>{},()=>{});
+  view.anomaly=id==='haunted'?'window':null;
+  view.scene=id==='classroom'?'classroom':'corridor';
+  view.player=id==='classroom'?{x:0,z:4.5,angle:-Math.PI/2}:{x:1,z:7,angle:Math.PI/2};
+  view.windowGhost.onload=()=>{view.buildTextures();view.draw(0);};
+  view.buildTextures();view.draw(0);
+  new ResizeObserver(()=>view.draw(0)).observe(view.canvas);
+}
+</script></html>
