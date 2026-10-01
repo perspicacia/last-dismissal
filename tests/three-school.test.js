@@ -27,3 +27,15 @@ test('상행 마지막 발판 위에는 사람이 설 여유가 있고 하강 �
   v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.lastState='null|false|false';const old=globalThis.window;globalThis.window={matchMedia:()=>({matches:true})};
   try{const source={anomaly:null,mouthOpen:false,player:{x:1.6,z:23.6,angle:0},scene:'corridor',keys:new Set()};v.draw(source,0);assert.ok(v.camera.getWorldDirection(new THREE.Vector3()).y<-.4);source.scene='classroom';v.draw(source,0);assert.ok(Math.abs(v.camera.getWorldDirection(new THREE.Vector3()).y)<.01);}finally{globalThis.window=old;}
 });
+
+test('계단 중앙 칸막이와 외벽은 입구부터 뒷벽까지 빈 틈 없이 이어진다',()=>{
+  const scene=buildView().scenes.corridor;
+  for(const name of ['stair-central-wall','stair-outer-wall-up','stair-outer-wall-down']){
+    const wall=scene.getObjectByName(name),{depth,height}=wall.geometry.parameters;
+    assert.ok(wall.position.z-depth/2<=24.6);assert.ok(wall.position.z+depth/2>=31);
+    assert.ok(wall.position.y-height/2<=-2.5);assert.ok(wall.position.y+height/2>=5.4);
+  }
+  const center=scene.getObjectByName('stair-central-wall');assert.equal(center.geometry.parameters.width,1.3);
+  assert.ok(scene.getObjectByName('stair-up-0').position.x<-center.geometry.parameters.width/2);
+  assert.ok(scene.getObjectByName('stair-down-0').position.x>center.geometry.parameters.width/2);
+});

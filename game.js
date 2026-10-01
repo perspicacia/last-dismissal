@@ -1,7 +1,7 @@
-import { createHorrorEvents } from './horror-events.js?v=sliding-doors-2';
-import { newGame, choose } from './logic.js?v=sliding-doors-2';
-import { SchoolAudio } from './audio.js?v=sliding-doors-2';
-import { Corridor } from './corridor.js?v=sliding-doors-2';
+import { createHorrorEvents } from './horror-events.js?v=stairwell-wall';
+import { newGame, choose } from './logic.js?v=stairwell-wall';
+import { SchoolAudio } from './audio.js?v=stairwell-wall';
+import { Corridor } from './corridor.js?v=stairwell-wall';
 import { stairDirection } from './walk-exits.js';
 import { schoolAction, canChooseStairs } from './school-route.js';
 const $ = id => document.getElementById(id);

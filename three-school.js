@@ -109,15 +109,16 @@ export class ThreeSchoolView {
   desk(g,d){const {x,z,width,depth,height}=d;const metal=material('#70837c',{metalness:.7,roughness:.4}),top=material('#ae9168',{roughness:.55});box(g,x,height-.025,z,width,.065,depth,top);for(const dx of [-width*.39,width*.39])for(const dz of [-depth*.35,depth*.35])box(g,x+dx,height/2,z+dz,.045,height-.04,.045,metal);box(g,x,height-.19,z,width*.87,.13,depth*.78,material('#60523d'));}
   chair(g,x,z){const metal=material('#71877e',{metalness:.7,roughness:.4}),wood=material('#aa8e62');box(g,x,.42,z,.55,.06,.46,wood);box(g,x,.67,z-.22,.55,.42,.055,wood);for(const dx of [-.21,.21])for(const dz of [-.17,.17])box(g,x+dx,.22,z+dz,.035,.44,.035,metal);}
   stairs(g,plaster,lower){const stone=material('#91988d',{roughness:.75}),stripe=material('#454f4b'),steel=material('#96aaa1',{metalness:.75,roughness:.3});
-    box(g,0,1.5,24.6,1.3,3,.18,plaster);
+    box(g,0,1.5,27.8,1.3,8,6.6,plaster).name='stair-central-wall';
+    for(const x of [-.655,.655])box(g,x,-.68,27.8,.025,3.66,6.6,lower);
     for(const up of [true,false]){const center=up?-1.65:1.65,sign=up?1:-1;
       for(let i=0;i<12;i++){const level=sign*(i+1)*.19,z=24.6+i*.42;box(g,center,level-.11,z+.21,2,.22,.42,stone).name=`stair-${up?'up':'down'}-${i}`;box(g,center,level+.004,z+.025,2,.008,.05,stripe);if(up)box(g,center,level-.25,z+.405,2,.3,.025,stone);}
       box(g,center,sign*2.28-.11,30.15,2,.22,1.3,stone);
       for(const x of [center-.94,center+.94]){for(let i=0;i<=12;i+=3){const z=24.6+i*.42,y=sign*i*.19;cylinder(g,[x,y,z],[x,y+.95,z],.025,steel);}cylinder(g,[x,.95,24.6],[x,sign*2.28+.95,29.64],.035,steel);cylinder(g,[x,.47,24.6],[x,sign*2.28+.47,29.64],.021,steel);}
       box(g,center,1.5,31,2,8,.2,lower);
-      box(g,up?-2.76:2.76,1.5,28,.2,8,6,plaster);
+      box(g,up?-2.76:2.76,1.5,27.8,.2,8,6.6,plaster).name=`stair-outer-wall-${up?'up':'down'}`;
     }
-    box(g,-1.65,5.4,27.5,2.15,.16,6,plaster).name='stair-ceiling-up';box(g,1.65,3.08,27.5,2.15,.16,6,plaster);
+    box(g,-1.65,5.4,27.8,2.15,.16,6.6,plaster).name='stair-ceiling-up';box(g,1.65,3.08,27.8,2.15,.16,6.6,plaster);
   }
   syncTextures(source){
     if(!this.refs.photo)return;
