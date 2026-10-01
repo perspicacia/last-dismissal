@@ -1,10 +1,11 @@
+import { createKeyDoor, constrainKeyDoor, KEY_POSITION } from './key-door.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트'};
 export class Corridor {
   constructor(canvas, onPosition, onStep, onReveal = () => {}) {
     this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.onPosition=onPosition;this.onStep=onStep;
-    this.keys=new Set();this.player={...SPAWN};this.active=false;this.anomaly=null;this.steps=0;
+    this.keyDoor=createKeyDoor(false);this.keys=new Set();this.player={...SPAWN};this.active=false;this.anomaly=null;this.steps=0;
     this.mascot = new Image();
     this.mascot.src = new URL('./assets/mascot-rabbit.png', import.meta.url).href;
     this.mascotOpen = new Image();
@@ -18,10 +19,11 @@ export class Corridor {
   }
   resize() { this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*.57); }
   reset(anomaly) {this.anomaly=anomaly;this.mouthOpen=false;this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
+  setKeyDoor(value) {this.keyDoor=value;this.notify();}
   setActive(value) {this.active=value;this.keys.clear();}
   nudge(action) {
     if(!this.active) return;
-    this.player=movePlayer(this.player,new Set([action]),.05);this.notify();
+    const before=this.player;this.player=constrainKeyDoor(movePlayer(this.player,new Set([action]),.05),this.keyDoor);this.steps+=Math.hypot(this.player.x-before.x,this.player.z-before.z);if(this.steps>.95){this.steps=0;this.onStep();}this.notify();
   }
   texture(draw) {
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
@@ -60,6 +62,14 @@ export class Corridor {
       c.strokeStyle='#253d2b';c.lineWidth=2;for(let i=0;i<12;i++){let a=i*Math.PI/6;c.beginPath();c.moveTo(256+Math.sin(a)*36,86-Math.cos(a)*36);c.lineTo(256+Math.sin(a)*42,86-Math.cos(a)*42);c.stroke();}
       c.lineWidth=4;c.beginPath();c.moveTo(256,86);c.lineTo(this.anomaly==='clock'?256:241,this.anomaly==='clock'?114:62);c.moveTo(256,86);c.lineTo(this.anomaly==='clock'?258:291,this.anomaly==='clock'?123:93);c.stroke();
     });
+    this.fireDoor=this.texture(c=>{
+      c.fillStyle='#30464b';c.fillRect(0,0,512,256);
+      c.strokeStyle='#849194';c.lineWidth=5;c.strokeRect(5,5,502,246);c.beginPath();c.moveTo(256,0);c.lineTo(256,256);c.stroke();
+      c.fillStyle='#111d25';c.fillRect(48,35,164,70);c.fillRect(300,35,164,70);
+      c.fillStyle='#dfcd98';c.font='bold 25px sans-serif';c.textAlign='center';c.fillText('夜間通行 · 방화문',256,138);
+      c.font='18px sans-serif';c.fillText('열쇠는 오른쪽 당직 책상',256,173);
+      c.fillStyle='#c5b989';c.fillRect(181,192,150,8);
+    });
     this.end=this.texture(c=>{
       for(const [x,title,hint] of [[35,'위층 계단','이상이 있다면'],[290,'아래층 계단','이상이 없다면']]){
         c.fillStyle='#070f0b';c.fillRect(x,46,185,210);c.strokeStyle='#738c71';c.lineWidth=3;c.strokeRect(x,46,185,210);
@@ -75,12 +85,12 @@ export class Corridor {
     this.canvas.dataset.mascotMouth=open?'open':'closed';
     const item=nearbyItem(this.player,this.anomaly);const stairs=this.player.z>22;
     this.item=item;this.atStairs=stairs;
-    this.onPosition({item,stairs,names,player:this.player});
+    this.onPosition({item,stairs,names,player:this.player,keyDoor:this.keyDoor});
   }
   frame(time) {
     const dt=Math.min((time-this.last)/1000,.05);this.last=time;
     if(this.active && !document.hidden){
-      const before=this.player;this.player=movePlayer(this.player,this.keys,dt);
+      const before=this.player;this.player=constrainKeyDoor(movePlayer(this.player,this.keys,dt),this.keyDoor);
       const distance=Math.hypot(this.player.x-before.x,this.player.z-before.z);this.steps+=distance;
       if(this.steps>.95){this.steps=0;this.onStep();}
       this.notify();this.draw(time);
@@ -111,12 +121,14 @@ export class Corridor {
       const dx=Math.sin(angle),dz=Math.cos(angle);
       const tx=Math.abs(dx)<1e-9?Infinity:((dx>0?3:-3)-p.x)/dx;
       const tz=Math.abs(dz)<1e-9?Infinity:((dz>0?26:0)-p.z)/dz;
-      const side=tx<tz,dist=side?tx:tz,perp=Math.max(.02,dist*Math.cos(offset));depth[x/2]=perp;
+      const doorDistance=this.keyDoor.tutorial&&!this.keyDoor.doorOpen&&dz>0?(8-p.z)/dz:Infinity;
+      const barrier=doorDistance>0&&doorDistance<Math.min(tx,tz);
+      const side=!barrier&&tx<tz,dist=barrier?doorDistance:side?tx:tz,perp=Math.max(.02,dist*Math.cos(offset));depth[x/2]=perp;
       let tex=this.wall,u;
       if(side){const z=p.z+dz*dist;u=((z%2)+2)%2/2;
         if(dx<0){if(z>=4&&z<6)tex=this.door;else if(z>=8&&z<10)tex=this.board;else if(z>=14&&z<16)tex=this.door;}
         else {if((z>=4&&z<8)||(z>=12&&z<16))tex=this.window;else if(z>=18&&z<20)tex=this.clock;}
-      } else {u=(p.x+dx*dist+3)/6;if(dz>0)tex=this.end;}
+      } else {u=(p.x+dx*dist+3)/6;if(barrier)tex=this.fireDoor;else if(dz>0)tex=this.end;}
       const height=3*lens/perp,top=horizon-height*.5;
       c.drawImage(tex,Math.max(0,Math.min(511,Math.floor(u*512))),0,1,256,x,top,2,height);
       c.fillStyle=`rgba(0,10,5,${Math.min(.7,perp*.022)})`;c.fillRect(x,top,2,height);
@@ -126,6 +138,20 @@ export class Corridor {
     for(let z=24;z>=2;z-=4){
       const points=[project(-.6,2.96,z),project(.6,2.96,z),project(.6,2.96,z+.6),project(-.6,2.96,z+.6)];
       if(points.every(Boolean)){c.fillStyle='#b9c5a0';c.beginPath();points.forEach((a,i)=>i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y));c.closePath();c.fill();}
+    }
+    if(this.keyDoor.tutorial){
+      const desk=project(KEY_POSITION.x,0,KEY_POSITION.z);
+      if(desk&&desk.d<depth[Math.min(depth.length-1,Math.max(0,Math.floor(desk.x/2)))]){
+        const unit=lens/desk.d,top=desk.y-.85*unit;
+        c.fillStyle='#3b2822';c.fillRect(desk.x-.6*unit,top,.95*unit,.7*unit);
+        c.fillStyle='#a08a68';c.fillRect(desk.x-.67*unit,top-.09*unit,1.1*unit,.13*unit);
+        c.fillStyle='#e8ddbe';c.fillRect(desk.x-.49*unit,top+.1*unit,.72*unit,.22*unit);
+        c.fillStyle='#302e28';c.font=`${Math.max(10,.12*unit)}px sans-serif`;c.textAlign='center';c.fillText('당직 책상',desk.x-.12*unit,top+.26*unit);
+        if(!this.keyDoor.hasKey){
+          c.save();c.strokeStyle='#ffe3a0';c.lineWidth=Math.max(3,.045*unit);c.shadowColor='#ffd75c';c.shadowBlur=12;
+          c.beginPath();c.arc(desk.x-.18*unit,top-.15*unit,.08*unit,0,Math.PI*2);c.moveTo(desk.x-.1*unit,top-.15*unit);c.lineTo(desk.x+.2*unit,top-.15*unit);c.lineTo(desk.x+.2*unit,top-.06*unit);c.stroke();c.restore();
+        }
+      }
     }
     const figure=project(1.6,0,this.anomaly==='figure'?16:22);
     const sprite=this.mouthOpen && this.mascotOpen.complete && this.mascotOpen.naturalWidth ? this.mascotOpen : this.mascot;

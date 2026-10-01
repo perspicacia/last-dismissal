@@ -1,9 +1,13 @@
+import { createHorrorEvents } from './horror-events.js';
+import { createKeyDoor, keyDoorAction, interactKeyDoor } from './key-door.js';
 import { newGame, choose } from './logic.js';
 import { SchoolAudio } from './audio.js';
 import { Corridor } from './corridor.js';
 const $ = id => document.getElementById(id);
 const audio = new SchoolAudio();
 let state = null;
+let keyDoor = createKeyDoor();
+const horrorEvents = createHorrorEvents();
 function updateAudioStatus(message) {
   const status = $('audio-status');
   status.textContent = message || (!audio.ctx ? 'BGM 대기' : audio.muted || audio.volume === 0 ? 'BGM 음소거' : audio.ctx.state === 'running' ? 'BGM 재생 중' : 'BGM 일시 정지 · 소리 확인을 눌러주세요');
@@ -37,6 +41,9 @@ function render() {
   $('mode').textContent = state.tutorial ? '정상 복도 · 기억하는 시간' : '야간 자율학습 종료';
   $('progress-label').textContent = `하교 기록 ${state.progress} / 5`;
   $('marks').innerHTML = Array.from({length:5},(_,i)=>`<i class="${i<state.progress?'done':''}"></i>`).join('');
+  keyDoor = state.tutorial ? keyDoor : createKeyDoor(false);
+  corridor.keyDoor = keyDoor;
+  horrorEvents.reset();
   corridor.reset(state.anomaly);
   $('inspect-title').textContent = '복도를 관찰하세요.';
   $('inspect-text').textContent = state.tutorial ? '이곳이 정상 상태입니다. 화살표로 탐색하고 복도 끝의 아래층 계단으로 가세요.' : '방금 기억한 복도와 달라진 점이 있나요?';
@@ -44,8 +51,8 @@ function render() {
   $('record').textContent = `출석부 · 하교한 학생 ${state.progress}명 / 마지막 이름: 나`;
 }
 async function start() {
-  state = newGame(); show('game'); corridor.setActive(true); render(); $('corridor').focus();
-  $('feedback').textContent = '첫 복도에는 이상이 없습니다. 정상 상태를 기억하세요.';
+  keyDoor = createKeyDoor(); state = newGame(); show('game'); corridor.setActive(true); render(); $('corridor').focus();
+  $('feedback').textContent = '오른쪽 당직 책상에서 열쇠를 줍고 방화문을 여세요. 가까이 가면 큰 버튼이 나타납니다.';
   await enableAudio();
 }
 function decide(up) {
@@ -60,19 +67,40 @@ function decide(up) {
   $('feedback').textContent = tutorial ? '계단을 내려왔는데 같은 복도다. 이제 이상을 찾아야 한다.' : state.correct ? '올바른 계단이었다. 하지만 다시 같은 복도에 도착했다.' : `다시 처음이다. ${old ? labels[old]+'에 이상이 있었다.' : '방금 복도에는 이상이 없었다.'} 기록이 0으로 돌아갔다.`;
 }
 const corridor = new Corridor($('corridor'), ({item, stairs, names, player}) => {
+  const action=keyDoorAction(player,keyDoor);
+  $('key-action').hidden=!action;
+  $('key-action').textContent=action==='pickup'?'E · 열쇠 줍기':action==='open'?'E · 방화문 열기':'E · 잠긴 문 확인';
+  $('key-action').dataset.action=action||'';
+  $('inventory').textContent=keyDoor.hasKey?'통행 열쇠 보유':'통행 열쇠 없음';
+  $('inventory').hidden=!state?.tutorial;
+  $('objective').textContent=state?.tutorial ? keyDoor.doorOpen?'방화문 개방 · 정상 복도를 살펴보고 아래층으로 가세요':keyDoor.hasKey?'목표 · 앞의 방화문에서 E 또는 문 열기 버튼':'목표 · 오른쪽 당직 책상에 가까이 가서 열쇠 줍기' : '목표 · 이상을 관찰하고 계단을 선택하세요';
   $('inspect').disabled = !item;
   $('inspect').textContent = item ? `E · ${names[item]} 조사` : 'E · 가까운 사물 조사';
   $('up').disabled = !stairs || Boolean(state?.tutorial);
   $('down').disabled = !stairs;
-  $('walk-prompt').textContent = stairs ? '계단에 도착했다. 아래에서 방향을 선택하세요.' : item ? `E · ${names[item]} 조사` : '↑↓ 걷기 · ←→ 둘러보기';
+  $('walk-prompt').textContent = action ? action==='pickup'?'조준하지 않아도 됩니다 · E 또는 열쇠 줍기':action==='open'?'E 또는 버튼으로 방화문 열기':'잠겨 있다 · 뒤쪽 오른편 당직 책상에 열쇠가 있다' : stairs ? '계단에 도착했다. 아래에서 방향을 선택하세요.' : item ? `E · ${names[item]} 조사` : '↑↓ 걷기 · ←→ 둘러보기';
   $('position').textContent = stairs ? '계단 앞' : `복도 ${Math.round(player.z)} / 26 m`;
   $('position').dataset.x = player.x.toFixed(2);
   $('position').dataset.z = player.z.toFixed(2);
   $('position').dataset.angle = player.angle.toFixed(2);
 }, () => audio.tone(105,.12,.06), () => {
-  audio.tone(130,.7,.12); audio.tone(138,.7,.08);
+  if(horrorEvents.takeEvent('mascot-reveal'))audio.cue('mascot-reveal');
   $('feedback').textContent='토끼가 입을 벌렸다. 웃음 안쪽에서 날카로운 이빨이 드러났다.';
 });
+function interact() {
+  if (!state || state.ended || $('game').hidden) return;
+  const action=keyDoorAction(corridor.player,keyDoor);
+  if(!action){inspect();return;}
+  keyDoor=interactKeyDoor(corridor.player,keyDoor);
+  const event=action==='pickup'?'key-pickup':action==='open'?'door-unlock':null;
+  if(event&&horrorEvents.takeEvent(event))audio.cue(event);
+  $('inspect-title').textContent=action==='pickup'?'통행 열쇠 획득':action==='open'?'방화문 개방':'잠긴 방화문';
+  $('inspect-text').textContent=action==='pickup'?'열쇠를 챙겼다. 앞의 방화문에서 E를 누르거나 문 열기 버튼을 누르세요.':action==='open'?'문이 열렸다. 앞으로 걸어 정상 복도를 기억하세요.':'뒤쪽 오른편 당직 책상 위에 금빛 열쇠가 있다. 가까이 가면 줍기 버튼이 나타난다.';
+  $('feedback').textContent=$('inspect-text').textContent;
+  corridor.setKeyDoor(keyDoor);
+  $('corridor').focus();
+}
+$('key-action').onclick=interact;
 function inspect() {
   if (!state || !corridor.item || $('game').hidden) return;
   const key = corridor.item;
@@ -86,7 +114,7 @@ document.addEventListener('keydown', e => {
   if ($('game').hidden || e.target.tagName === 'INPUT') return;
   const action = keyActions[e.key] || keyActions[e.key.toLowerCase()];
   if (action) { e.preventDefault(); if(!e.repeat)corridor.nudge(action); corridor.keys.add(action); }
-  if (e.key.toLowerCase() === 'e' && !e.repeat) { e.preventDefault(); inspect(); }
+  if (e.key.toLowerCase() === 'e' && !e.repeat) { e.preventDefault(); interact(); }
 });
 document.addEventListener('keyup', e => {
   const action = keyActions[e.key] || keyActions[e.key.toLowerCase()];
