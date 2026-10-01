@@ -59,4 +59,4 @@ Use case: stylized-concept. Asset type: original character concept and transpare
 
 ## 교실 기립 이벤트
 
-[specs/classroom-doll.md](specs/classroom-doll.md)에 따라 정상에서는 누워 있고, doll 이상에서 1.9m 이내 접근·0.3초 응시 후 0.55초 동안 일어난다. 교실 문 손자국이 복도 단서다. 재입장은 기립을 유지하고 새 복도·재시작은 초기화한다. 기존 투명 이미지 평면을 기울여 세우며 추가 이미지 제작은 하지 않았다.
+[specs/classroom-doll.md](specs/classroom-doll.md)에 따라 정상에서는 누워 있고, doll 이상에서 1.9m 이내 접근·0.3초 응시 후 0.55초 동안 일어난다. 교실 문 손자국이 복도 단서다. 재입장은 기립을 유지하고 새 복도·재시작은 초기화한다. 기존 투명 이미지 실루엣을 곡면·두께가 있는 입체 볼륨으로 만들어 기울여 세우며 추가 이미지 제작은 하지 않았다.

@@ -39,3 +39,7 @@ test('계단 중앙 칸막이와 외벽은 입구부터 뒷벽까지 빈 틈 없
   assert.ok(scene.getObjectByName('stair-up-0').position.x<-center.geometry.parameters.width/2);
   assert.ok(scene.getObjectByName('stair-down-0').position.x>center.geometry.parameters.width/2);
 });
+test('게시판 사진은 원본 비율을 유지하고 보드 안쪽에 여백을 남긴다',()=>{
+ const photo=buildView().refs.photo,{width,height}=photo.geometry.parameters;
+ assert.ok(width<1.78);assert.ok(height<.98);assert.ok(Math.abs(width/height-1.5)<.001);assert.equal(photo.position.y,1.61);
+});
