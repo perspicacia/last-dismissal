@@ -38,6 +38,7 @@ export class SchoolAudio {
       this.music = this.ctx.createBufferSource(); this.music.buffer = buffer; this.music.loop = true;
       this.music.connect(this.ambient); this.music.start();
     }
+    this.ambient.gain.cancelScheduledValues(this.ctx.currentTime);
     this.ambient.gain.setTargetAtTime(.7, this.ctx.currentTime, .2);
     await this.ctx.resume(); this.update();
   }
@@ -59,8 +60,20 @@ export class SchoolAudio {
     osc.connect(gain).connect(this.master); osc.start(t); osc.stop(t + duration + .05);
     osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
+  // Short, soft toy/broadcast cues. All tones route through master gain,
+  // so mute and the player's volume also apply to these effects.
+  cue(name) {
+    const phrases = {
+      'key-pickup': [[659.25, .22, .035, 0], [523.25, .3, .025, .12]],
+      'door-unlock': [[220, .65, .04, 0], [233.08, .6, .025, .08], [440, .3, .018, .3]],
+      'mascot-reveal': [[130.81, .7, .04, 0], [138.59, .65, .03, .04], [277.18, .35, .012, .18]],
+    };
+    if (!Object.hasOwn(phrases, name)) return false;
+    phrases[name].forEach(args => this.tone(...args));
+    return true;
+  }
   inspect() { this.tone(220,.15,.045); }
   result(correct) { if (correct) this.tone(440,.65,.09); else {this.tone(65,.8,.13); this.tone(69,.8,.1);} }
   end() { if (this.ctx) this.ambient.gain.setTargetAtTime(.12,this.ctx.currentTime,1); [261.6,329.6,392].forEach((f,i)=>this.tone(f,2,.08,i*.3)); }
-  async stop() { if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; await this.ctx.suspend(); this.ambient.gain.value = .7; } }
+  async stop() { if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; this.ambient.gain.cancelScheduledValues(this.ctx.currentTime); this.ambient.gain.value = .7; await this.ctx.suspend(); } }
 }
