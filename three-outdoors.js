@@ -13,7 +13,19 @@ export function buildOutdoors({ side = 'corridor' } = {}) {
   };
   const cube = new THREE.BoxGeometry(1, 1, 1);
   const cylinder = new THREE.CylinderGeometry(1, 1, 1, 8);
-  const ball = new THREE.IcosahedronGeometry(1, 2);
+  const fallback = new THREE.IcosahedronGeometry(1, 1);
+  const positions = fallback.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    const variation = .75 + Math.sin(positions.getX(i) * 34 + positions.getY(i) * 51 + positions.getZ(i) * 23) * .24;
+    positions.setXYZ(i, positions.getX(i) * variation, positions.getY(i) * variation, positions.getZ(i) * variation);
+  }
+  fallback.computeVertexNormals();
+  const leafTexture = makeFoliageTexture();
+  const leafGeometry = leafTexture ? new THREE.PlaneGeometry(2, 2) : fallback;
+  const leafMaterial = new THREE.MeshStandardMaterial({
+    color: '#ffffff', map: leafTexture, alphaTest: .45, side: THREE.DoubleSide,
+    roughness: 1, metalness: 0,
+  });
   const box = (x, y, z, sx, sy, sz, color, extra = {}) => {
     const mesh = new THREE.Mesh(cube, mat(color, extra));
     mesh.position.set(x, y, z); mesh.scale.set(sx, sy, sz);
@@ -40,15 +52,21 @@ export function buildOutdoors({ side = 'corridor' } = {}) {
       const end = new THREE.Vector3(x + Math.cos(angle) * height * .18, crown + (random() - .5) * height * .22, z + Math.sin(angle) * height * .18);
       branches.push({ p: start.clone().add(end).multiplyScalar(.5).toArray(), s: [.045, start.distanceTo(end), .045], q: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), end.sub(start).normalize()) });
     }
-    // Offset and squash clusters instead of using one spherical crown per tree.
+    // Three intersecting twig-and-leaf cards give each cluster a porous silhouette
+    // from any viewing direction, rather than a smooth solid spherical crown.
     for (let k = 0; k < 10; k++) {
       const angle = random() * Math.PI * 2, radius = random() * height * .23;
       const size = height * (.13 + random() * .1);
-      leaves.push({ p: [x + Math.cos(angle) * radius, crown + (random() - .2) * height * .32, z + Math.sin(angle) * radius], s: [size * (1 + random() * .45), size * (.65 + random() * .6), size], color: new THREE.Color().setHSL(.27 + random() * .07, .19 + random() * .18, .17 + random() * .12) });
+      const p = [x + Math.cos(angle) * radius, crown + (random() - .2) * height * .32, z + Math.sin(angle) * radius];
+      const scale = [size * (1 + random() * .45), size * (.65 + random() * .6), size];
+      const color = new THREE.Color().setHSL(.27 + random() * .07, .19 + random() * .18, .17 + random() * .12);
+      for (let face = 0; face < (leafTexture ? 3 : 1); face++) {
+        leaves.push({ p, s: scale, color, q: new THREE.Quaternion().setFromEuler(new THREE.Euler((face - 1) * .32, angle + face * Math.PI / 3, Math.sin(angle) * .17)) });
+      }
     }
   };
-  const flush = (geometry, color, items, name) => {
-    const mesh = new THREE.InstancedMesh(geometry, mat(color), items.length);
+  const flush = (geometry, color, items, name, material = mat(color)) => {
+    const mesh = new THREE.InstancedMesh(geometry, material, items.length);
     const transform = new THREE.Object3D();
     items.forEach((item, i) => {
       transform.position.set(...item.p); transform.scale.set(...item.s);
@@ -126,15 +144,64 @@ export function buildOutdoors({ side = 'corridor' } = {}) {
     for (let i = 0; i < 50; i++) tree(19 + random() * 37, -30 + random() * 85, 5 + random() * 7);
     // Low planting allows the distant ghost and forest to remain readable.
     for (let i = 0; i < 24; i++) {
-      const shrub = new THREE.Mesh(ball, mat(i % 2 ? '#536546' : '#455c43'));
-      shrub.position.set(10.65 + random() * .55, .14, -21 + i * 2.8);
-      shrub.scale.set(.6, .43 + random() * .18, .95); shrub.castShadow = true; group.add(shrub);
+      const p = [10.65 + random() * .55, .2, -21 + i * 2.8];
+      const scale = [.75, .43 + random() * .18, .95];
+      for (let face = 0; face < (leafTexture ? 3 : 1); face++) leaves.push({
+        p, s: scale, color: new THREE.Color(i % 2 ? '#536546' : '#455c43'),
+        q: new THREE.Quaternion().setFromEuler(new THREE.Euler(.2, face * Math.PI / 3, 0)),
+      });
     }
   }
   flush(cylinder, '#655e4e', trunks, 'tree-trunks');
   flush(cylinder, '#645c4f', branches, 'tree-branches');
-  flush(ball, '#ffffff', leaves, 'tree-canopies');
+  flush(leafGeometry, '#ffffff', leaves, 'tree-canopies', leafMaterial);
   group.userData.side = side;
   group.userData.treeCount = trunks.length;
   return group;
+}
+
+
+// A locally generated, transparent twig cluster. No image download, external
+// texture or random layout change is needed. Node tests use jagged geometry.
+function makeFoliageTexture() {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas'); canvas.width = canvas.height = 512;
+  const c = canvas.getContext('2d');
+  if (!c) return null;
+  let seed = 401;
+  const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const leaf = (x, y, angle, length) => {
+    c.save(); c.translate(x, y); c.rotate(angle);
+    const brightness = Math.floor(140 + random() * 110);
+    c.fillStyle = `rgb(${brightness},${brightness},${Math.floor(brightness * .9)})`;
+    c.beginPath(); c.moveTo(-length / 2, 0);
+    c.bezierCurveTo(-length * .15, -length * .36, length * .25, -length * .22, length / 2, 0);
+    c.bezierCurveTo(length * .16, length * .31, -length * .25, length * .24, -length / 2, 0);
+    c.fill(); c.restore();
+  };
+  for (let branch = 0; branch < 19; branch++) {
+    const angle = branch / 19 * Math.PI * 2 + (random() - .5) * .4;
+    const length = 115 + random() * 109;
+    const originX = 256 + (random() - .5) * 88, originY = 256 + (random() - .5) * 75;
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    c.strokeStyle = '#95877a'; c.lineWidth = 1.3 + random() * 2;
+    c.beginPath(); c.moveTo(originX, originY); c.lineTo(originX + dx * length, originY + dy * length); c.stroke();
+    for (let twig = 1; twig <= 8; twig++) {
+      const t = twig / 9, px = originX + dx * length * t, py = originY + dy * length * t;
+      for (const side of [-1, 1]) {
+        const twigAngle = angle + side * (.5 + random() * .8), twigLength = 20 + random() * 37;
+        const tx = Math.cos(twigAngle), ty = Math.sin(twigAngle);
+        c.lineWidth = .9; c.beginPath(); c.moveTo(px, py); c.lineTo(px + tx * twigLength, py + ty * twigLength); c.stroke();
+        for (let i = 1; i <= 4; i++) {
+          const u = i / 4;
+          leaf(px + tx * twigLength * u + (random() - .5) * 8, py + ty * twigLength * u + (random() - .5) * 8,
+            twigAngle + (i % 2 ? .6 : -.6), 8 + random() * 13);
+        }
+      }
+    }
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
 }
