@@ -3,10 +3,12 @@ import { createKeyDoor, keyDoorAction, interactKeyDoor } from './key-door.js';
 import { newGame, choose } from './logic.js';
 import { SchoolAudio } from './audio.js';
 import { Corridor } from './corridor.js';
+import { createSchoolRoute, schoolAction, confirmAttendance, canChooseStairs } from './school-route.js';
 const $ = id => document.getElementById(id);
 const audio = new SchoolAudio();
 let state = null;
 let keyDoor = createKeyDoor();
+let schoolRoute = createSchoolRoute();
 const horrorEvents = createHorrorEvents();
 function updateAudioStatus(message) {
   const status = $('audio-status');
@@ -43,6 +45,7 @@ function render() {
   $('marks').innerHTML = Array.from({length:5},(_,i)=>`<i class="${i<state.progress?'done':''}"></i>`).join('');
   keyDoor = state.tutorial ? keyDoor : createKeyDoor(false);
   corridor.keyDoor = keyDoor;
+  corridor.noteTaken = schoolRoute.confirmed;
   horrorEvents.reset();
   corridor.reset(state.anomaly);
   $('inspect-title').textContent = '복도를 관찰하세요.';
@@ -51,12 +54,12 @@ function render() {
   $('record').textContent = `출석부 · 하교한 학생 ${state.progress}명 / 마지막 이름: 나`;
 }
 async function start() {
-  keyDoor = createKeyDoor(); state = newGame(); show('game'); corridor.setActive(true); render(); $('corridor').focus();
+  schoolRoute = createSchoolRoute(); keyDoor = createKeyDoor(); state = newGame(); show('game'); corridor.setActive(true); render(); $('corridor').focus();
   $('feedback').textContent = '오른쪽 당직 책상에서 열쇠를 줍고 방화문을 여세요. 가까이 가면 큰 버튼이 나타납니다.';
   await enableAudio();
 }
 function decide(up) {
-  if (!state || state.ended || $('game').hidden || !corridor.atStairs || (state.tutorial && up)) return;
+  if (!state || state.ended || $('game').hidden || !canChooseStairs(corridor.scene,corridor.atStairs,state.tutorial,schoolRoute) || (state.tutorial && up)) return;
   const tutorial = state.tutorial, old = state.anomaly;
   state = choose(state,up);
   if (!tutorial) audio.result(state.correct);
@@ -64,22 +67,34 @@ function decide(up) {
     corridor.setActive(false); show('ending'); audio.end(); $('result').textContent = `총 ${state.attempts}번의 선택 끝에 하교했습니다.`; $('again').focus(); return;
   }
   render();
-  $('feedback').textContent = tutorial ? '계단을 내려왔는데 같은 복도다. 이제 이상을 찾아야 한다.' : state.correct ? '올바른 계단이었다. 하지만 다시 같은 복도에 도착했다.' : `다시 처음이다. ${old ? labels[old]+'에 이상이 있었다.' : '방금 복도에는 이상이 없었다.'} 기록이 0으로 돌아갔다.`;
+  $('feedback').textContent = tutorial ? '계단을 내려왔는데 같은 복도다. 왼쪽 3-2 교실에서 하교 확인표를 챙기세요. 이후 이상을 찾아 계단을 선택합니다.' : state.correct ? '올바른 계단이었다. 하지만 다시 같은 복도에 도착했다.' : `다시 처음이다. ${old ? labels[old]+'에 이상이 있었다.' : '방금 복도에는 이상이 없었다.'} 기록이 0으로 돌아갔다.`;
 }
-const corridor = new Corridor($('corridor'), ({item, stairs, names, player}) => {
-  const action=keyDoorAction(player,keyDoor);
+const corridor = new Corridor($('corridor'), ({item, stairs, names, player, scene='corridor'}) => {
+  const inside=scene==='classroom';
+  const roomAction=schoolAction(player,scene,Boolean(state?.tutorial),schoolRoute);
+  const action=inside?null:keyDoorAction(player,keyDoor);
+  $('floor').textContent=inside?'3-2 교실':'3층 동쪽 복도';
+  $('classroom-tools').hidden=!inside;
+  $('corridor').setAttribute('aria-label',`${inside?'3-2 교실':'학교 복도'} 탐색. 위아래 화살표로 이동하고 좌우 화살표로 회전합니다. E 키로 상호작용합니다.`);
+  $('room-action').hidden=!roomAction;
+  $('room-action').textContent=roomAction==='confirm'?'E · 하교 확인표 챙기기':'E · 교실 들어가기';
   $('key-action').hidden=!action;
   $('key-action').textContent=action==='pickup'?'E · 열쇠 줍기':action==='open'?'E · 방화문 열기':'E · 잠긴 문 확인';
   $('key-action').dataset.action=action||'';
-  $('inventory').textContent=keyDoor.hasKey?'통행 열쇠 보유':'통행 열쇠 없음';
-  $('inventory').hidden=!state?.tutorial;
-  $('objective').textContent=state?.tutorial ? keyDoor.doorOpen?'방화문 개방 · 정상 복도를 살펴보고 아래층으로 가세요':keyDoor.hasKey?'목표 · 앞의 방화문에서 E 또는 문 열기 버튼':'목표 · 오른쪽 당직 책상에 가까이 가서 열쇠 줍기' : '목표 · 이상을 관찰하고 계단을 선택하세요';
+  $('inventory').textContent=state?.tutorial?(keyDoor.hasKey?'통행 열쇠 보유':'통행 열쇠 없음'):(schoolRoute.confirmed?'하교 확인표 보유':'하교 확인표 없음');
+  $('inventory').hidden=false;
+  $('objective').textContent=inside?(schoolRoute.confirmed?'확인표를 챙겼습니다 · 복도로 돌아가 이상을 관찰하세요':'목표 · 가운데 통로로 이동해 금빛 책상의 하교 확인표 챙기기'):state?.tutorial ? keyDoor.doorOpen?'방화문 개방 · 정상 복도를 살펴보고 아래층으로 가세요':keyDoor.hasKey?'목표 · 앞의 방화문에서 E 또는 문 열기 버튼':'목표 · 오른쪽 당직 책상에 가까이 가서 열쇠 줍기' : schoolRoute.confirmed?'목표 · 이상을 관찰하고 계단을 선택하세요':'목표 · 왼쪽 5m 교실문에서 교실에 들어가 하교 확인표 찾기';
   $('inspect').disabled = !item;
-  $('inspect').textContent = item ? `E · ${names[item]} 조사` : 'E · 가까운 사물 조사';
-  $('up').disabled = !stairs || Boolean(state?.tutorial);
-  $('down').disabled = !stairs;
+  $('inspect').textContent = item ? roomAction ? `${names[item]} 조사 · 버튼으로 확인` : `E · ${names[item]} 조사` : 'E · 가까운 사물 조사';
+  const canChoose=canChooseStairs(scene,stairs,Boolean(state?.tutorial),schoolRoute);
+  $('up').disabled = !canChoose || Boolean(state?.tutorial);
+  $('down').disabled = !canChoose;
   $('walk-prompt').textContent = action ? action==='pickup'?'조준하지 않아도 됩니다 · E 또는 열쇠 줍기':action==='open'?'E 또는 버튼으로 방화문 열기':'잠겨 있다 · 뒤쪽 오른편 당직 책상에 열쇠가 있다' : stairs ? '계단에 도착했다. 아래에서 방향을 선택하세요.' : item ? `E · ${names[item]} 조사` : '↑↓ 걷기 · ←→ 둘러보기';
-  $('position').textContent = stairs ? '계단 앞' : `복도 ${Math.round(player.z)} / 26 m`;
+  if(roomAction)$('walk-prompt').textContent=roomAction==='confirm'?'E 또는 버튼 · 하교 확인표 챙기기':'E · 교실 입장 / 문 번호는 조사 버튼으로 확인';
+  else if(inside)$('walk-prompt').textContent=schoolRoute.confirmed?'교실을 둘러보거나 복도로 돌아가세요':'앞의 책상 위에 하교 확인표가 있습니다';
+  else if(stairs&&!canChoose)$('walk-prompt').textContent='확인표가 필요합니다 · 뒤쪽 왼편 3-2 교실로 돌아가세요';
+  $('position').textContent = inside?`교실 ${Math.round(player.z)} / 10 m`:stairs ? '계단 앞' : `복도 ${Math.round(player.z)} / 26 m`;
+  $('position').dataset.scene=scene;
   $('position').dataset.x = player.x.toFixed(2);
   $('position').dataset.z = player.z.toFixed(2);
   $('position').dataset.angle = player.angle.toFixed(2);
@@ -89,6 +104,21 @@ const corridor = new Corridor($('corridor'), ({item, stairs, names, player}) => 
 });
 function interact() {
   if (!state || state.ended || $('game').hidden) return;
+  const roomAction=schoolAction(corridor.player,corridor.scene,state.tutorial,schoolRoute);
+  if(roomAction==='enter') {
+    corridor.enterClassroom();
+    $('inspect-title').textContent='3-2 교실';$('inspect-text').textContent='창문 너머로 푸른 빛이 스며든다. 가운데 통로 앞, 금빛 책상의 확인표를 챙기세요.';
+    $('feedback').textContent='교실에 들어왔다. 돌아가기 버튼은 언제든 사용할 수 있습니다.';
+    audio.inspect();$('corridor').focus();return;
+  }
+  if(roomAction==='confirm') {
+    schoolRoute=confirmAttendance(corridor.player,corridor.scene,schoolRoute);
+    corridor.noteTaken=schoolRoute.confirmed;
+    corridor.notify();$('inspect-title').textContent='하교 확인표 획득';$('inspect-text').textContent='마지막 이름 옆에 내 서명이 남아 있다. 복도로 돌아가 이상을 관찰하고 계단을 선택하세요.';
+    $('feedback').textContent='확인표를 챙겼다. 다음 복도에서는 다시 챙길 필요가 없습니다.';
+    audio.cue('key-pickup');$('corridor').focus();return;
+  }
+  if(corridor.scene==='classroom')return;
   const action=keyDoorAction(corridor.player,keyDoor);
   if(!action){inspect();return;}
   keyDoor=interactKeyDoor(corridor.player,keyDoor);
@@ -101,6 +131,8 @@ function interact() {
   $('corridor').focus();
 }
 $('key-action').onclick=interact;
+$('room-action').onclick=interact;
+$('room-return').onclick=()=>{if(!state||state.ended||corridor.scene!=='classroom')return;corridor.leaveClassroom();$('inspect-title').textContent='교실 밖으로';$('inspect-text').textContent=schoolRoute.confirmed?'확인표를 챙겼다. 복도를 관찰하고 계단을 선택하세요.':'확인표는 아직 교실 책상 위에 있다. 교실에 다시 들어갈 수 있습니다.';$('corridor').focus();};
 function inspect() {
   if (!state || !corridor.item || $('game').hidden) return;
   const key = corridor.item;

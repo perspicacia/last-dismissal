@@ -1,11 +1,12 @@
 import { createKeyDoor, constrainKeyDoor, KEY_POSITION } from './key-door.js';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트'};
 export class Corridor {
   constructor(canvas, onPosition, onStep, onReveal = () => {}) {
     this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.onPosition=onPosition;this.onStep=onStep;
-    this.keyDoor=createKeyDoor(false);this.keys=new Set();this.player={...SPAWN};this.active=false;this.anomaly=null;this.steps=0;
+    this.scene="corridor";this.corridorPlayer=null;this.keyDoor=createKeyDoor(false);this.keys=new Set();this.player={...SPAWN};this.active=false;this.anomaly=null;this.steps=0;
     this.mascot = new Image();
     this.mascot.src = new URL('./assets/mascot-rabbit.png', import.meta.url).href;
     this.mascotOpen = new Image();
@@ -24,27 +25,45 @@ export class Corridor {
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
   resize() { this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*.57); }
-  reset(anomaly) {this.anomaly=anomaly;this.mouthOpen=false;this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
+  enterClassroom() {if(this.scene==='classroom')return;this.corridorPlayer={...this.player};this.scene='classroom';this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
+  leaveClassroom() {if(this.scene!=='classroom')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
+  move(keys,dt) {return this.scene==='classroom'?moveClassroomPlayer(this.player,keys,dt):constrainKeyDoor(movePlayer(this.player,keys,dt),this.keyDoor);}
+  reset(anomaly) {this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
   setKeyDoor(value) {this.keyDoor=value;this.notify();}
   setActive(value) {this.active=value;this.keys.clear();}
   nudge(action) {
     if(!this.active) return;
-    const before=this.player;this.player=constrainKeyDoor(movePlayer(this.player,new Set([action]),.05),this.keyDoor);this.steps+=Math.hypot(this.player.x-before.x,this.player.z-before.z);if(this.steps>.95){this.steps=0;this.onStep();}this.notify();
+    const before=this.player;this.player=this.move(new Set([action]),.05);this.steps+=Math.hypot(this.player.x-before.x,this.player.z-before.z);if(this.steps>.95){this.steps=0;this.onStep();}this.notify();
   }
   texture(draw) {
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
-    const c=canvas.getContext('2d');c.fillStyle='#354c40';c.fillRect(0,0,512,256);
-    c.fillStyle='#233c30';c.fillRect(0,145,512,111);c.fillStyle='#6b8270';c.fillRect(0,143,512,3);
-    c.strokeStyle='#ffffff08';for(let y=0;y<256;y+=32){c.beginPath();c.moveTo(0,y);c.lineTo(512,y);c.stroke();}
+    const c=canvas.getContext('2d');
+    c.fillStyle='#a1aaa2';c.fillRect(0,0,512,256);
+    // Deterministic plaster mottling, damp corners and school wall mouldings.
+    for(let i=0;i<420;i++){const x=(i*83)%512,y=(i*47)%256;c.fillStyle=i%3?'#314e4912':'#f6eadb12';c.fillRect(x,y,6+i%17,1+i%4);}
+    c.fillStyle='#365c5d';c.fillRect(0,145,512,111);
+    for(let i=0;i<160;i++){c.fillStyle='#101e2911';c.fillRect((i*61)%512,149+(i*17)%105,8+i%24,2+i%8);}
+    c.fillStyle='#c7c4ad';c.fillRect(0,141,512,3);c.fillStyle='#263d3c';c.fillRect(0,145,512,3);
+    c.fillStyle='#1f302e';c.fillRect(0,247,512,9);c.fillStyle='#75867b';c.fillRect(0,245,512,2);
+    c.fillStyle='#929f95';c.fillRect(0,0,512,8);c.fillStyle='#dee0c52a';c.fillRect(0,8,512,2);
+    c.strokeStyle='#183a321c';c.lineWidth=1;for(let i=0;i<6;i++){c.beginPath();c.moveTo(i*89+12,8);c.lineTo(i*89+15,28);c.lineTo(i*89+7,43);c.stroke();}
     draw(c);return canvas;
   }
   buildTextures() {
     this.wall=this.texture(()=>{});
     this.door=this.texture(c=>{
-      c.fillStyle='#101f18';c.fillRect(65,32,382,224);c.fillStyle='#375748';c.fillRect(76,42,360,214);
-      c.fillStyle='#0b1817';c.fillRect(98,56,316,84);c.strokeStyle='#718274';c.lineWidth=3;c.strokeRect(98,56,316,84);
-      c.fillStyle='#e1e5ca';c.font='bold 28px sans-serif';c.textAlign='center';c.fillText(this.anomaly==='door'?'404':'3-2',256,178);
-      c.fillStyle='#a6aa8c';c.fillRect(388,194,20,5);
+      c.fillStyle='#33362c';c.fillRect(57,27,398,229);c.fillStyle='#79664b';c.fillRect(69,35,374,221);
+      c.fillStyle='#a28d69';c.fillRect(69,35,9,221);c.fillStyle='#413d31';c.fillRect(433,35,10,221);
+      // Narrow vertical grain in weathered sliding wooden classroom doors.
+      for(let i=0;i<48;i++){c.strokeStyle=i%2?'#dcc89e18':'#201b141a';c.beginPath();c.moveTo(82+i*7.3,39);c.bezierCurveTo(74+i*7.3,112,89+i*7.3,199,82+i*7.3,255);c.stroke();}
+      c.fillStyle='#273d3d';c.fillRect(96,54,320,87);c.fillStyle='#112734';c.fillRect(103,59,306,77);
+      const glass=c.createLinearGradient(103,59,409,136);glass.addColorStop(0,'#486369');glass.addColorStop(.45,'#1d343d');glass.addColorStop(1,'#0b1e2a');c.fillStyle=glass;c.fillRect(103,59,306,77);
+      c.fillStyle='#aaa486';c.fillRect(248,54,8,87);c.fillRect(96,93,320,4);
+      c.fillStyle='#d2d4bd20';c.beginPath();c.moveTo(115,60);c.lineTo(152,60);c.lineTo(245,135);c.lineTo(205,135);c.fill();
+      c.fillStyle='#eee4c6';c.fillRect(198,153,116,35);c.strokeStyle='#998c68';c.strokeRect(198,153,116,35);
+      c.fillStyle='#283931';c.font='bold 27px sans-serif';c.textAlign='center';c.fillText(this.anomaly==='door'?'404':'3-2',256,180);
+      c.fillStyle='#383e36';c.fillRect(385,203,17,25);c.fillStyle='#b0ad8e';c.fillRect(390,207,6,18);
+      c.fillStyle='#334a4520';c.fillRect(86,238,338,18);
     });
     this.board=this.texture(c=>{
       c.fillStyle='#171e15';c.fillRect(45,38,422,168);c.fillStyle='#7b7150';c.fillRect(52,44,408,155);
@@ -58,13 +77,13 @@ export class Corridor {
       c.fillStyle='#dfd6b5';c.font='13px sans-serif';c.fillText('수학여행 단체사진',76,173);
     });
     this.window=this.texture(c=>{
-      c.fillStyle='#9cad95';c.fillRect(35,30,442,163);c.fillStyle='#06151b';c.fillRect(42,37,428,149);
+      c.fillStyle='#7e7055';c.fillRect(29,25,454,173);c.fillStyle='#ac9b75';c.fillRect(35,30,442,163);c.fillStyle='#06151b';c.fillRect(42,37,428,149);
       if(this.anomaly==='window'){
         c.fillStyle='#425c47';c.fillRect(42,37,428,149);c.fillStyle='#162c20';c.beginPath();c.moveTo(42,37);c.lineTo(220,90);c.lineTo(292,90);c.lineTo(470,37);c.fill();
         c.fillStyle='#738575';c.beginPath();c.moveTo(42,186);c.lineTo(220,128);c.lineTo(292,128);c.lineTo(470,186);c.fill();
         c.fillStyle='#08150d';c.fillRect(235,91,40,39);c.fillRect(82,65,50,85);c.fillRect(364,65,50,85);
       } else {c.fillStyle='#8eaa9d';for(let i=0;i<10;i++)c.fillRect(55+i*40,55+(i%3)*17,2,2);c.fillStyle='#303f2b';c.fillRect(42,160,428,26);c.fillStyle='#d8c79e';c.fillRect(370,123,5,40);c.fillRect(361,121,23,4);}
-      c.fillStyle='#91a48c';c.fillRect(253,37,6,149);c.fillRect(42,113,428,5);
+      c.fillStyle='#82795e';c.fillRect(251,37,10,149);c.fillRect(42,111,428,7);c.fillStyle='#bac1a433';c.beginPath();c.moveTo(55,40);c.lineTo(82,40);c.lineTo(225,180);c.lineTo(194,180);c.fill();c.fillStyle='#a99f83';c.fillRect(24,195,464,5);c.fillStyle='#233833';c.fillRect(24,200,464,5);
     });
     this.clock=this.texture(c=>{
       c.fillStyle='#0b1a13';c.beginPath();c.arc(256,86,53,0,Math.PI*2);c.fill();c.fillStyle='#d1d7bd';c.beginPath();c.arc(256,86,46,0,Math.PI*2);c.fill();
@@ -88,18 +107,19 @@ export class Corridor {
     });
   }
   notify() {
+    if(this.scene==='classroom'){this.item=null;this.atStairs=false;this.onPosition({item:null,stairs:false,names,player:this.player,keyDoor:this.keyDoor,scene:this.scene});return;}
     const open=revealsTeeth(this.player,this.anomaly,this.mouthOpen);
     if(open && !this.mouthOpen) this.onReveal();
     this.mouthOpen=open;
     this.canvas.dataset.mascotMouth=open?'open':'closed';
     const item=nearbyItem(this.player,this.anomaly);const stairs=this.player.z>22;
     this.item=item;this.atStairs=stairs;
-    this.onPosition({item,stairs,names,player:this.player,keyDoor:this.keyDoor});
+    this.onPosition({item,stairs,names,player:this.player,keyDoor:this.keyDoor,scene:this.scene});
   }
   frame(time) {
     const dt=Math.min((time-this.last)/1000,.05);this.last=time;
     if(this.active && !document.hidden){
-      const before=this.player;this.player=constrainKeyDoor(movePlayer(this.player,this.keys,dt),this.keyDoor);
+      const before=this.player;this.player=this.move(this.keys,dt);
       const distance=Math.hypot(this.player.x-before.x,this.player.z-before.z);this.steps+=distance;
       if(this.steps>.95){this.steps=0;this.onStep();}
       this.notify();this.draw(time);
@@ -108,20 +128,24 @@ export class Corridor {
   }
   draw(time) {
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
+    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.noteTaken);return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
-    const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#111c17');ceiling.addColorStop(1,'#344438');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
-    const floor=c.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#293b2e');floor.addColorStop(1,'#53614d');c.fillStyle=floor;c.fillRect(0,horizon,w,h);
-    c.fillStyle='#9dae8926';
-    for(let y=Math.ceil(horizon)+1;y<h;y+=4){
+    const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
+    const floor=c.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#252d2b');floor.addColorStop(1,'#584b3e');c.fillStyle=floor;c.fillRect(0,horizon,w,h);
+    for(let y=Math.ceil(horizon)+1;y<h;y+=2){
       const d=1.5*lens/(y-horizon);if(d>40)continue;
-      for(let x=0;x<w;x+=4){
+      for(let x=0;x<w;x+=2){
         const across=(x-w/2)*d/lens;
         const wx=p.x+Math.sin(p.angle)*d+Math.cos(p.angle)*across;
         const wz=p.z+Math.cos(p.angle)*d-Math.sin(p.angle)*across;
-        const gx=((wx%2)+2)%2,gz=((wz%2)+2)%2;
-        if(gx<.035||gx>1.965||gz<.035||gz>1.965)c.fillRect(x,y,4,4);
+        const row=Math.floor(wx/.25),gx=((wx%.25)+.25)%.25,gz=((wz+row*.51)%2+2)%2;
+        const wood=42+Math.sin(row*21)*8+Math.sin(wz*10+row*7)*3;
+        const light=Math.max(.38,1-d*.018);
+        c.fillStyle=`rgb(${(wood+23)*light},${(wood+12)*light},${(wood+6)*light})`;
+        if(d<8&&(gx<.015||gz<.02))c.fillStyle=`rgb(${(wood+15)*light},${(wood+4)*light},${(wood-2)*light})`;
+        c.fillRect(x,y,2,2);
       }
     }
     const depth=new Float64Array(Math.ceil(w/2));
@@ -146,7 +170,7 @@ export class Corridor {
     const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z;const d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.12?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon-(y-1.5)*lens/d,d}:null;};
     for(let z=24;z>=2;z-=4){
       const points=[project(-.6,2.96,z),project(.6,2.96,z),project(.6,2.96,z+.6),project(-.6,2.96,z+.6)];
-      if(points.every(Boolean)){c.fillStyle='#b9c5a0';c.beginPath();points.forEach((a,i)=>i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y));c.closePath();c.fill();}
+      if(points.every(Boolean)){c.fillStyle='#d0e2d2';c.shadowColor='#accac3';c.shadowBlur=9;c.beginPath();points.forEach((a,i)=>i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y));c.closePath();c.fill();c.shadowBlur=0;}
     }
     if(this.keyDoor.tutorial){
       const desk=project(KEY_POSITION.x,0,KEY_POSITION.z);
