@@ -63,3 +63,11 @@ test('창문 이상 판정·프레임 가림·다음 정상 복도의 귀신 제
     c.anomaly=null;c.buildTextures();assert.equal(c.hauntedWindow.ops.some(v=>v[0]==='drawImage'&&v[1]===ghost),false);
   } finally {globalThis.document=old;}
 });
+
+test('플레이 시점은 창별 시차로 전달되며 정지·짧은 프레임에서는 캐시를 재사용한다',()=>{
+  const c=Object.create(Corridor.prototype),calls=[];
+  Object.assign(c,{player:{z:7},scene:'corridor',anomaly:'window',windowViews:{},lastExteriorUpdate:-Infinity,windowTexture:(haunted,offset)=>{calls.push({haunted,offset});return {haunted,offset};}});
+  c.updateExterior(0);assert.equal(calls.length,4);assert.equal(c.windowViews[6].texture.haunted,true);assert.equal(c.windowViews[4].texture.haunted,false);assert.equal(c.windowViews[6].offset,0);
+  c.updateExterior(70);c.updateExterior(150);assert.equal(calls.length,4);
+  c.player.z=8;c.updateExterior(300);assert.ok(calls.length>4);assert.ok(c.windowViews[6].offset>0);
+});

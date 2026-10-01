@@ -1,3 +1,4 @@
+import { drawSceneDepth } from './scene-depth.js';
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
 export const CLASSROOM_TEACHER_DESK = { x: -.5, z: 8.7, width: 2, depth: .65, height: .72 };
 export const CLASSROOM_DESKS = [-2.5, 1.2, 2.8].flatMap(x => [3.2, 5, 6.8].map(z => ({x,z,width:1.1,depth:.65,height:.76})));
@@ -37,6 +38,6 @@ export function drawClassroom(c,w,h,p,time,exterior=null) {
   // Teacher's desk anchors the classroom front.
   const teacher=CLASSROOM_TEACHER_DESK;box(teacher.x,0,teacher.z,teacher.width,teacher.height,teacher.depth,['#948064','#51493a','#685b47']);
   faces.sort((a,b)=>b.d-a.d);for(const face of faces){c.fillStyle=face.color;c.strokeStyle='#10202980';c.lineWidth=.7;c.beginPath();face.pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.stroke();}
-  for(let z of [2.3,5.3,8.3]){const pts=[project(-1,2.98,z),project(1,2.98,z),project(1,2.98,z+.22),project(-1,2.98,z+.22)];if(pts.every(Boolean)){c.fillStyle='#bddbd9';c.shadowColor='#8eccc7';c.shadowBlur=10;c.beginPath();pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.shadowBlur=0;}}
+  drawSceneDepth(c,project,p,{classroom:true});
   const shade=c.createRadialGradient(w/2,h/2,w*.15,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#000915c0');c.fillStyle=shade;c.fillRect(0,0,w,h);
 }
