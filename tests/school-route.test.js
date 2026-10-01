@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSchoolRoute, schoolAction, confirmAttendance, canChooseStairs } from '../school-route.js';
+import { newGame, choose } from '../logic.js';
 test('교실은 연습 다음 가까운 문에서 입장하고 조준이 필요 없다', () => {
   const r=createSchoolRoute(), p={x:0,z:5,angle:Math.PI};
   assert.equal(schoolAction(p,'corridor',true,r),null);
@@ -23,4 +24,22 @@ test('교실 안 계단 판정 금지, 확인표 보유 후 복도 진행 가능
   assert.equal(canChooseStairs('classroom',true,false,{confirmed:true}),false);
   assert.equal(canChooseStairs('corridor',true,false,{confirmed:true}),true);
   assert.equal(canChooseStairs('corridor',false,false,{confirmed:true}),false);
+});
+test('연습 후 확인표 확보, 오답과 다음 복도 보유 유지, 5회 탈출 후 새 게임 초기화', () => {
+  let state=newGame(), route=createSchoolRoute();
+  state=choose(state,false,()=>0);
+  assert.equal(canChooseStairs('corridor',true,state.tutorial,route),false);
+  route=confirmAttendance({x:1.2,z:5},'classroom',route);
+  state=choose(state,true,()=>0); // 정상 복도에서 오답
+  assert.equal(state.progress,0);
+  for(let i=0;i<5;i++) {
+    assert.equal(canChooseStairs('corridor',true,state.tutorial,route),true);
+    state=choose(state,Boolean(state.anomaly),()=>0);
+    assert.equal(route.confirmed,true);
+  }
+  assert.equal(state.ended,true);
+  state=newGame();route=createSchoolRoute();
+  assert.equal(state.tutorial,true);
+  assert.equal(state.progress,0);
+  assert.equal(route.confirmed,false);
 });
