@@ -12,7 +12,7 @@
     <p class="eyebrow">OBSERVATION HORROR · FIRST PROTOTYPE</p>
     <h1>마지막<br><em>하교.</em></h1>
     <p class="story">과제 제출은 끝났다.<br>그런데 학교는 아직 나를 보내주지 않는다.</p>
-    <div class="rules"><p>이상이 있다면 <strong>위층으로.</strong><br>이상이 없다면 <strong>아래층으로.</strong></p><p>계단 입구로 직접 걸어 들어가세요. 다섯 번 올바르게 선택하면 하교합니다.<br>첫 복도에서는 열쇠를 줍고 방화문을 연 뒤 정상 상태를 기억하세요.<br>다음 복도에서는 교실에 들어가 하교 확인표를 챙기세요.</p></div>
+    <div class="rules"><p>이상이 있다면 <strong>위층으로.</strong><br>이상이 없다면 <strong>아래층으로.</strong></p><p>계단 입구로 직접 걸어 들어가세요. 다섯 번 올바르게 선택하면 하교합니다.<br>첫 복도에서는 정상 상태를 기억하고 아래층으로 걸어 내려가세요.<br>교실은 자유롭게 둘러볼 수 있습니다. 물건을 챙길 필요는 없습니다.</p></div>
     <div class="start-actions"><button id="start" class="primary">학교에 들어가기 <span>→</span></button></div>
     <p class="fine">↑↓ 앞뒤 이동 / ←→ 방향 회전 / E 상호작용 / M 음소거 / Esc 처음 화면<br>소리 없이도 플레이 가능 · 갑작스러운 큰 소리와 점멸 없음</p>
   </section>
@@ -23,11 +23,10 @@
       <div class="scene-caption">23:17</div>
       <span class="crosshair" aria-hidden="true">+</span>
       <p id="walk-prompt" class="walk-prompt" hidden>↑ 앞으로 걷기 · ← → 둘러보기</p>
-      <button id="key-action" class="key-action" hidden>열쇠 줍기</button>
       <button id="room-action" class="key-action" hidden>교실 들어가기</button>
       <div class="vignette"></div>
     </div>
-    <div class="quest-strip"><span id="objective" role="status">목표 · 통행 열쇠 찾기</span><span id="inventory">통행 열쇠 없음</span></div>
+
     <div id="classroom-tools" class="classroom-tools" hidden><span>3-2 교실</span><button id="room-return">복도로 돌아가기 →</button></div>
     <button id="inspect" class="inspect-action" hidden>살펴보기</button><span id="position" hidden></span>
     <div class="inspection" role="status" aria-live="polite"><span id="inspect-title">먼저 복도를 살펴보세요.</span><p id="inspect-text">화살표로 걸어가 사물 가까이에서 E 키를 누르세요.</p></div>
