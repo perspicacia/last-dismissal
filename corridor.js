@@ -182,7 +182,7 @@ export class Corridor {
     }
     // Ceiling fixtures projected into the same world as the walls.
     const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z;const d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.12?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon-(y-1.5)*lens/d,d}:null;};
-    drawStairs(c,project);
+    drawStairs(c,project,p);
     drawSceneDepth(c,project,p);
     drawWallClock(c,project,this.clockFace);
     if(this.tutorial){

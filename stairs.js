@@ -4,13 +4,43 @@ export function stairFlight(up) {
   const steps=Array.from({length:count},(_,i)=>({near:start+i*tread,far:start+(i+1)*tread,previous:i?(up?1:-1)*i*rise:0,level:(up?1:-1)*(i+1)*rise}));
   return {left,right,start,tread,rise,count,steps};
 }
-export function drawStairs(c, project) {
+// Clip in world space before perspective division. A vertex behind the eye
+// must trim the visible shape, not discard the whole stairwell.
+export function clipNearPlane(vertices, player, near=.13, closed=true) {
+  const depth=v=>(v[0]-player.x)*Math.sin(player.angle)+(v[2]-player.z)*Math.cos(player.angle);
+  const intersection=(a,b,da,db)=>{const t=(near-da)/(db-da);return a.map((v,i)=>v+(b[i]-v)*t);};
+  if(!closed){
+    const [a,b]=vertices,da=depth(a),db=depth(b);
+    if(da<near&&db<near)return [];
+    if(da<near)return [intersection(a,b,da,db),b];
+    if(db<near)return [a,intersection(a,b,da,db)];
+    return vertices;
+  }
+  const out=[];
+  for(let i=0;i<vertices.length;i++){
+    const a=vertices[i],b=vertices[(i+1)%vertices.length],da=depth(a),db=depth(b);
+    if(da>=near)out.push(a);
+    if((da>=near)!==(db>=near))out.push(intersection(a,b,da,db));
+  }
+  return out;
+}
+export function screenHull(points) {
+  const sorted=points.slice().sort((a,b)=>a.x-b.x||a.y-b.y);
+  const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+  const half=arr=>{const out=[];for(const p of arr){while(out.length>1&&cross(out.at(-2),out.at(-1),p)<=0)out.pop();out.push(p);}return out;};
+  const lower=half(sorted),upper=half(sorted.slice().reverse());return lower.slice(0,-1).concat(upper.slice(0,-1));
+}
+export function drawStairs(c, project, player) {
+  const projected=(vertices,closed=true)=>clipNearPlane(vertices,player,.13,closed).map(v=>project(...v));
   for(const up of [true,false]) {
     const flight=stairFlight(up),{left:l,right:r,steps}=flight,faces=[];
-    const face=(vertices,color,edge=false)=>{const pts=vertices.map(v=>project(...v));if(pts.every(Boolean))faces.push({pts,color,edge,d:pts.reduce((sum,p)=>sum+p.d,0)/pts.length});};
-    const line=(a,b,color,width)=>{const pa=project(...a),pb=project(...b);if(pa&&pb)faces.push({pts:[pa,pb],color,width,d:(pa.d+pb.d)/2});};
-    const clip=[project(l,3,24.6),project(r,3,24.6),project(r,0,23.4),project(l,0,23.4)];
-    if(!clip.every(Boolean))continue;
+    const face=(vertices,color,edge=false)=>{const pts=projected(vertices);if(pts.length>=3&&pts.every(Boolean))faces.push({pts,color,edge,d:pts.reduce((sum,p)=>sum+p.d,0)/pts.length});};
+    const line=(a,b,color,width)=>{const [pa,pb]=projected([a,b],false);if(pa&&pb)faces.push({pts:[pa,pb],color,width,d:(pa.d+pb.d)/2});};
+    const clip=screenHull([
+      ...projected([[l,3,24.6],[r,3,24.6],[r,0,24.6],[l,0,24.6]]),
+      ...projected([[l,0,23.4],[r,0,23.4],[r,0,24.6],[l,0,24.6]])
+    ].filter(Boolean));
+    if(clip.length<3||!clip.every(Boolean))continue;
     c.save();c.beginPath();clip.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.clip();
     // Recessed stairwell: side walls extend below the corridor for the down flight.
     if(up)face([[l,-2.5,26.8],[l,3,26.8],[l,3,30],[l,-2.5,30]],'#52615d');
