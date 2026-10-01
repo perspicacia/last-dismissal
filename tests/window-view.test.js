@@ -10,6 +10,31 @@ function context() {
   return ctx;
 }
 const ghost={complete:true,naturalWidth:1024,naturalHeight:1536};
+test('시점 이동은 먼 숲보다 가까운 나무를 크게 옮기고 귀신과 가로등은 함께 이동한다',()=>{
+  const c=context();drawWindowView(c,{x:0,y:0,width:428,height:447},{ghost,haunted:true,verticalScale:1,viewOffset:1});
+  const translations=c.ops.filter(v=>v[0]==='translate').map(v=>v.slice(1));
+  assert.deepEqual(translations,[[0,0],[-5,0],[-18,0],[-18,0],[362,447*.29-2],[-35,0]]);
+  // Track save/restore transforms to verify actual ghost placement shares the
+  // lamp plane rather than merely testing the options passed by callers.
+  const stack=[];let tx=0, ghostX=null, lampX=null;
+  for(const [op,...args] of c.ops){
+    if(op==='save')stack.push(tx);
+    if(op==='restore')tx=stack.pop();
+    if(op==='translate')tx+=args[0];
+    if(op==='drawImage')ghostX=tx+args[1]+args[3]/2;
+    if(op==='moveTo'&&args[0]===319&&args[1]===447*.96)lampX=tx+args[0];
+  }
+  assert.equal(ghostX,142);assert.equal(lampX,301);
+});
+test('시차 입력은 기본 0이며 비정상 값과 범위를 안전하게 정규화한다',()=>{
+  const render=viewOffset=>{const c=context();drawWindowView(c,{x:0,y:0,width:428,height:447},{verticalScale:1,viewOffset});return c.ops;};
+  assert.deepEqual(render(undefined),render(0));
+  assert.deepEqual(render(NaN),render(0));
+  assert.deepEqual(render(Infinity),render(0));
+  assert.deepEqual(render(10),render(1));
+  assert.deepEqual(render(-10),render(-1));
+  assert.notDeepEqual(render(-1),render(1));
+});
 test('정상 숲은 귀신 없이 그리고 이상에서만 클립 내부에 비율을 유지해 표시',()=>{
   const c=context();drawWindowView(c,{x:42,y:37,width:428,height:149},{ghost});
   assert.equal(c.ops.filter(v=>v[0]==='drawImage').length,0);
@@ -37,4 +62,12 @@ test('창문 이상 판정·프레임 가림·다음 정상 복도의 귀신 제
     assert.equal(choose(state,true,()=>0).correct,true);assert.equal(choose(state,false,()=>0).correct,false);
     c.anomaly=null;c.buildTextures();assert.equal(c.hauntedWindow.ops.some(v=>v[0]==='drawImage'&&v[1]===ghost),false);
   } finally {globalThis.document=old;}
+});
+
+test('플레이 시점은 창별 시차로 전달되며 정지·짧은 프레임에서는 캐시를 재사용한다',()=>{
+  const c=Object.create(Corridor.prototype),calls=[];
+  Object.assign(c,{player:{z:7},scene:'corridor',anomaly:'window',windowViews:{},lastExteriorUpdate:-Infinity,windowTexture:(haunted,offset)=>{calls.push({haunted,offset});return {haunted,offset};}});
+  c.updateExterior(0);assert.equal(calls.length,4);assert.equal(c.windowViews[6].texture.haunted,true);assert.equal(c.windowViews[4].texture.haunted,false);assert.equal(c.windowViews[6].offset,0);
+  c.updateExterior(70);c.updateExterior(150);assert.equal(calls.length,4);
+  c.player.z=8;c.updateExterior(300);assert.ok(calls.length>4);assert.ok(c.windowViews[6].offset>0);
 });

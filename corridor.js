@@ -1,3 +1,5 @@
+import { drawClockFace, drawWallClock } from './clock.js';
+import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
 import { drawWindowView } from './window-view.js';
 import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js';
@@ -81,21 +83,20 @@ export class Corridor {
     });
     this.exterior=document.createElement('canvas');this.exterior.width=428;this.exterior.height=447;
     drawWindowView(this.exterior.getContext('2d'),{x:0,y:0,width:428,height:447},{verticalScale:1});
-    const windowTexture=haunted=>this.texture(c=>{
+    this.windowTexture=(haunted,viewOffset=0)=>this.texture(c=>{
       c.fillStyle='#244e4a';c.fillRect(29,25,454,173);c.fillStyle='#507d6c';c.fillRect(35,30,442,163);
-      drawWindowView(c,{x:42,y:37,width:428,height:149},{ghost:this.windowGhost,haunted});
+      drawWindowView(c,{x:42,y:37,width:428,height:149},{ghost:this.windowGhost,haunted,viewOffset});
       // The exterior is behind both crossbars and faint glass reflections.
       c.fillStyle='#345e52';c.fillRect(251,37,10,149);c.fillRect(42,111,428,7);
       c.fillStyle='#aac1ad';c.fillRect(251,37,2,149);c.fillRect(42,111,428,1);
       c.fillStyle='#bac1a41a';c.beginPath();c.moveTo(55,40);c.lineTo(72,40);c.lineTo(208,180);c.lineTo(191,180);c.fill();
       c.fillStyle='#aaa68b';c.fillRect(24,195,464,5);c.fillStyle='#233833';c.fillRect(24,200,464,5);
     });
-    this.window=windowTexture(false);this.hauntedWindow=windowTexture(this.anomaly==='window');
-    this.clock=this.texture(c=>{
-      c.fillStyle='#0b1a13';c.beginPath();c.arc(256,86,53,0,Math.PI*2);c.fill();c.fillStyle='#d1d7bd';c.beginPath();c.arc(256,86,46,0,Math.PI*2);c.fill();
-      c.strokeStyle='#253d2b';c.lineWidth=2;for(let i=0;i<12;i++){let a=i*Math.PI/6;c.beginPath();c.moveTo(256+Math.sin(a)*36,86-Math.cos(a)*36);c.lineTo(256+Math.sin(a)*42,86-Math.cos(a)*42);c.stroke();}
-      c.lineWidth=4;c.beginPath();c.moveTo(256,86);c.lineTo(this.anomaly==='clock'?256:241,this.anomaly==='clock'?114:62);c.moveTo(256,86);c.lineTo(this.anomaly==='clock'?258:291,this.anomaly==='clock'?123:93);c.stroke();
-    });
+    this.window=this.windowTexture(false);this.hauntedWindow=this.windowTexture(this.anomaly==='window');
+    this.windowViews={};this.lastExteriorUpdate=-Infinity;this.exteriorOffset=null;
+    this.clock=this.wall;
+    this.clockFace=document.createElement('canvas');this.clockFace.width=512;this.clockFace.height=512;
+    drawClockFace(this.clockFace.getContext('2d'),512,this.anomaly==='clock');
     this.end=this.texture(c=>{
       // Recessed openings; the stair flights are projected in world space.
       for(const x of [30,311]){
@@ -104,6 +105,22 @@ export class Corridor {
     });
   }
 
+  updateExterior(time) {
+    if(time-this.lastExteriorUpdate<120)return;
+    this.lastExteriorUpdate=time;
+    const offset=center=>Math.max(-1,Math.min(1,(this.player.z-center)/3));
+    if(this.scene==='classroom'){
+      const viewOffset=Math.round(offset(4.5)*20)/20;
+      if(viewOffset!==this.exteriorOffset){
+        drawWindowView(this.exterior.getContext('2d'),{x:0,y:0,width:428,height:447},{verticalScale:1,viewOffset});
+        this.exteriorOffset=viewOffset;
+      }
+    } else for(const start of [4,6,12,14]){
+      const viewOffset=Math.round(offset(start+1)*20)/20;
+      if(this.windowViews[start]?.offset===viewOffset)continue;
+      this.windowViews[start]={offset:viewOffset,texture:this.windowTexture(this.anomaly==='window'&&start===6,viewOffset)};
+    }
+  }
   notify() {
     if(this.scene==='classroom'){this.item=null;this.atStairs=false;this.onPosition({item:null,stairs:false,names,player:this.player,scene:this.scene});return;}
     const open=revealsTeeth(this.player,this.anomaly,this.mouthOpen);
@@ -126,6 +143,7 @@ export class Corridor {
   }
   draw(time) {
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
+    this.updateExterior(time);
     if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.exterior);return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
@@ -156,7 +174,7 @@ export class Corridor {
       let tex=this.wall,u;
       if(side){const z=p.z+dz*dist;u=((z%2)+2)%2/2;
         if(dx<0){if(z>=4&&z<6)tex=this.door;else if(z>=8&&z<10)tex=this.board;else if(z>=14&&z<16)tex=this.door;}
-        else {if((z>=4&&z<8)||(z>=12&&z<16))tex=this.anomaly==='window'&&z>=6&&z<8?this.hauntedWindow:this.window;else if(z>=18&&z<20)tex=this.clock;}
+        else {if((z>=4&&z<8)||(z>=12&&z<16))tex=this.windowViews[Math.floor(z/2)*2]?.texture||this.window;else if(z>=18&&z<20)tex=this.clock;}
       } else {u=(p.x+dx*dist+3)/6;if(dz>0)tex=this.end;}
       const height=3*lens/perp,top=horizon-height*.5;
       c.drawImage(tex,Math.max(0,Math.min(511,Math.floor(u*512))),0,1,256,x,top,2,height);
@@ -165,10 +183,8 @@ export class Corridor {
     // Ceiling fixtures projected into the same world as the walls.
     const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z;const d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.12?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon-(y-1.5)*lens/d,d}:null;};
     drawStairs(c,project,{tutorial:this.tutorial});
-    for(let z=24;z>=2;z-=4){
-      const points=[project(-.6,2.96,z),project(.6,2.96,z),project(.6,2.96,z+.6),project(-.6,2.96,z+.6)];
-      if(points.every(Boolean)){c.fillStyle='#d0e2d2';c.shadowColor='#accac3';c.shadowBlur=9;c.beginPath();points.forEach((a,i)=>i?c.lineTo(a.x,a.y):c.moveTo(a.x,a.y));c.closePath();c.fill();c.shadowBlur=0;}
-    }
+    drawSceneDepth(c,project,p);
+    drawWallClock(c,project,this.clockFace);
     if(this.tutorial){
       const desk=project(2,0,4);
       if(desk&&desk.d<depth[Math.min(depth.length-1,Math.max(0,Math.floor(desk.x/2)))]){
