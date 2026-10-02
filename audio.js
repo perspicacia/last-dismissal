@@ -1,4 +1,4 @@
-import {effectSamples} from './sound-effects.js?v=classroom-hauntings-1';
+import {effectSamples} from './sound-effects.js?v=music-ghost-polish-1';
 export class SchoolAudio {
   constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
   async start() {
@@ -82,6 +82,7 @@ export class SchoolAudio {
   jumpscare(){return this.playEffect('jumpscare',.58);}
   doorSlide(){return this.playEffect('door-slide',.27);}
   babyCry(){return this.playEffect('baby-cry',.14);}
+  ghostLaugh(){return this.playEffect('ghost-laugh',.24);}
   clearEffects(){
     for(const {source,gain} of this.effects){source.onended=null;source.stop();source.disconnect();gain.disconnect();}
     this.effects.clear();this.lastStep=-Infinity;this.foot=0;

@@ -1,5 +1,5 @@
 // Original deterministic synthesis. Every effect shares the player's master gain.
-export const EFFECT_DURATIONS={footstep:.24,jumpscare:.85,'door-slide':.65,'baby-cry':1.7};
+export const EFFECT_DURATIONS={footstep:.24,jumpscare:.85,'door-slide':1.05,'baby-cry':1.7,'ghost-laugh':1.85};
 const TAU=2*Math.PI;
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 export function effectSamples(kind,rate=44100,variant=0){
@@ -36,12 +36,42 @@ export function effectSamples(kind,rate=44100,variant=0){
    const envelope=clamp(t/.012,0,1)*clamp((duration-t)/.15,0,1);
    data[i]=envelope*(folds+body+rasp);
   }else if(kind==='door-slide'){
-   // Wooden panel friction, uneven rail chatter and a soft latch at the end.
-   const glide=clamp(t/.035,0,1)*clamp((.60-t)/.09,0,1);
-   const rail=.52+.48*Math.sin(TAU*(23*t+14*t*t))**8;
-   const creak=Math.sin(TAU*(155*t+19*t*t))*.12;
-   const latch=t>=.56?Math.exp(-(t-.56)*65)*(.50*low+.32*Math.sin(TAU*82*(t-.56))):0;
-   data[i]=(glide*(low*.48+(mid-low)*.50)*rail+glide*creak+latch)*clamp((duration-t)/.018,0,1);
+   // A sliding wooden panel that binds against a rusty rail: friction continues
+   // under several uneven, voiced squeals before the runner clicks into place.
+   const glide=clamp(t/.075,0,1)*clamp((.97-t)/.16,0,1);
+   const stick=.36+.64*Math.sin(TAU*(3.2*t+2.4*t*t))**4;
+   const speed=1+.07*Math.sin(TAU*17*t)+.025*Math.sin(TAU*41*t);
+   phase+=TAU*(590+160*Math.sin(TAU*.85*t)+80*t)*speed/rate;
+   const squeal=Math.sin(phase)*.27+Math.sin(phase*2.01)*.11+Math.sin(phase*3.03)*.045;
+   const chatter=(mid-low)*(.17+.17*Math.sin(TAU*(36*t+9*t*t))**10);
+   const friction=low*(.55+.12*Math.sin(TAU*11*t));
+   const latchT=t-.93;
+   const latch=latchT>=0?Math.exp(-latchT*58)*(.25*noise+.22*Math.sin(TAU*135*latchT)+.13*Math.sin(TAU*2150*latchT)*Math.exp(-latchT*45)):0;
+   data[i]=(glide*(friction+chatter+squeal*stick)+latch)*clamp((duration-t)/.025,0,1);
+  }else if(kind==='ghost-laugh'){
+   // Breath-led "hu, hu ... ha, ha, ha" with a woman's lower register and vowel
+   // formants. Irregular phrasing and a fading room echo avoid a toy-like giggle.
+   const syllables=[[.04,.28,.72],[.39,.25,.8],[.76,.25,1],[1.06,.24,.86],[1.34,.27,.58]];
+   let voiced=0,exhale=0,vowel=0;
+   for(let s=0;s<syllables.length;s++){
+    const [start,length,level]=syllables[s],u=(t-start)/length;
+    if(u<0||u>1)continue;
+    voiced=Math.sin(Math.PI*clamp((u-.13)/.87,0,1))**1.5*level;
+    exhale=Math.sin(Math.PI*u)**.8*level;
+    vowel=s<2?0:1;
+   }
+   const pitch=238-35*t+24*Math.sin(TAU*2.6*t)+6*Math.sin(TAU*6.7*t)+noise*1.4;
+   phase+=TAU*pitch/rate;
+   let voice=0;
+   for(let h=1;h<=20;h++){
+    const f=pitch*h;if(f>=rate*.45)break;
+    const first=500+320*vowel,second=1150+340*vowel;
+    const formant=.15+1.7*Math.exp(-(((f-first)/180)**2))+.9*Math.exp(-(((f-second)/260)**2))+.28*Math.exp(-(((f-2750)/380)**2));
+    voice+=Math.sin(phase*h)*formant/Math.pow(h,1.12);
+   }
+   const folds=Math.tanh(voice*1.35)*(.78+.12*Math.sin(phase*.5));
+   const breath=(mid-low)*.23+low*.04;
+   data[i]=(voiced*folds*.72+exhale*breath)*clamp((duration-t)/.15,0,1);
   }else{
    // Two breathy, wavering cries behind a wall. A slow attack and low playback
    // gain make it an atmosphere cue, not a second jumpscare.
@@ -60,17 +90,17 @@ export function effectSamples(kind,rate=44100,variant=0){
   }
   peak=Math.max(peak,Math.abs(data[i]));
  }
- if(kind==='baby-cry'){
+ if(kind==='baby-cry'||kind==='ghost-laugh'){
   // Short room reflections and softened upper frequencies suggest distance.
-  const dry=data.slice(),early=Math.round(rate*.071),late=Math.round(rate*.137);
-  const soften=1-Math.exp(-TAU*1900/rate);let softened=0;peak=0;
+  const ghost=kind==='ghost-laugh',dry=data.slice(),early=Math.round(rate*(ghost?.095:.071)),late=Math.round(rate*(ghost?.187:.137));
+  const soften=1-Math.exp(-TAU*(ghost?2900:1900)/rate);let softened=0;peak=0;
   for(let i=0;i<data.length;i++){
    const reflected=dry[i]+(i>=early?dry[i-early]*.22:0)+(i>=late?dry[i-late]*.12:0);
    softened+=soften*(reflected-softened);
    data[i]=softened*clamp((duration-i/rate)/.12,0,1);peak=Math.max(peak,Math.abs(data[i]));
   }
  }
- const limit=kind==='footstep'?.70:kind==='jumpscare'?.85:kind==='baby-cry'?.60:.65;
+ const limit=kind==='footstep'?.70:kind==='jumpscare'?.85:kind==='baby-cry'?.60:kind==='ghost-laugh'?.62:.65;
  if(peak)for(let i=0;i<data.length;i++)data[i]*=limit/peak;
  return data;
 }
