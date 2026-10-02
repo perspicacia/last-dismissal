@@ -20,3 +20,5 @@
 - 기록: [docs/progress.md](progress.md)
 
 - 3-1 책상과 음악실 의자에는 정적인 학생 인형, 3-3·무용실 창밖에는 공격하지 않는 귀신을 배치한다. [교실 확장 명세](../specs/classrooms-doll-depth.md).
+
+- 교실 환경 공포와 음향: 3-1 주인 없는 공, 3-2 구석 그림자, 창밖 귀신 근접 미소, 입장 문 소리·간헐적 아기 울음·괴물 토끼 포효. [명세](../specs/classroom-hauntings.md).

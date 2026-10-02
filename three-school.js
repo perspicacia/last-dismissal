@@ -3,10 +3,12 @@ import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=five-classrooms-1';
 import {buildRoomProps} from './room-props.js';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
-import {volumeFromImage} from './doll-volume.js?v=five-classrooms-2';
+import {volumeFromImage} from './doll-volume.js?v=classroom-hauntings-1';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
-import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=five-classrooms-1';
+import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=classroom-hauntings-2';
+
+import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js';
 
 const material=(color,options={})=>new THREE.MeshStandardMaterial({color,roughness:.82,...options});
 function box(group,x,y,z,w,h,d,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
@@ -25,6 +27,7 @@ export class ThreeSchoolView {
     this.scenes={};this.refs={};this.build('corridor');for(const room of ROOMS)this.build(room.id);this.syncTextures(source);this.resize();
     canvas.dataset.rendererReady='three';
   }
+  resetHauntings(){this.lastViewTime=null;this.dollLook=0;for(const group of Object.values(this.refs.hauntings||{}))updateRoomHauntings(group,{player:this.source.player,time:0,dt:0,active:false});for(const ghost of this.refs.ambienceGhosts||[])updateGhostSmile(ghost.userData.smile,ghost,this.source.player,ghost.userData.config,{active:false});if(this.source.canvas)Object.assign(this.source.canvas.dataset,{ballActive:'false',ballHeight:'0',ghostSmile:'0',cornerVisible:'false'});}
   resize(){const w=Math.max(1,this.source.canvas.clientWidth),h=Math.max(1,this.source.canvas.clientHeight);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=THREE.MathUtils.radToDeg(2*Math.atan(h/(w*.68)*.5));this.camera.updateProjectionMatrix();}
   build(kind){
     const scene=new THREE.Scene();scene.background=new THREE.Color('#10212c');scene.fog=new THREE.FogExp2('#1a2c35',.013);scene.scale.z=-1;this.scenes[kind]=scene;
@@ -73,6 +76,7 @@ export class ThreeSchoolView {
       Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;this.refs.doll.receiveShadow=true;
       tilt.rotation.x=Math.PI/2;this.contactShadow(g,DOLL.x,.008,DOLL.z-DOLL.height*.5,.70,1.55);}
       this.addAmbience(g,kind);
+      const haunting=buildRoomHauntings(kind);g.add(haunting);(this.refs.hauntings??={})[kind]=haunting;
       (this.refs.roomRabbits??={})[kind]=this.rabbitRig(g);this.refs.roomRabbits[kind].visible=false;
     }else{
       const print=document.createElement('canvas');print.width=512;print.height=112;const pc=print.getContext('2d');pc.fillStyle='#e9e1c9b0';
@@ -96,7 +100,7 @@ export class ThreeSchoolView {
       const mesh=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);Object.assign(mesh.material,{transparent:true,alphaTest:.55,roughness:1});mesh.castShadow=true;mesh.receiveShadow=true;(this.refs.ambienceDolls??=[]).push(mesh);
       this.contactShadow(parent,p.x,p.y+.003,p.z-p.height*.5,p.height*.48,p.height);
     }
-    if(config.ghost){const p=config.ghost,ghost=this.sprite(parent,p.height,p.y,[p.x,p.y,p.z]);ghost.name='ambience-window-ghost';(this.refs.ambienceGhosts??=[]).push(ghost);}
+    if(config.ghost){const p=config.ghost,ghost=this.sprite(parent,p.height,p.y,[p.x,p.y,p.z]);ghost.name='ambience-window-ghost';ghost.userData.room=kind;const smile=createGhostSmile(p);parent.add(smile);ghost.userData.smile=smile;ghost.userData.config=p;(this.refs.ambienceGhosts??=[]).push(ghost);}
   }
   slidingDoor(parent,x,z,angle=0){
     const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=angle;g.name='sliding-classroom-door';parent.add(g);
@@ -201,7 +205,7 @@ export class ThreeSchoolView {
     }
     for(const mesh of this.refs.ambienceDolls||[]){if(this.dollVolumeReady&&!mesh.userData.volumeReady){mesh.geometry.dispose();mesh.geometry=this.refs.doll.geometry;mesh.material=[mesh.material,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];mesh.userData.volumeReady=true;}assign({material:Array.isArray(mesh.material)?mesh.material[0]:mesh.material},source.dollImage);mesh.visible=Boolean(this.dollVolumeReady);}
     const scary=dollRise(source.dollState)>.25;const face=this.refs.dollFace||this.refs.doll.material;
-    assign({material:face},scary?source.dollScary:source.dollImage);this.refs.doll.visible=Boolean(face.map)&&Boolean(this.dollVolumeReady);this.lastState='';
+    assign({material:face},scary?source.dollScary:source.dollImage);this.refs.doll.visible=Boolean(face.map)&&Boolean(this.dollVolumeReady);if(source.canvas)Object.assign(source.canvas.dataset,{dollReady:String(Boolean(this.dollVolumeReady)),dollImageSize:`${source.dollImage?.naturalWidth}x${source.dollImage?.naturalHeight}`,dollMesh:String(this.refs.doll.geometry.index?.count)});this.lastState='';
   }
   draw(source,time){
     const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
@@ -230,11 +234,19 @@ export class ThreeSchoolView {
     const ambience=ROOM_AMBIENCE[source.scene]?.student;
     if(ambience){const dx=ambience.x-p.x,dz=ambience.z-ambience.height*.5-p.z,distance=Math.hypot(dx,dz);const facing=(dx*Math.sin(p.angle)+dz*Math.cos(p.angle))/Math.max(.001,distance);
       if(distance<3.5&&facing>.7)targetDollLook=-(1.5-ambience.y-.18)/Math.max(.5,distance)*THREE.MathUtils.clamp((3.5-distance)/1.2,0,1);}
+    const corner=ROOM_HAUNTINGS[source.scene]?.corner;if(corner){const dx=corner.x-p.x,dz=corner.z-p.z,distance=Math.hypot(dx,dz);if(distance<4&&(dx*Math.sin(p.angle)+dz*Math.cos(p.angle))/Math.max(.001,distance)>.85)targetDollLook=-.94/Math.max(.6,distance);}
+    const nearGhost=ROOM_AMBIENCE[source.scene]?.ghost;if(nearGhost&&ghostSmileAmount(p,nearGhost,{active:!source.exploration?.ended}))targetDollLook=(nearGhost.y+nearGhost.height*.327-1.5)/Math.max(.6,Math.hypot(nearGhost.x-p.x,nearGhost.z-p.z));
     const viewDt=Math.min(.05,Math.max(0,(time-(this.lastViewTime??time-50))/1000));this.lastViewTime=time;
+    let ballActive=false,ballHeight=0,cornerVisible=false,ghostSmile=0;
+    for(const [room,group] of Object.entries(this.refs.hauntings||{})){const result=updateRoomHauntings(group,{player:p,time:time/1000,dt:viewDt,reduced,active:source.scene===room&&!source.exploration?.ended});if(source.scene===room){({ballActive,ballHeight,cornerVisible}=result);}}
+    if(source.canvas)Object.assign(source.canvas.dataset,{ballActive:String(ballActive),ballHeight:(ballHeight??0).toFixed(3),ghostSmile:ghostSmile.toFixed(2),cornerVisible:String(cornerVisible)});
     this.dollLook=(this.dollLook??targetDollLook)+(targetDollLook-(this.dollLook??targetDollLook))*(1-Math.exp(-viewDt*12));
-    const dollLook=source.scene==='classroom'||ambience?this.dollLook:0;
+    const dollLook=source.scene==='classroom'||ambience||nearGhost?this.dollLook:0;
     const descent=source.scene==='corridor'&&p.x>.65?-.65*THREE.MathUtils.clamp((p.z-21.5)/2,0,1)*Math.max(0,Math.cos(p.angle)):0;
     this.camera.position.set(p.x,1.5+(!reduced&&walking?Math.sin(time/130)*.012:0),-p.z);this.camera.lookAt(p.x+Math.sin(p.angle),this.camera.position.y+descent+dollLook,-p.z-Math.cos(p.angle));
+    this.camera.updateMatrixWorld();this.scenes[source.scene].updateMatrixWorld(true);
+    for(const ghost of this.refs.ambienceGhosts||[]){const amount=updateGhostSmile(ghost.userData.smile,ghost,p,ghost.userData.config,{camera:this.camera,dt:viewDt,reduced,active:source.scene===ghost.userData.room&&!source.exploration?.ended});if(source.scene===ghost.userData.room)ghostSmile=amount;}
+    if(source.canvas)source.canvas.dataset.ghostSmile=ghostSmile.toFixed(2);
     this.renderer.render(this.scenes[source.scene],this.camera);
   }
 }

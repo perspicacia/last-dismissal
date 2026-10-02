@@ -3,7 +3,7 @@ import * as THREE from './vendor/three.module.js';
 // Metres in the school's unreflected scene coordinates. These props never
 // participate in movement, rabbit discovery, or a game-over decision.
 export const ROOM_HAUNTINGS = Object.freeze({
-  classroom31: {ball: {x: -6.7, z: 4.7, radius: .20, floorY: -.265}},
+  classroom31: {ball: {x: -6.7, z: 5.25, radius: .20, floorY: -.265}},
   classroom: {corner: {x: 3.72, z: 1.05}},
 });
 const clamp = value => Math.max(0, Math.min(1, value));
@@ -145,7 +145,7 @@ export function updateGhostSmile(overlay, ghost, player, config, {dt = 1 / 60, r
     if (player) overlay.rotation.set(0, Math.atan2(player.x - config.x, player.z - config.z), 0);
     overlay.rotateZ(tilt);
   }
-  data.mouth.scale.set(config.height * (.5 + amount * .5), config.height * (.22 + amount * .78), config.height);
+  data.mouth.scale.set(config.height * (.5 + amount * .22), config.height * (.22 + amount * .44), config.height);
   data.opening.material.opacity = amount;
   for (const tooth of data.teeth) tooth.material.opacity = amount * .8;
   return amount;

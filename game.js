@@ -1,9 +1,10 @@
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
-import {SchoolAudio} from './audio.js?v=rabbit-scream-1';
-import {Corridor} from './corridor.js?v=five-classrooms-1';
+import {SchoolAudio} from './audio.js?v=classroom-hauntings-1';
+import {Corridor} from './corridor.js?v=classroom-hauntings-1';
 import {ROOMS,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=five-classrooms-1';
+import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
-let state=null,endingTimer,audioError='';
+let state=null,endingTimer,audioError='',hauntingAudio=newHauntingAudio();
 function show(id){document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
 function updateAudioStatus(){const status=$('audio-status');status.textContent=audioError||(!audio.ctx?'BGM 대기':audio.muted||audio.volume===0?'BGM 음소거':audio.ctx.state==='running'?'BGM 재생 중':'BGM 일시 정지 · 소리 확인');status.dataset.level=String(audio.level().toFixed(5));}
 setInterval(updateAudioStatus,500);
@@ -12,12 +13,12 @@ const corridor=new Corridor($('corridor'),({player,scene})=>{
  $('position').dataset.scene=scene;for(const key of ['x','z','angle'])$('position').dataset[key]=player[key].toFixed(2);
  updateUI();
 },()=>audio.footstep(corridor.scene==='corridor'?'corridor':'classroom'));
-audio.onEffect=kind=>{const canvas=$('corridor');canvas.dataset.soundEffect=kind;canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);};
+audio.onEffect=kind=>{const canvas=$('corridor');canvas.dataset.soundEffect=kind;canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);const key=kind==='baby-cry'?'babyCryCount':kind==='door-slide'?'doorSlideCount':kind==='jumpscare'?'roarCount':null;if(key)canvas.dataset[key]=String(Number(canvas.dataset[key]||0)+1);};
 corridor.onTick=dt=>{
  if(!state)return;
  if(state.ended){updateArrival();return;}
  state=advanceExploration(state,dt,corridor.scene,corridor.player);
- corridor.exploration=state;updateUI();if(state.ended)finish();
+ corridor.exploration=state;updateUI();if(state.ended)finish();else{const ambient=advanceHauntingAudio(hauntingAudio,dt,corridor.scene,false);hauntingAudio=ambient.state;if(ambient.cry)audio.babyCry();}
 };
 function updateUI(){
  if(!state)return;
@@ -37,8 +38,8 @@ function updateUI(){
  corridor.exploration=state;
 }
 async function start(){
- clearTimeout(endingTimer);audio.clearEffects();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);corridor.screamTriggered=false;
- $('jumpscare').hidden=true;$('corridor').dataset.soundCount='0';$('corridor').dataset.soundEffect='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
+ clearTimeout(endingTimer);audio.clearEffects();hauntingAudio=newHauntingAudio();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);corridor.screamTriggered=false;
+ $('jumpscare').hidden=true;for(const key of ['soundCount','babyCryCount','doorSlideCount','roarCount'])$('corridor').dataset[key]='0';$('corridor').dataset.soundEffect='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
 }
 function updateArrival(){
  const arrival=rabbitArrival((performance.now()-corridor.caughtAt)/1000);
@@ -47,18 +48,19 @@ function updateArrival(){
  if(arrival.teeth&&!corridor.screamTriggered){corridor.screamTriggered=true;audio.jumpscare();}
 }
 function finish(){
+ audio.clearEffects();hauntingAudio=newHauntingAudio();
  corridor.keys.clear();corridor.caughtAt=performance.now();corridor.mouthOpen=false;corridor.screamTriggered=false;updateUI();
  // Keep drawing the room-space lunge, but block movement and all actions.
- endingTimer=setTimeout(()=>{if(!state?.ended)return;corridor.setActive(false);show('gameover');$('caught-result').textContent=`${ROOMS.find(r=>r.id===state.rabbitRoom).label}에 숨어 있었다. 다시 들어가면 다른 방에 있을 수도 있다.`;$('retry').focus();},ARRIVAL.end*1000);
+ endingTimer=setTimeout(()=>{if(!state?.ended)return;corridor.setActive(false);audio.clearEffects();show('gameover');$('caught-result').textContent=`${ROOMS.find(r=>r.id===state.rabbitRoom).label}에 숨어 있었다. 다시 들어가면 다른 방에 있을 수도 있다.`;$('retry').focus();},ARRIVAL.end*1000);
 }
 function interact(){
  if(!state||state.ended)return;
  if(corridor.scene!=='corridor'){leaveRoom();return;}
- const room=nearbyRoom(corridor.player,corridor.scene);if(room){corridor.enterClassroom(room.id);updateUI();audio.inspect();$('corridor').focus();}
+ const room=nearbyRoom(corridor.player,corridor.scene);if(room){audio.clearEffects();hauntingAudio=newHauntingAudio();corridor.enterClassroom(room.id);updateUI();audio.doorSlide();$('corridor').focus();}
 }
-function leaveRoom(){if(!state||state.ended)return;corridor.leaveClassroom();updateUI();$('corridor').focus();}
+function leaveRoom(){if(!state||state.ended)return;audio.clearEffects();hauntingAudio=newHauntingAudio();corridor.leaveClassroom();updateUI();$('corridor').focus();}
 $('room-action').onclick=interact;$('room-return').onclick=leaveRoom;
-function restart(){clearTimeout(endingTimer);state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
+function restart(){clearTimeout(endingTimer);hauntingAudio=newHauntingAudio();state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
 const keyActions={ArrowUp:'forward',ArrowDown:'back',ArrowLeft:'left',ArrowRight:'right',w:'forward',s:'back',a:'left',d:'right'};
 document.addEventListener('keydown',e=>{
  if(e.target.tagName==='INPUT')return;
