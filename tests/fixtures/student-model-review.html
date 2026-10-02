@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><title>학생 인형 GLB 검증</title>
+<style>body{margin:0;background:#172328;color:#e2ddcb;font:15px sans-serif}nav{display:flex;gap:8px;align-items:center;padding:12px;flex-wrap:wrap}button{padding:8px 12px}canvas{display:block;width:100vw;height:calc(100vh - 58px)}output{margin-left:auto}</style>
+<nav><button data-view="front">정면</button><button data-view="left">왼쪽</button><button data-view="right">오른쪽</button><button data-view="back">뒤쪽</button><button data-view="face">얼굴</button><button data-view="lying">누운 자세</button><button data-view="low">누운 측면</button><output id="status">GLB 로딩 중</output></nav>
+<canvas aria-label="실제 3D 학생 인형 모델"></canvas>
+<script type="module">
+import * as THREE from '../../vendor/three.module.js';
+import {loadStudentModel,prepareStudentModel} from '../../student-model.js?v=student-glb-1';
+const canvas=document.querySelector('canvas'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#26363b');scene.add(new THREE.HemisphereLight('#d1e0e5','#605343',2));
+const key=new THREE.DirectionalLight('#ede3c9',3);key.position.set(-2,4,-3);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-2,right:2,top:2,bottom:-2});key.shadow.bias=-.0004;key.shadow.normalBias=.012;scene.add(key);
+const fill=new THREE.DirectionalLight('#9fbfd0',1.2);fill.position.set(2,2,2);scene.add(fill);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:'#655947',roughness:.85}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+const camera=new THREE.PerspectiveCamera(38,1,.01,30),pose=new THREE.Group();scene.add(pose);
+try{
+  const model=prepareStudentModel(await loadStudentModel(),1.55);pose.add(model);
+  const b=new THREE.Box3().setFromObject(model),size=b.getSize(new THREE.Vector3());
+  let triangles=0;model.traverse(o=>{if(o.isMesh)triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;});
+  canvas.dataset.status='ready';canvas.dataset.depth=size.z.toFixed(3);canvas.dataset.triangles=triangles;
+  document.querySelector('#status').textContent=`GLB 정상 · 깊이 ${size.z.toFixed(2)}m · ${triangles.toLocaleString()} triangles`;
+  const views={front:[[0,.98,-2.7],[0,.82,0]],left:[[-2.7,1,-.4],[0,.82,0]],right:[[2.7,1,-.4],[0,.82,0]],back:[[0,1,2.7],[0,.82,0]],face:[[.12,1.36,-.85],[0,1.29,0]],lying:[[1.1,1.2,1.7],[0,.17,.76]],low:[[1.6,.45,.75],[0,.20,.75]]};
+  function view(name){const lying=name==='lying'||name==='low';pose.rotation.x=lying?Math.PI/2:0;pose.position.y=lying?model.userData.floorHeight:0;camera.position.set(...views[name][0]);camera.lookAt(...views[name][1]);canvas.dataset.view=name;render();}
+  function render(){renderer.setSize(canvas.clientWidth,canvas.clientHeight,false);camera.aspect=canvas.clientWidth/canvas.clientHeight;camera.updateProjectionMatrix();renderer.render(scene,camera);}
+  for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>view(button.dataset.view);
+  new ResizeObserver(render).observe(canvas);view('front');
+}catch(error){canvas.dataset.status='failed';document.querySelector('#status').textContent=String(error);console.error(error);}
+</script></html>

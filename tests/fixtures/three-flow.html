@@ -3,8 +3,8 @@
 const html=await fetch('../../index.html').then(r=>r.text());const page=new DOMParser().parseFromString(html,'text/html');page.querySelector('script[src^="game.js"]').remove();
 document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D 탐색 흐름 검증';document.body.innerHTML=page.body.innerHTML;document.body.dataset.screen=page.body.dataset.screen;
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
-// Reproducible safe route through the ordinary classrooms; attack remains in dance.
-if(new URLSearchParams(location.search).has('safe'))Math.random=()=>.99;
+// A failed optional character asset must never prevent entering/restarting.
+if(new URLSearchParams(location.search).has('modelFail')){const fetchAsset=window.fetch;window.fetch=(url,...args)=>String(url instanceof Request?url.url:url).includes('student-doll.glb')?Promise.reject(new Error('Intentional model failure')):fetchAsset(url,...args);}
 // Exercise the real controller/audio graph without emitting sound on the user's
 // device. The analyser remains upstream so PCM activity is still measurable.
 if(new URLSearchParams(location.search).has('silent')){
@@ -14,5 +14,11 @@ if(new URLSearchParams(location.search).has('silent')){
   analyser.connect=destination=>{connect(sink);sink.connect(destination);return destination;};return analyser;
  };
 }
-await import('../../game.js?v=reference-audio-1');
+await import('../../game.js?v=student-glb-1');
+// Preserve the first sound-clock draw and force the following exploration draw.
+// Then restore random before Three.js creates UUIDs or audio creates noise.
+// Capturing the real start/retry click runs before the ordinary game handler.
+if(new URLSearchParams(location.search).has('safe'))for(const id of ['start','retry','again'])document.getElementById(id).addEventListener('click',()=>{
+ const random=Math.random;let draws=0;Math.random=()=>{if(++draws===2){Math.random=random;return .99;}return random();};
+},{capture:true});
 </script></body></html>

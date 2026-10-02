@@ -4,6 +4,7 @@ import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js
 import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=doll-sides-stable-1';
+import {loadStudentModel,prepareStudentModel} from './student-model.js?v=student-glb-1';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=music-ghost-polish-1';
@@ -26,6 +27,24 @@ export class ThreeSchoolView {
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;
     this.scenes={};this.refs={};this.build('corridor');for(const room of ROOMS)this.build(room.id);this.syncTextures(source);this.resize();
     canvas.dataset.rendererReady='three';
+    this.loadStudentModel();
+  }
+  async loadStudentModel(load=loadStudentModel){
+    const data=this.source.canvas.dataset;data.studentModelStatus='loading';
+    try{
+      const asset=await load(),model=prepareStudentModel(asset,DOLL.height);
+      this.refs.dollSolid=model;this.refs.dollTilt.add(model);data.studentModelStatus='ready';
+      this.updateStudentModel(this.source);
+    }catch{data.studentModelStatus='fallback';this.updateStudentModel(this.source);}
+  }
+  updateStudentModel(source){
+    const solid=this.refs.dollSolid,useSolid=Boolean(solid&&source.exploration);
+    if(solid)solid.visible=useSolid;
+    const face=this.refs.dollFace||this.refs.doll.material;
+    this.refs.doll.visible=!useSolid&&Boolean(face.map)&&Boolean(this.dollVolumeReady);
+    this.refs.dollRoot.position.y=useSolid?solid.userData.floorHeight:.035;
+    if(source.canvas)Object.assign(source.canvas.dataset,{studentModel:useSolid?'glb':'image-volume',dollReady:String(useSolid||Boolean(this.dollVolumeReady))});
+    return useSolid;
   }
   resetHauntings(){this.lastViewTime=null;this.dollLook=0;for(const group of Object.values(this.refs.hauntings||{}))updateRoomHauntings(group,{player:this.source.player,time:0,dt:0,active:false});for(const ghost of this.refs.ambienceGhosts||[])updateGhostSmile(ghost.userData.smile,ghost,this.source.player,ghost.userData.config,{active:false});if(this.source.canvas)Object.assign(this.source.canvas.dataset,{ballActive:'false',ballHeight:'0',ghostSmile:'0',cornerVisible:'false'});}
   resize(){const w=Math.max(1,this.source.canvas.clientWidth),h=Math.max(1,this.source.canvas.clientHeight);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=THREE.MathUtils.radToDeg(2*Math.atan(h/(w*.68)*.5));this.camera.updateProjectionMatrix();}
@@ -205,7 +224,7 @@ export class ThreeSchoolView {
     }
     for(const mesh of this.refs.ambienceDolls||[]){if(this.dollVolumeReady&&!mesh.userData.volumeReady){mesh.geometry.dispose();mesh.geometry=this.refs.doll.geometry;mesh.material=[mesh.material,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];mesh.userData.volumeReady=true;}assign({material:Array.isArray(mesh.material)?mesh.material[0]:mesh.material},source.dollImage);mesh.visible=Boolean(this.dollVolumeReady);}
     const scary=dollRise(source.dollState)>.25;const face=this.refs.dollFace||this.refs.doll.material;
-    assign({material:face},scary?source.dollScary:source.dollImage);this.refs.doll.visible=Boolean(face.map)&&Boolean(this.dollVolumeReady);if(source.canvas)Object.assign(source.canvas.dataset,{dollReady:String(Boolean(this.dollVolumeReady)),dollImageSize:`${source.dollImage?.naturalWidth}x${source.dollImage?.naturalHeight}`,dollMesh:String(this.refs.doll.geometry.index?.count)});this.lastState='';
+    assign({material:face},scary?source.dollScary:source.dollImage);this.updateStudentModel(source);if(source.canvas)Object.assign(source.canvas.dataset,{dollImageSize:`${source.dollImage?.naturalWidth}x${source.dollImage?.naturalHeight}`,dollMesh:String(this.refs.doll.geometry.index?.count)});this.lastState='';
   }
   draw(source,time){
     const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
@@ -226,7 +245,7 @@ export class ThreeSchoolView {
     }
     this.refs.rabbit.position.z=source.rabbitZ??(source.anomaly==='figure'?16:22);
     if(source.survival){const door=this.scenes.classroom.getObjectByName('sliding-classroom-door');const closed=source.survival.doorUntil>source.survival.elapsed;for(const leaf of door.userData.leaves)leaf.position.z=closed?0:leaf.userData.side*.72;}this.refs.ghost.visible=source.anomaly==='window';this.refs.dollPrint.visible=source.anomaly==='doll';this.refs.dollPrintBack.visible=source.anomaly==='doll';
-    const rise=dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI*(1-ease)+(source.scene==='classroom'?source.player.angle*ease:0);
+    const solid=this.updateStudentModel(source),rise=solid?0:dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI*(1-ease)+(source.scene==='classroom'?source.player.angle*ease:0);
     const p=source.player;const walking=source.keys.has('forward')||source.keys.has('back');const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const nearDoll=source.scene==='classroom'&&facingDoll(p,3.8);const dollDistance=Math.hypot(DOLL_GAZE.x-p.x,DOLL_GAZE.z-p.z);
     const headDistance=Math.hypot(DOLL.x-p.x,DOLL.z-DOLL.height*.78-p.z);

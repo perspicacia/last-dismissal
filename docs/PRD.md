@@ -19,7 +19,7 @@
 - 캐릭터: [CHARACTERS.md](../CHARACTERS.md)
 - 기록: [docs/progress.md](progress.md)
 - 문·토끼 녹음 효과음: [specs/reference-horror-audio.md](../specs/reference-horror-audio.md), [출처](../assets/audio/README.md)
-- 미채택 학생 인형 3D 전환 제안: [docs/student-doll-3d-plan.md](student-doll-3d-plan.md)
+- 채택한 학생 인형 3D 전환: [진단 기록](student-doll-3d-plan.md), [3-2 정적 GLB 명세](../specs/student-doll-glb.md). 현재 탐색의 3-2 바닥 인형만 우선 교체한다. 다른 방과 리깅/표정 전환은 후속 범위다.
 
 - 3-1 책상과 음악실 의자에는 정적인 학생 인형, 3-3·무용실 창밖에는 공격하지 않는 귀신을 배치한다. [교실 확장 명세](../specs/classrooms-doll-depth.md).
 
