@@ -1,10 +1,21 @@
 import * as THREE from './vendor/three.module.js';
 // Closed image relief with a rounded underside and thin silhouette seam.
+// Half-thickness in metres for the 1.55 m doll. The face stays on one
+// plane; round shoulders, skirt and limbs provide depth without warping it.
 export function dollDepth(u,v){
   const ellipsoid=(x,y,rx,ry,r)=>r*Math.sqrt(Math.max(0,1-((u-x)/rx)**2-((v-y)/ry)**2));
-  const head=v<.34?.035:0;
-  if(v<.34)return .014+head;
-  return .014+Math.max(ellipsoid(.52,.40,.23,.15,.075),ellipsoid(.52,.59,.27,.15,.055),ellipsoid(.31,.57,.07,.14,.045),ellipsoid(.72,.57,.07,.14,.045),ellipsoid(.46,.82,.075,.19,.05),ellipsoid(.60,.82,.075,.19,.05));
+  if(v<.34){
+    const cheek=Math.max(0,.34-u,u-.69)/.22;
+    return .025+.095*Math.sqrt(Math.max(0,1-cheek*cheek));
+  }
+  return .014+Math.max(
+    ellipsoid(.52,.41,.23,.16,.088),
+    ellipsoid(.52,.61,.27,.18,.078),
+    ellipsoid(.31,.57,.085,.16,.059),
+    ellipsoid(.72,.57,.085,.16,.059),
+    ellipsoid(.46,.82,.08,.19,.066),
+    ellipsoid(.60,.82,.08,.19,.066)
+  );
 }
 export function buildDollVolume(pixels,width,height,worldHeight=1.55,columns=192,rows=288){
   const positions=[],uvs=[],colors=[],front=[],sides=[],active=[];const stride=columns+1,count=stride*(rows+1),worldWidth=worldHeight*width/height;
@@ -20,9 +31,11 @@ export function buildDollVolume(pixels,width,height,worldHeight=1.55,columns=192
   for(let y=rows;y>=0;y--)for(let x=columns;x>=0;x--){const i=y*stride+x;if(x<columns)distances[i]=Math.min(distances[i],distances[i+1]+1);if(y<rows)distances[i]=Math.min(distances[i],distances[i+stride]+1);}
   for(let back=0;back<2;back++)for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++){
     const u=x/columns,v=y/rows,i=sample(u,v),rounding=Math.sin(Math.min(1,distances[y*stride+x]/Math.max(3,columns/96*10))*Math.PI/2);
-    const depth=2*dollDepth(u,v);
+    const depth=2*dollDepth(u,v)*worldHeight/1.55;
     const face=u>.34&&u<.69&&v>.12&&v<.30;
-    const frontZ=v<.34?-depth+(face?0:.012*(1-rounding)):-Math.max(.004,depth*rounding);
+    // Keep the central face flat but roll the hair contour and every body
+    // contour toward the floor. A deeper model must not expose tall edge walls.
+    const frontZ=face?-depth:-Math.max(.004,depth*rounding);
     const thickness=.002+Math.max(0,-frontZ-.002)*rounding;
     positions.push((u-.5)*worldWidth,(.5-v)*worldHeight,frontZ+(back?thickness:0));
     uvs.push(u,1-v);const color=new THREE.Color().setRGB(pixels[i]/255,pixels[i+1]/255,pixels[i+2]/255,THREE.SRGBColorSpace);colors.push(color.r,color.g,color.b);

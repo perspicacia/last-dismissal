@@ -32,3 +32,26 @@ test('실루엣 경계는 바닥까지 늘어진 측면 없이 얇게 닫힌다'
  }
  assert.ok(Math.abs(a.getZ(24*(w+1)+16)-a.getZ(24*(w+1)+16+n))>.10);
 });
+
+
+test('머리·몸통·치마·팔다리가 각 부위에 맞는 실제 두께를 갖는다',()=>{
+ const thickness=(u,v)=>2*dollDepth(u,v);
+ assert.ok(thickness(.5,.20)>=.22&&thickness(.5,.20)<=.26);
+ assert.ok(thickness(.52,.41)>=.19&&thickness(.52,.41)<=.21);
+ assert.ok(thickness(.52,.61)>=.17&&thickness(.52,.61)<=.19);
+ assert.ok(thickness(.31,.57)>=.14&&thickness(.31,.57)<=.16);
+ assert.ok(thickness(.46,.88)>=.14&&thickness(.46,.88)<=.17);
+ assert.ok(thickness(.12,.20)<thickness(.5,.20));
+ assert.ok(thickness(.52,.75)<thickness(.52,.61));
+});
+
+test('몸통은 둥글게 부풀고 이미지 너비·높이 비율은 유지된다',()=>{
+ const w=48,h=72,p=new Uint8ClampedArray(w*h*4).fill(255);
+ const g=buildDollVolume(p,w,h,1.55,w,h),a=g.getAttribute('position');
+ const at=(x,y)=>a.getZ(y*(w+1)+x);
+ assert.ok(at(25,30)<at(19,30));
+ assert.ok(at(25,44)<at(17,44));
+ assert.ok(Math.abs((g.boundingBox.max.x-g.boundingBox.min.x)/1.55-w/h)<1e-6);
+ const smaller=buildDollVolume(p,w,h,.775,w,h);
+ assert.ok(Math.abs(smaller.boundingBox.min.z/g.boundingBox.min.z-.5)<1e-6);
+});
