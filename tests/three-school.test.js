@@ -62,3 +62,9 @@ test('인형의 얼굴 면은 누웠을 때 위를 향하고 기립 후 플레�
   assert.ok(v.refs.doll.localToWorld(front.clone()).z>v.refs.doll.localToWorld(back.clone()).z);
  }finally{globalThis.window=old;}
 });
+test('생존 경고는 토끼 위치·이빨을 갱신하고 교실 미닫이 문은 방어 상태를 표시한다',()=>{
+ const v=buildView();v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.syncTextures=()=>{};
+ const old=globalThis.window;globalThis.window={matchMedia:()=>({matches:true})};
+ const source={anomaly:null,mouthOpen:true,rabbitZ:9,player:{x:0,z:2,angle:0},scene:'classroom',keys:new Set(),survival:{elapsed:13,doorUntil:20}};
+ try{v.draw(source,0);assert.equal(v.refs.rabbit.position.z,9);const door=v.scenes.classroom.getObjectByName('sliding-classroom-door');assert.ok(door.userData.leaves.every(leaf=>leaf.position.z===0));source.survival.elapsed=21;v.draw(source,1000);assert.ok(door.userData.leaves.every(leaf=>Math.abs(leaf.position.z)===.72));}finally{globalThis.window=old;}
+});
