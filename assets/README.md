@@ -1,5 +1,7 @@
 # 게임 이미지
 
+문·토끼 비명의 로컬 녹음 파일과 출처·이용 조건은 [audio/README.md](audio/README.md)에 기록한다.
+
 ## 게시판 단체사진
 
 `school-group-photo.png`와 `school-group-photo-erased.png`는 내장 image_gen 도구로 생성·편집한 1536×1024 PNG다. 실제 인물을 촬영한 사진이 아니라 가상의 학생들을 실사 느낌으로 표현한 이미지다. 정상·이상 사진은 같은 구도를 사용한다.

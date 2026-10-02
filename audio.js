@@ -1,6 +1,7 @@
 import {effectSamples} from './sound-effects.js?v=music-ghost-polish-1';
+import {loadRecordedEffects} from './recorded-effects.js?v=reference-audio-1';
 export class SchoolAudio {
-  constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
+  constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.recordedBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
   async start() {
     const Audio = window.AudioContext || window.webkitAudioContext;
     if (!Audio) throw new Error('이 브라우저는 오디오 재생을 지원하지 않습니다.');
@@ -42,6 +43,15 @@ export class SchoolAudio {
     this.ambient.gain.cancelScheduledValues(this.ctx.currentTime);
     this.ambient.gain.setTargetAtTime(.7, this.ctx.currentTime, .2);
     await this.ctx.resume(); this.update();
+    await this.loadEffectFiles();
+  }
+  loadEffectFiles(fetcher = globalThis.fetch) {
+    if (!this.ctx) return Promise.resolve([]);
+    if (!this.effectLoad) {
+      this.effectLoad = loadRecordedEffects(this.ctx, this.recordedBuffers, fetcher)
+        .finally(() => { this.effectLoad = null; });
+    }
+    return this.effectLoad;
   }
   update() { if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, .15); }
   level() {
@@ -64,15 +74,16 @@ export class SchoolAudio {
   playEffect(kind,level,variant=0) {
     if(!this.ctx||this.ctx.state!=='running'||this.muted||this.volume===0)return false;
     const key=`${kind}:${variant}`;
-    if(!this.effectBuffers.has(key)){
+    const recorded=this.recordedBuffers.get(kind);
+    if(!recorded&&!this.effectBuffers.has(key)){
       const samples=effectSamples(kind,this.ctx.sampleRate,variant),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
       buffer.getChannelData(0).set(samples);this.effectBuffers.set(key,buffer);
     }
     const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();
-    source.buffer=this.effectBuffers.get(key);gain.gain.value=level;source.connect(gain);gain.connect(this.master);
+    source.buffer=recorded||this.effectBuffers.get(key);gain.gain.value=level;source.connect(gain);gain.connect(this.master);
     const effect={source,gain};this.effects.add(effect);
     source.onended=()=>{source.disconnect();gain.disconnect();this.effects.delete(effect);};
-    source.start();this.onEffect?.(kind);return true;
+    source.start();this.onEffect?.(kind,{source:recorded?'recording':'synthesis'});return true;
   }
   footstep(scene='corridor') {
     if(!this.ctx||this.ctx.currentTime-this.lastStep<.18)return false;
