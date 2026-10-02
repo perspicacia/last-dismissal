@@ -1,4 +1,4 @@
-import {SchoolAudio} from './audio.js';
+import {SchoolAudio} from './audio.js?v=survival-audio-1';
 import {Corridor} from './corridor.js?v=rabbit-survival-2';
 import {schoolAction} from './school-route.js';
 import {newSurvival,advanceSurvival,toggleDoor,doorClosed,rabbitPosition,SURVIVAL} from './survival.js?v=rabbit-survival-2';
@@ -11,7 +11,8 @@ async function enableAudio(test=false){audioError='';try{await(test?audio.test()
 const corridor=new Corridor($('corridor'),({player,scene})=>{
  $('position').dataset.scene=scene;for(const key of ['x','z','angle'])$('position').dataset[key]=player[key].toFixed(2);
  updateUI();
-},()=>audio.tone(105,.12,.04));
+},()=>audio.footstep(corridor.scene));
+audio.onEffect=kind=>{const canvas=$('corridor');canvas.dataset.soundEffect=kind;canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);};
 corridor.onTick=dt=>{
  if(!state||state.ended)return;
  const previous=state;
@@ -39,13 +40,13 @@ function updateUI(){
  corridor.survival=state;corridor.rabbitZ=rabbitPosition(state);corridor.mouthOpen=state.phase==='warning';
 }
 async function start(){
- clearTimeout(endingTimer);lastPhase='watch';state=newSurvival();corridor.survival=state;corridor.rabbitZ=22;corridor.tutorial=false;corridor.reset(null);
- $('jumpscare').hidden=true;$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
+ clearTimeout(endingTimer);audio.clearEffects();lastPhase='watch';state=newSurvival();corridor.survival=state;corridor.rabbitZ=22;corridor.tutorial=false;corridor.reset(null);
+ $('jumpscare').hidden=true;$('corridor').dataset.soundCount='0';$('corridor').dataset.soundEffect='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
 }
 function finish(){
  corridor.setActive(false);updateUI();
  if(state.outcome==='escaped'){show('ending');audio.end();$('result').textContent=`토끼의 접근을 ${state.defended}번 막고 학교를 나왔다.`;$('again').focus();return;}
- $('jumpscare').hidden=false;audio.cue('mascot-reveal');
+ $('jumpscare').hidden=false;audio.jumpscare();
  endingTimer=setTimeout(()=>{if(state?.outcome!=='caught')return;$('jumpscare').hidden=true;show('gameover');$('caught-result').textContent=`${Math.floor(state.elapsed)}초 동안 버텼다. 다음에는 토끼가 다가올 때 교실 문을 닫자.`;$('retry').focus();},1200);
 }
 function changeDoor(){if(!state||state.ended)return;const before=state;state=toggleDoor(state,corridor.scene);if(before!==state)audio.inspect();updateUI();corridor.draw(performance.now());$('corridor').focus();}

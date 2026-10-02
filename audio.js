@@ -1,5 +1,6 @@
+import {effectSamples} from './sound-effects.js';
 export class SchoolAudio {
-  constructor() { this.volume = .5; this.muted = false; }
+  constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
   async start() {
     const Audio = window.AudioContext || window.webkitAudioContext;
     if (!Audio) throw new Error('이 브라우저는 오디오 재생을 지원하지 않습니다.');
@@ -60,6 +61,29 @@ export class SchoolAudio {
     osc.connect(gain).connect(this.master); osc.start(t); osc.stop(t + duration + .05);
     osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
+  playEffect(kind,level,variant=0) {
+    if(!this.ctx||this.ctx.state!=='running'||this.muted||this.volume===0)return false;
+    const key=`${kind}:${variant}`;
+    if(!this.effectBuffers.has(key)){
+      const samples=effectSamples(kind,this.ctx.sampleRate,variant),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
+      buffer.getChannelData(0).set(samples);this.effectBuffers.set(key,buffer);
+    }
+    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();
+    source.buffer=this.effectBuffers.get(key);gain.gain.value=level;source.connect(gain);gain.connect(this.master);
+    const effect={source,gain};this.effects.add(effect);
+    source.onended=()=>{source.disconnect();gain.disconnect();this.effects.delete(effect);};
+    source.start();this.onEffect?.(kind);return true;
+  }
+  footstep(scene='corridor') {
+    if(!this.ctx||this.ctx.currentTime-this.lastStep<.18)return false;
+    if(!this.playEffect('footstep',scene==='classroom'?.24:.32,this.foot%2))return false;
+    this.lastStep=this.ctx.currentTime;this.foot++;return true;
+  }
+  jumpscare(){return this.playEffect('jumpscare',.58);}
+  clearEffects(){
+    for(const {source,gain} of this.effects){source.onended=null;source.stop();source.disconnect();gain.disconnect();}
+    this.effects.clear();this.lastStep=-Infinity;this.foot=0;
+  }
   // Short, soft toy/broadcast cues. All tones route through master gain,
   // so mute and the player's volume also apply to these effects.
   cue(name) {
@@ -76,5 +100,5 @@ export class SchoolAudio {
   inspect() { this.tone(220,.15,.045); }
   result(correct) { if (correct) this.tone(440,.65,.09); else {this.tone(65,.8,.13); this.tone(69,.8,.1);} }
   end() { if (this.ctx) this.ambient.gain.setTargetAtTime(.12,this.ctx.currentTime,1); [261.6,329.6,392].forEach((f,i)=>this.tone(f,2,.08,i*.3)); }
-  async stop() { if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; this.ambient.gain.cancelScheduledValues(this.ctx.currentTime); this.ambient.gain.value = .7; await this.ctx.suspend(); } }
+  async stop() { this.clearEffects(); if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; this.ambient.gain.cancelScheduledValues(this.ctx.currentTime); this.ambient.gain.value = .7; await this.ctx.suspend(); } }
 }
