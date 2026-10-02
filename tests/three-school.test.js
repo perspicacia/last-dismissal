@@ -68,3 +68,11 @@ test('생존 경고는 토끼 위치·이빨을 갱신하고 교실 미닫이 �
  const source={anomaly:null,mouthOpen:true,rabbitZ:9,player:{x:0,z:2,angle:0},scene:'classroom',keys:new Set(),survival:{elapsed:13,doorUntil:20}};
  try{v.draw(source,0);assert.equal(v.refs.rabbit.position.z,9);const door=v.scenes.classroom.getObjectByName('sliding-classroom-door');assert.ok(door.userData.leaves.every(leaf=>leaf.position.z===0));source.survival.elapsed=21;v.draw(source,1000);assert.ok(door.userData.leaves.every(leaf=>Math.abs(leaf.position.z)===.72));}finally{globalThis.window=old;}
 });
+
+test('탐색에서는 복도 토끼를 숨기고 해당 방 발견 뒤에만 공간 돌진',()=>{
+ const v=buildView(),oldDocument=globalThis.document,oldWindow=globalThis.window;
+ globalThis.document={createElement:mockCanvas};v.build('music');v.build('dance');globalThis.document=oldDocument;
+ globalThis.window={matchMedia:()=>({matches:false})};v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.lastState='';
+ const source={scene:'music',anomaly:null,mouthOpen:false,player:{x:0,z:4,angle:0},keys:new Set(),exploration:{ended:false},caughtAt:0};
+ try{v.draw(source,0);assert.equal(v.refs.rabbit.visible,false);assert.ok(Object.values(v.refs.roomRabbits).every(r=>!r.visible));source.exploration.ended=true;v.draw(source,0);assert.equal(v.refs.roomRabbits.music.visible,true);assert.equal(v.refs.roomRabbits.dance.visible,false);const far=v.refs.roomRabbits.music.position.z;v.draw(source,700);assert.ok(v.refs.roomRabbits.music.position.z<far);assert.ok(v.refs.roomRabbits.music.position.z>source.player.z);source.exploration.ended=false;v.draw(source,800);assert.ok(Object.values(v.refs.roomRabbits).every(r=>!r.visible));assert.deepEqual(v.refs.doors.map(d=>d.userData.label),['3-2','음악실','무용실']);}finally{globalThis.window=oldWindow;}
+});

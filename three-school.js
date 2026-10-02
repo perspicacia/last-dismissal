@@ -1,3 +1,5 @@
+import {ROOMS,RABBIT_SPOT} from './exploration.js';
+import {buildRoomProps} from './room-props.js';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=rabbit-survival-1';
 import * as THREE from './vendor/three.module.js';
@@ -18,13 +20,13 @@ export class ThreeSchoolView {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFShadowMap;
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;
-    this.scenes={};this.refs={};this.build('corridor');this.build('classroom');this.syncTextures(source);this.resize();
+    this.scenes={};this.refs={};this.build('corridor');this.build('classroom');this.build('music');this.build('dance');this.syncTextures(source);this.resize();
     canvas.dataset.rendererReady='three';
   }
   resize(){const w=Math.max(1,this.source.canvas.clientWidth),h=Math.max(1,this.source.canvas.clientHeight);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=THREE.MathUtils.radToDeg(2*Math.atan(h/(w*.68)*.5));this.camera.updateProjectionMatrix();}
   build(kind){
     const scene=new THREE.Scene();scene.background=new THREE.Color('#10212c');scene.fog=new THREE.FogExp2('#1a2c35',.013);scene.scale.z=-1;this.scenes[kind]=scene;
-    const g=new THREE.Group();scene.add(g);const classroom=kind==='classroom',half=classroom?4.4:3,end=classroom?9.8:24.6;
+    const g=new THREE.Group();scene.add(g);const classroom=kind!=='corridor',half=classroom?4.4:3,end=classroom?9.8:24.6;
     const plaster=material('#d0cbb8',{map:plasterTexture()}),lower=material('#365d60'),trim=material('#a7aa99'),base=material('#183934'),wood=material('#b69b73',{map:woodTexture(),roughness:.48,bumpScale:.013});wood.bumpMap=wood.map;
     const floor=box(g,0,-.075,end/2,half*2,.15,end,wood);floor.castShadow=false;
     box(g,0,3.08,end/2,half*2,.16,end,material('#b7beb4'));
@@ -46,13 +48,13 @@ export class ThreeSchoolView {
     if(classroom){wall(half,0,end);wall(-half,0,1.8);wall(-half,8.9,end);for(let a=1.8;a<8.9;a+=1.45)window(-half,a,Math.min(a+1.45,8.9));}
     else {wall(-half,0,end);for(const [a,b] of [[0,4],[8,12],[16,end]])wall(half,a,b);for(const [a,b] of [[4,6],[6,8],[12,14],[14,16]])window(half,a,b);}
     box(g,0,1.5,-.1,half*2,3,.2,plaster);
-    if(classroom){box(g,0,1.5,end,half*2,3,.2,plaster);box(g,-.2,1.65,end-.13,6,.99,.07,material('#736948'));box(g,-.2,1.66,end-.18,5.8,.85,.03,material('#153d36'));const chalk=material('#bec9b0');for(let i=0;i<5;i++)box(g,-1.7+i*.23,1.6,end-.205,.09,.007,.005,chalk);for(const desk of [...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK])this.desk(g,desk);for(const desk of CLASSROOM_DESKS)this.chair(g,desk.x,desk.z-.72);for(let x=-3.5;x<-1.4;x+=.72){box(g,x,.48,.18,.68,.96,.45,material('#64745c'));box(g,x,.49,-.06,.012,.08,.013,trim);}}
+    if(classroom){box(g,0,1.5,end,half*2,3,.2,plaster);if(kind==='classroom'){box(g,-.2,1.65,end-.13,6,.99,.07,material('#736948'));box(g,-.2,1.66,end-.18,5.8,.85,.03,material('#153d36'));const chalk=material('#bec9b0');for(let i=0;i<5;i++)box(g,-1.7+i*.23,1.6,end-.205,.09,.007,.005,chalk);for(const desk of [...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK])this.desk(g,desk);for(const desk of CLASSROOM_DESKS)this.chair(g,desk.x,desk.z-.72);for(let x=-3.5;x<-1.4;x+=.72){box(g,x,.48,.18,.68,.96,.45,material('#64745c'));box(g,x,.49,-.06,.012,.08,.013,trim);}}else g.add(buildRoomProps(kind));}
     else {
       this.stairs(g,plaster,lower);this.refs.doors=[];
-      this.doorLabels={};for(const text of ['3-2','404']){const label=document.createElement('canvas');label.width=256;label.height=112;const ctx=label.getContext('2d');ctx.fillStyle='#e1dcc5';ctx.fillRect(0,0,256,112);ctx.strokeStyle='#8c8166';ctx.lineWidth=6;ctx.strokeRect(3,3,250,106);ctx.fillStyle='#233b32';ctx.font='bold 66px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,128,58);this.doorLabels[text]=label;}
-      for(const z of [5,15]){
+      this.doorLabels={};for(const text of ['3-2','404','음악실','무용실']){const label=document.createElement('canvas');label.width=256;label.height=112;const ctx=label.getContext('2d');ctx.fillStyle='#e1dcc5';ctx.fillRect(0,0,256,112);ctx.strokeStyle='#8c8166';ctx.lineWidth=6;ctx.strokeRect(3,3,250,106);ctx.fillStyle='#233b32';ctx.font='bold 60px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,128,58);this.doorLabels[text]=label;}
+      for(const {z,label} of ROOMS){
         this.slidingDoor(g,-2.84,z);
-        const d=this.picture(g,null,.62,.27,[-2.61,2.81,z],Math.PI/2);this.refs.doors.push(d);
+        const d=this.picture(g,null,.62,.27,[-2.61,2.81,z],Math.PI/2);d.userData.label=label==='3-2 교실'?'3-2':label;this.refs.doors.push(d);
       }
       box(g,-2.81,1.61,9,.16,1.1,1.9,material('#65513a'));box(g,-2.7,1.61,9,.08,.98,1.78,material('#97865d'));
       this.refs.photo=this.picture(g,null,1.05,.70,[-2.646,1.61,9],Math.PI/2);
@@ -64,10 +66,11 @@ export class ThreeSchoolView {
     }
     if(classroom){
       this.slidingDoor(g,0,.02,-Math.PI/2);
-      const root=new THREE.Group(),tilt=new THREE.Group();root.position.set(DOLL.x,.035,DOLL.z);root.rotation.y=Math.PI;root.add(tilt);g.add(root);
+      if(kind==='classroom'){const root=new THREE.Group(),tilt=new THREE.Group();root.position.set(DOLL.x,.035,DOLL.z);root.rotation.y=Math.PI;root.add(tilt);g.add(root);
       this.refs.dollRoot=root;this.refs.dollTilt=tilt;this.refs.doll=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);
       Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;this.refs.doll.receiveShadow=true;
-      tilt.rotation.x=Math.PI/2;
+      tilt.rotation.x=Math.PI/2;}
+      (this.refs.roomRabbits??={})[kind]=this.sprite(g,2.1,1.05,[RABBIT_SPOT.x,1.05,RABBIT_SPOT.z]);this.refs.roomRabbits[kind].visible=false;
     }else{
       const print=document.createElement('canvas');print.width=512;print.height=112;const pc=print.getContext('2d');pc.fillStyle='#e9e1c9b0';
       for(const x of [92,420]){pc.beginPath();pc.ellipse(x,78,24,22,-.1,0,Math.PI*2);pc.fill();for(let i=0;i<5;i++){pc.beginPath();pc.ellipse(x-24+i*12,43-(i%3)*5,5,20,.08,0,Math.PI*2);pc.fill();}}
@@ -77,7 +80,7 @@ export class ThreeSchoolView {
     const moon=new THREE.DirectionalLight('#b7cfdf',1.1);moon.position.set(classroom?-16:16,24,12);moon.target.position.set(0,0,end/2);scene.add(moon,moon.target);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);Object.assign(moon.shadow.camera,{left:-30,right:30,top:40,bottom:-40,near:.5,far:90});moon.shadow.bias=-.0004;moon.shadow.normalBias=.035;
     const fixture=material('#d1d6c7',{emissive:'#dfedcf',emissiveIntensity:1.3}),housing=material('#65726d');
     for(let z=classroom?2:3;z<end;z+=classroom?4:5){box(g,0,2.94,z,1.25,.085,.43,housing);box(g,0,2.88,z,1.13,.035,.34,fixture);const light=new THREE.PointLight('#e0e5c8',13,11,2);light.position.set(0,2.65,z);scene.add(light);}
-    scene.add(buildOutdoors({side:kind}));
+    scene.add(buildOutdoors({side:classroom?'classroom':'corridor'}));
   }
   slidingDoor(parent,x,z,angle=0){
     const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=angle;g.name='sliding-classroom-door';parent.add(g);
@@ -164,10 +167,10 @@ export class ThreeSchoolView {
     if(!this.refs.photo)return;
     for(const t of this.textures)t.dispose();this.textures=[];
     const assign=(mesh,image)=>{if(!image||(!image.getContext&&!image.naturalWidth))return;const t=canvasTexture(image);this.textures.push(t);mesh.material.map=t;mesh.material.needsUpdate=true;};
-    for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':'3-2']);
+    for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':d.userData.label]);
     assign(this.refs.clock,source.clockFace);
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
-    assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);
+    assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);for(const rabbit of Object.values(this.refs.roomRabbits||{}))assign(rabbit,source.mascotOpen);
     assign(this.refs.ghost,source.windowGhost);
     if(!this.dollVolumeReady&&source.dollImage?.naturalWidth){
       const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;}
@@ -177,6 +180,11 @@ export class ThreeSchoolView {
   }
   draw(source,time){
     const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
+    this.refs.rabbit.visible=!source.exploration;
+    for(const [room,rabbit] of Object.entries(this.refs.roomRabbits||{})){
+      rabbit.visible=Boolean(source.exploration?.ended&&source.scene===room);
+      if(rabbit.visible){const t=window.matchMedia('(prefers-reduced-motion: reduce)').matches?1:THREE.MathUtils.clamp((time-source.caughtAt)/700,0,1),rush=1-Math.pow(1-t,3);const p=source.player;const goal={x:p.x+Math.sin(p.angle)*.80,z:p.z+Math.cos(p.angle)*.80};rabbit.position.set(THREE.MathUtils.lerp(RABBIT_SPOT.x,goal.x,rush),THREE.MathUtils.lerp(1.05,1.25,rush),THREE.MathUtils.lerp(RABBIT_SPOT.z,goal.z,rush));rabbit.rotation.y=p.angle;const growth=1+.15*rush;rabbit.scale.set(-growth,growth,1);}
+    }
     this.refs.rabbit.position.z=source.rabbitZ??(source.anomaly==='figure'?16:22);
     if(source.survival){const door=this.scenes.classroom.getObjectByName('sliding-classroom-door');const closed=source.survival.doorUntil>source.survival.elapsed;for(const leaf of door.userData.leaves)leaf.position.z=closed?0:leaf.userData.side*.72;}this.refs.ghost.visible=source.anomaly==='window';this.refs.dollPrint.visible=source.anomaly==='doll';this.refs.dollPrintBack.visible=source.anomaly==='doll';
     const rise=dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI*(1-ease)+(source.scene==='classroom'?source.player.angle*ease:0);

@@ -4,12 +4,12 @@ import { drawSceneDepth } from './scene-depth.js';
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
 export const CLASSROOM_TEACHER_DESK = { x: -.5, z: 8.7, width: 2, depth: .65, height: .72 };
 export const CLASSROOM_DESKS = [-2.5, 1.2, 2.8].flatMap(x => [3.2, 5, 6.8].map(z => ({x,z,width:1.1,depth:.65,height:.76})));
-export function moveClassroomPlayer(player, keys, dt) {
+export function moveClassroomPlayer(player, keys, dt, blockers=null) {
   const step=Math.max(0,Math.min(.05,dt));
   const angle=player.angle+(Number(keys.has('right'))-Number(keys.has('left')))*1.65*step;
   const walk=(Number(keys.has('forward'))-Number(keys.has('back')))*3.8*step;
   const result={...player,angle};
-  const blocked=(x,z)=>[...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK].some(d=>Math.abs(x-d.x)<d.width/2+.22 && Math.abs(z-d.z)<d.depth/2+.22)||CLASSROOM_DESKS.some(d=>Math.abs(x-d.x)<.45 && Math.abs(z-(d.z-.72))<.42);
+  const blocked=(x,z)=>(blockers||[...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK]).some(d=>Math.abs(x-d.x)<d.width/2+.22 && Math.abs(z-d.z)<d.depth/2+.22)||(!blockers&&CLASSROOM_DESKS.some(d=>Math.abs(x-d.x)<.45 && Math.abs(z-(d.z-.72))<.42));
   const x=Math.max(-4,Math.min(4,player.x+Math.sin(angle)*walk));
   if(!blocked(x,result.z))result.x=x;
   const z=Math.max(.8,Math.min(9.2,player.z+Math.cos(angle)*walk));
@@ -18,7 +18,7 @@ export function moveClassroomPlayer(player, keys, dt) {
 }
 
 // Geometry uses the same world units as movement; desks cannot be walked through.
-export function drawClassroom(c,w,h,p,time,exterior=null,doll=null) {
+export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classroom') {
   const horizon=h*.48,lens=w*.68;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
   c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
@@ -36,11 +36,28 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null) {
   const faces=[];
   const polygon=(vertices,color)=>{const pts=vertices.map(v=>project(...v));if(pts.every(Boolean))faces.push({pts,color,d:pts.reduce((s,v)=>s+v.d,0)/pts.length});};
   const box=(x,y,z,width,height,depth,colors)=>{const l=x-width/2,r=x+width/2,n=z-depth/2,f=z+depth/2,t=y+height;polygon([[l,t,n],[r,t,n],[r,t,f],[l,t,f]],colors[0]);polygon([[l,y,n],[r,y,n],[r,t,n],[l,t,n]],colors[1]);polygon([[l,y,f],[r,y,f],[r,t,f],[l,t,f]],colors[1]);polygon([[l,y,n],[l,y,f],[l,t,f],[l,t,n]],colors[2]);polygon([[r,y,n],[r,y,f],[r,t,f],[r,t,n]],colors[2]);};
-  for(const desk of CLASSROOM_DESKS){const {x,z,width,depth}=desk;for(const dx of [-.43,.43])for(const dz of [-.22,.22])box(x+dx,0,z+dz,.045,.72,.045,['#95a6a2','#65736e','#3d504d']);box(x,.71,z,width,.06,depth,['#9c8360','#6d563c','#7a644a']);box(x,.53,z,.96,.08,.48,['#4c4739','#554936','#4a3c2f']);box(x,.38,z-.72,.55,.055,.46,['#897854','#5d533d','#746548']);box(x,.43,z-.96,.55,.43,.065,['#8f7d56','#716247','#514b3b']);for(const dx of [-.2,.2])for(const dz of [-.15,.15])box(x+dx,0,z-.72+dz,.035,.4,.035,['#8a9992','#5f7168','#34493d']);}
+  for(const desk of kind==='classroom'?CLASSROOM_DESKS:[]){const {x,z,width,depth}=desk;for(const dx of [-.43,.43])for(const dz of [-.22,.22])box(x+dx,0,z+dz,.045,.72,.045,['#95a6a2','#65736e','#3d504d']);box(x,.71,z,width,.06,depth,['#9c8360','#6d563c','#7a644a']);box(x,.53,z,.96,.08,.48,['#4c4739','#554936','#4a3c2f']);box(x,.38,z-.72,.55,.055,.46,['#897854','#5d533d','#746548']);box(x,.43,z-.96,.55,.43,.065,['#8f7d56','#716247','#514b3b']);for(const dx of [-.2,.2])for(const dz of [-.15,.15])box(x+dx,0,z-.72+dz,.035,.4,.035,['#8a9992','#5f7168','#34493d']);}
   // Teacher's desk anchors the classroom front.
-  const teacher=CLASSROOM_TEACHER_DESK;box(teacher.x,0,teacher.z,teacher.width,teacher.height,teacher.depth,['#948064','#51493a','#685b47']);
+  const teacher=CLASSROOM_TEACHER_DESK;if(kind==='classroom')box(teacher.x,0,teacher.z,teacher.width,teacher.height,teacher.depth,['#948064','#51493a','#685b47']);
+  if(kind==='music'){
+    box(3.38,0,7.35,.8,1.4,2.45,['#53382c','#211b18','#35231b']);
+    box(2.98,.82,7.35,.32,.055,2.15,['#e0ddcd','#b9b9ad','#ccc8ba']);
+    box(2.68,0,7.35,.42,.52,.65,['#69482d','#3d3327','#56412d']);
+    box(-2.65,0,4.8,1.5,.85,1.2,['#afac98','#68372d','#523128']);
+    box(-2.4,0,7.8,.06,1.2,.06,['#999','#666','#888']);
+    box(-2.4,1.2,7.8,.7,.5,.025,['#ddd','#ccc','#eee']);
+    box(-2.4,0,6.95,.65,.5,.42,['#69482d','#3d3327','#56412d']);
+    box(3.55,.12,3.1,.5,.75,.15,['#bc894b','#916733','#a47739']);
+    box(3.55,.85,3.1,.075,.75,.07,['#604128','#39291d','#58371f']);
+  }
+  if(kind==='dance'){
+    box(4.22,.6,5.275,.1,2.15,5.75,['#8ba9ab','#6d8992','#6d8992']);
+    for(const x of [-3.3,3.3])box(x,0,8.8,.58,1.04,.5,['#333','#171c22','#242b30']);
+    for(const z of [2.6,5.4,8.5])box(-4,0,z,.05,1.15,.05,['#aaa','#666','#888']);
+    for(const y of [.73,1.13])box(-4,y,5.5,.08,.08,6.2,['#ab9570','#7d684e','#8b795b']);
+  }
   faces.sort((a,b)=>b.d-a.d);for(const face of faces){c.fillStyle=face.color;c.strokeStyle='#10202980';c.lineWidth=.7;c.beginPath();face.pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.stroke();}
   drawSceneDepth(c,project,p,{classroom:true});
-  if(doll){const rise=dollRise(doll.state),image=rise>.25?doll.scary:doll.image;const pos=project(DOLL.x,rise>.2?.04:.16,DOLL.z-.6);if(pos&&image?.naturalWidth){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2*(1-rise));c.drawImage(image,-DOLL.height*unit/3,-DOLL.height*unit,DOLL.height*unit*2/3,DOLL.height*unit);c.restore();}}
+  if(doll&&kind==='classroom'){const rise=dollRise(doll.state),image=rise>.25?doll.scary:doll.image;const pos=project(DOLL.x,rise>.2?.04:.16,DOLL.z-.6);if(pos&&image?.naturalWidth){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2*(1-rise));c.drawImage(image,-DOLL.height*unit/3,-DOLL.height*unit,DOLL.height*unit*2/3,DOLL.height*unit);c.restore();}}
   const shade=c.createRadialGradient(w/2,h/2,w*.15,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#000915c0');c.fillStyle=shade;c.fillRect(0,0,w,h);
 }

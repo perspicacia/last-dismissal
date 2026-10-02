@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>마지막 하교 · 생존 공포게임</title>
+  <title>마지막 하교 · 탐색 공포게임</title>
   <link rel="stylesheet" href="style.css?v=rabbit-survival-2">
 </head>
 <body>
@@ -12,14 +12,14 @@
     <p class="eyebrow">SURVIVAL HORROR · FIRST PROTOTYPE</p>
     <h1>마지막<br><em>하교.</em></h1>
     <p class="story">과제 제출은 끝났다.<br>그런데 학교는 아직 나를 보내주지 않는다.</p>
-    <div class="rules"><p>토끼를 살피고,<br><strong>다가오면 문을 닫으세요.</strong></p><p>60초 동안 버티면 학교를 나갈 수 있습니다.<br>토끼가 다가오면 가까운 교실로 피해서 문을 닫으세요.<br>문은 7초 뒤 다시 열리고, 3초 동안 걸립니다. 너무 일찍 닫지 마세요.</p></div>
+    <div class="rules"><p>비어 있는 교실을,<br><strong>하나씩 확인하세요.</strong></p><p>3-2 교실, 음악실, 무용실을 둘러보세요.<br>토끼는 매번 다른 방에 숨어 있습니다.<br>가까이 다가가 눈이 마주치는 순간, 탐색은 끝납니다.</p></div>
     <div class="start-actions"><button id="start" class="primary">학교에 들어가기 <span>→</span></button></div>
-    <p class="fine">↑↓ 앞뒤 이동 / ←→ 방향 회전 / E 교실 입장·문 열기/닫기 / M 음소거 / Esc 처음 화면<br>소리 없이도 플레이 가능 · 실패하면 토끼가 화면 앞으로 나타납니다 · 점멸 없음</p>
+    <p class="fine">↑↓ 앞뒤 이동 / ←→ 방향 회전 / E 교실 입장·복도 복귀 / M 음소거 / Esc 처음 화면<br>소리 없이도 플레이 가능 · 실패하면 토끼가 화면 앞으로 나타납니다 · 점멸 없음</p>
   </section>
   <section id="game" hidden>
     <div class="game-heading"><div><p class="eyebrow" id="mode">야간 자율학습 종료</p><h2 id="floor">3층 동쪽 복도</h2></div><div class="progress"><span id="progress-label">하교 기록 0 / 5</span><div id="marks" aria-hidden="true"></div></div></div>
     <div class="scene">
-      <canvas data-renderer="three" id="corridor" tabindex="0" role="application" aria-label="학교 복도 탐색. 위아래 화살표로 이동하고 좌우 화살표로 회전합니다. E 키로 교실에 들어가고 안에서는 문을 열거나 닫습니다."></canvas>
+      <canvas data-renderer="three" id="corridor" tabindex="0" role="application" aria-label="학교 복도 탐색. 위아래 화살표로 이동하고 좌우 화살표로 회전합니다. E 키로 교실에 들어가고 복도로 돌아갑니다."></canvas>
       <div class="scene-caption">23:17</div>
       <span class="crosshair" aria-hidden="true">+</span>
 
@@ -34,9 +34,9 @@
     <div class="game-footer"><span id="record">출석부 · 아직 하교한 학생 없음</span><button id="restart">처음 화면</button></div>
   </section>
   <section id="ending" class="intro" hidden><p class="eyebrow">05:42 · 학교 정문</p><h1>이제,<br><em>집에 가자.</em></h1><p class="story">아침 바람이 불어왔다.<br>출석부의 마지막 이름 옆에 ‘하교’가 찍혔다.</p><p id="result"></p><button id="again" class="primary">다시 학교에 들어가기 →</button></section>
-  <section id="gameover" class="intro" hidden><p class="eyebrow">CAUGHT · 3층 동쪽 복도</p><h1>너를,<br><em>찾았다.</em></h1><p class="story">문틈 너머로 웃음이 번졌다.</p><p id="caught-result"></p><button id="retry" class="primary">다시 버텨보기 →</button></section>
+  <section id="gameover" class="intro" hidden><p class="eyebrow">CAUGHT · 3층 동쪽 복도</p><h1>너를,<br><em>찾았다.</em></h1><p class="story">조용한 교실 안에서 웃음이 번졌다.</p><p id="caught-result"></p><button id="retry" class="primary">다시 둘러보기 →</button></section>
   <footer class="site-footer"><span>LAST DISMISSAL</span><span>부트캠프 과제 · Prototype 01</span></footer>
 </main>
-<script type="module" src="game.js?v=survival-audio-1"></script>
+<script type="module" src="game.js?v=hidden-rooms-2"></script>
 </body>
 </html>

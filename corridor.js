@@ -1,11 +1,12 @@
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=rabbit-survival-2';
+import { ThreeSchoolView } from './three-school.js?v=hidden-rooms-2';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
 import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=rabbit-survival-2';
+import {ROOM_BLOCKERS} from './room-props.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
@@ -47,13 +48,13 @@ export class Corridor {
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
-  enterClassroom() {if(this.scene==='classroom')return;this.corridorPlayer={...this.player};this.scene='classroom';this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
-  leaveClassroom() {if(this.scene!=='classroom')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
-  move(keys,dt) {return this.scene==='classroom'?moveClassroomPlayer(this.player,keys,dt):movePlayer(this.player,keys,dt);}
-  reset(anomaly) {this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
+  enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
+  leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
+  move(keys,dt) {return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene]):movePlayer(this.player,keys,dt);}
+  reset(anomaly) {this.caughtAt=null;this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
   setActive(value) {this.active=value;this.keys.clear();}
   nudge(action) {
-    if(!this.active) return;
+    if(!this.active||this.caughtAt!=null) return;
     const before=this.player;this.player=this.move(new Set([action]),.05);this.steps+=Math.hypot(this.player.x-before.x,this.player.z-before.z);if(this.steps>.95){this.steps=0;this.onStep();}this.notify();
   }
   texture(draw) {
@@ -88,6 +89,7 @@ export class Corridor {
       c.fillStyle='#eee4c6';c.fillRect(219,7,74,18);c.fillStyle='#283931';c.font='bold 15px sans-serif';c.textAlign='center';c.fillText(this.anomaly==='door'?'404':'3-2',256,21);
 
     });
+    this.roomDoorTextures={};for(const [z,label] of [[5,'3-2'],[15,'음악실'],[21,'무용실']]){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const c=canvas.getContext('2d');c.drawImage(this.door,0,0);c.fillStyle='#eee4c6';c.fillRect(219,7,74,18);c.fillStyle='#283931';c.font='bold 13px sans-serif';c.textAlign='center';c.fillText(label,256,21);this.roomDoorTextures[z]=canvas;}
     this.board=this.texture(c=>{
       c.fillStyle='#171e15';c.fillRect(45,38,422,168);c.fillStyle='#7b7150';c.fillRect(52,44,408,155);
       // A side wall maps 512px to 2m horizontally, 256px to 3m vertically.
@@ -141,9 +143,9 @@ export class Corridor {
     }
   }
   notify() {
-    if(this.scene==='classroom'){this.item=facingDoll(this.player)?'doll':null;this.atStairs=false;this.onPosition({item:this.item,stairs:false,names,player:this.player,scene:this.scene});return;}
-    const open=this.survival?this.survival.phase==='warning':revealsTeeth(this.player,this.anomaly,this.mouthOpen);
-    if(!this.survival&&open && !this.mouthOpen) this.onReveal();
+    if(this.scene!=='corridor'){this.canvas.dataset.mascotMouth=this.mouthOpen?'open':'closed';this.item=this.scene==='classroom'&&facingDoll(this.player)?'doll':null;this.atStairs=false;this.onPosition({item:this.item,stairs:false,names,player:this.player,scene:this.scene});return;}
+    const open=this.exploration?this.exploration.ended:this.survival?this.survival.phase==='warning':revealsTeeth(this.player,this.anomaly,this.mouthOpen);
+    if(!this.exploration&&!this.survival&&open && !this.mouthOpen) this.onReveal();
     this.mouthOpen=open;
     this.canvas.dataset.mascotMouth=open?'open':'closed';
     const item=nearbyItem(this.player,this.anomaly);const stairs=this.player.z>22;
@@ -154,18 +156,19 @@ export class Corridor {
   frame(time) {
     const dt=Math.min((time-this.last)/1000,.05);this.last=time;
     if(this.active && !document.hidden && this.focused){
-      const before=this.player;this.player=this.move(this.keys,dt);
+      const before=this.player;if(this.caughtAt==null)this.player=this.move(this.keys,dt);
       const distance=Math.hypot(this.player.x-before.x,this.player.z-before.z);this.steps+=distance;
       if(this.steps>.95){this.steps=0;this.onStep();}
       this.updateDoll(dt);this.onTick?.(dt);this.notify();this.draw(time);
     }
     requestAnimationFrame(t=>this.frame(t));
   }
+  drawCatch(time){const c=this.ctx,w=this.canvas.width,h=this.canvas.height,img=this.mascotOpen;if(!img.naturalWidth)return;const t=window.matchMedia('(prefers-reduced-motion: reduce)').matches?1:Math.min(1,(time-this.caughtAt)/650);c.fillStyle=`rgba(0,0,0,${t*.5})`;c.fillRect(0,0,w,h);const size=h*(.5+2*t*t);c.drawImage(img,img.naturalWidth*.22,img.naturalHeight*.23,img.naturalWidth*.56,img.naturalHeight*.30,w/2-size/2,h/2-size/2,size,size);}
   draw(time) {
     if(this.view3D){this.view3D.draw(this,time);return;}
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
     this.updateExterior(time);
-    if(this.scene==='classroom'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary});return;}
+    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary},this.scene);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
@@ -194,7 +197,7 @@ export class Corridor {
       const side=tx<tz,dist=side?tx:tz,perp=Math.max(.02,dist*Math.cos(offset));depth[x/2]=perp;
       let tex=this.wall,u;
       if(side){const z=p.z+dz*dist;u=((z%2)+2)%2/2;
-        if(dx<0){if(z>=4&&z<6)tex=this.door;else if(z>=8&&z<10)tex=this.board;else if(z>=14&&z<16)tex=this.door;}
+        if(dx<0){if(z>=4&&z<6)tex=this.exploration?this.roomDoorTextures[5]:this.door;else if(z>=8&&z<10)tex=this.board;else if(z>=14&&z<16)tex=this.exploration?this.roomDoorTextures[15]:this.door;else if(this.exploration&&z>=20&&z<22)tex=this.roomDoorTextures[21];}
         else {if((z>=4&&z<8)||(z>=12&&z<16))tex=this.windowViews[Math.floor(z/2)*2]?.texture||this.window;else if(z>=18&&z<20)tex=this.clock;}
       } else {u=(p.x+dx*dist+3)/6;if(dz>0)tex=this.end;}
       const height=3*lens/perp,top=horizon-height*.5;
@@ -217,7 +220,7 @@ export class Corridor {
     }
     const figure=project(1.6,0,this.rabbitZ??(this.anomaly==='figure'?16:22));
     const sprite=this.mouthOpen && this.mascotOpen.complete && this.mascotOpen.naturalWidth ? this.mascotOpen : this.mascot;
-    if(figure && sprite.complete && sprite.naturalWidth){
+    if(!this.exploration && figure && sprite.complete && sprite.naturalWidth){
       const height=2.1*lens/figure.d, width=height*sprite.naturalWidth/sprite.naturalHeight;
       const left=figure.x-width/2,top=figure.y-height;
       c.save();
