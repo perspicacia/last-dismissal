@@ -1,7 +1,7 @@
-import { createHorrorEvents } from './horror-events.js?v=photo-doll-depth-4';
-import { newGame, choose } from './logic.js?v=photo-doll-depth-4';
-import { SchoolAudio } from './audio.js?v=photo-doll-depth-4';
-import { Corridor } from './corridor.js?v=photo-doll-depth-4';
+import { createHorrorEvents } from './horror-events.js?v=doll-furniture-3';
+import { newGame, choose } from './logic.js?v=doll-furniture-3';
+import { SchoolAudio } from './audio.js?v=doll-furniture-3';
+import { Corridor } from './corridor.js?v=doll-furniture-3';
 import { stairDirection } from './walk-exits.js';
 import { schoolAction, canChooseStairs } from './school-route.js';
 const $ = id => document.getElementById(id);

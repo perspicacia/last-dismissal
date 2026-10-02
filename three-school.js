@@ -1,5 +1,5 @@
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
-import {volumeFromImage} from './doll-volume.js?v=rounded-3';
+import {volumeFromImage} from './doll-volume.js?v=face-stable-2';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js';
@@ -55,7 +55,7 @@ export class ThreeSchoolView {
         const d=this.picture(g,null,.62,.27,[-2.61,2.81,z],Math.PI/2);this.refs.doors.push(d);
       }
       box(g,-2.81,1.61,9,.16,1.1,1.9,material('#65513a'));box(g,-2.7,1.61,9,.08,.98,1.78,material('#97865d'));
-      this.refs.photo=this.picture(g,null,1.32,.88,[-2.646,1.61,9],Math.PI/2);
+      this.refs.photo=this.picture(g,null,1.05,.70,[-2.646,1.61,9],Math.PI/2);
       const clockFrame=new THREE.Mesh(new THREE.CylinderGeometry(.405,.405,.13,64),material('#38251d',{roughness:.4}));clockFrame.rotation.z=Math.PI/2;clockFrame.position.set(2.83,2.08,19);clockFrame.castShadow=true;g.add(clockFrame);
       this.refs.clock=this.picture(g,null,.79,.79,[2.755,2.08,19],-Math.PI/2);this.refs.clock.material.transparent=true;this.refs.clock.material.alphaTest=.05;
       this.refs.rabbit=this.sprite(g,2.1,1.05,[1.6,1.05,22]);this.refs.ghost=this.sprite(g,2.35,1.175,[7, .875,6.5]);
@@ -107,8 +107,47 @@ export class ThreeSchoolView {
   }
   picture(group,image,w,h,position,angle=0){const mat=material('#ffffff',{side:THREE.DoubleSide});const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(...position);m.rotation.y=angle;m.scale.x=-1;group.add(m);if(image)mat.map=canvasTexture(image);return m;}
   sprite(group,h,y,position){const m=new THREE.Sprite(new THREE.SpriteMaterial({color:'#c2c8ba',transparent:true,alphaTest:.06}));m.position.set(...position);m.scale.set(h*2/3,h,1);group.add(m);return m;}
-  desk(g,d){const {x,z,width,depth,height}=d;const metal=material('#70837c',{metalness:.7,roughness:.4}),top=material('#ae9168',{roughness:.55});box(g,x,height-.025,z,width,.065,depth,top);for(const dx of [-width*.39,width*.39])for(const dz of [-depth*.35,depth*.35])box(g,x+dx,height/2,z+dz,.045,height-.04,.045,metal);box(g,x,height-.19,z,width*.87,.13,depth*.78,material('#60523d'));}
-  chair(g,x,z){const metal=material('#71877e',{metalness:.7,roughness:.4}),wood=material('#aa8e62');box(g,x,.42,z,.55,.06,.46,wood);box(g,x,.67,z-.22,.55,.42,.055,wood);for(const dx of [-.21,.21])for(const dz of [-.17,.17])box(g,x+dx,.22,z+dz,.035,.44,.035,metal);}
+  furnitureMaterials(){
+    if(this.furnitureMats)return this.furnitureMats;
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const ctx=canvas.getContext('2d');ctx.fillStyle='#c39a61';ctx.fillRect(0,0,256,256);
+    for(let i=0;i<100;i++){ctx.strokeStyle=i%3?'#57371925':'#ffe0a733';ctx.beginPath();ctx.moveTo(0,i*2.55);ctx.bezierCurveTo(85,i*2.55+Math.sin(i)*3,165,i*2.55-2,256,i*2.55);ctx.stroke();}
+    return this.furnitureMats={wood:material('#ebc792',{map:canvasTexture(canvas),roughness:.48}),steel:material('#a2aca8',{metalness:.55,roughness:.42}),tray:material('#65716e',{metalness:.4,roughness:.6}),rubber:material('#242b28',{roughness:1})};
+  }
+  roundedPanel(g,width,height,thickness,position,mat,angle=0){
+    const w=width/2,h=height/2,r=Math.min(.045,width/8,height/8),s=new THREE.Shape();
+    s.moveTo(-w+r,-h);s.lineTo(w-r,-h);s.quadraticCurveTo(w,-h,w,-h+r);s.lineTo(w,h-r);s.quadraticCurveTo(w,h,w-r,h);s.lineTo(-w+r,h);s.quadraticCurveTo(-w,h,-w,h-r);s.lineTo(-w,-h+r);s.quadraticCurveTo(-w,-h,-w+r,-h);
+    const geo=new THREE.ExtrudeGeometry(s,{depth:thickness,bevelEnabled:true,bevelThickness:.004,bevelSize:.004,bevelSegments:2,curveSegments:6});geo.translate(0,0,-thickness/2);
+    // Extrusion UVs use shape units; normalize the wooden faces to one grain tile.
+    const uv=geo.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setXY(i,(uv.getX(i)+w)/width,(uv.getY(i)+h)/height);
+    const mesh=new THREE.Mesh(geo,mat);mesh.position.set(...position);mesh.rotation.x=angle;mesh.castShadow=mesh.receiveShadow=true;g.add(mesh);return mesh;
+  }
+  desk(g,d){
+    const {x,z,width,depth,height}=d,{wood,steel,tray,rubber}=this.furnitureMaterials();
+    const group=new THREE.Group();group.name='school-desk';g.add(group);
+    this.roundedPanel(group,width,depth,.045,[x,height-.0225,z],wood,-Math.PI/2).name='desk-rounded-top';
+    for(const dx of [-width*.39,width*.39])for(const dz of [-depth*.35,depth*.35]){
+      box(group,x+dx,height/2-.025,z+dz,.048,height-.05,.048,steel);
+      box(group,x+dx,.025,z+dz,.055,.05,.055,rubber).name='desk-rubber-foot';
+    }
+    box(group,x,.24,z+depth*.35,width*.78,.033,.033,steel);
+    for(const dx of [-width*.39,width*.39])box(group,x+dx,height-.09,z,.033,.033,depth*.7,steel);
+    box(group,x,height-.205,z,width*.85,.018,depth*.76,tray).name='desk-cubby-bottom';
+    for(const dx of [-width*.43,width*.43])box(group,x+dx,height-.125,z,.016,.16,depth*.76,tray);
+    box(group,x,height-.125,z+depth*.38,width*.86,.16,.018,tray); // Open toward the chair.
+  }
+  chair(g,x,z){
+    const {wood,steel,rubber}=this.furnitureMaterials(),group=new THREE.Group();group.name='school-chair';g.add(group);
+    this.roundedPanel(group,.52,.46,.026,[x,.435,z],wood,-Math.PI/2).name='chair-rounded-seat';
+    this.roundedPanel(group,.46,.21,.025,[x,.735,z-.255],wood,-.09).name='chair-wood-back';
+    const points=[[-.235,.025,-.27],[-.235,.44,-.18],[-.235,.80,-.26],[-.20,.855,-.27],[.20,.855,-.27],[.235,.80,-.26],[.235,.44,-.18],[.235,.025,-.27]].map(([dx,y,dz])=>new THREE.Vector3(x+dx,y,z+dz));
+    const frame=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),48,.022,8,false),steel);frame.name='chair-bent-frame';frame.castShadow=true;group.add(frame);
+    for(const dx of [-.235,.235]){
+      cylinder(group,[x+dx,.025,z+.19],[x+dx,.43,z+.16],.022,steel);
+      cylinder(group,[x+dx,.21,z-.235],[x+dx,.21,z+.18],.018,steel);
+      for(const dz of [-.27,.19])cylinder(group,[x+dx,0,z+dz],[x+dx,.052,z+dz],.026,rubber).name='chair-rubber-foot';
+    }
+    cylinder(group,[x-.235,.21,z+.18],[x+.235,.21,z+.18],.018,steel);
+  }
   stairs(g,plaster,lower){const stone=material('#91988d',{roughness:.75}),stripe=material('#454f4b'),steel=material('#96aaa1',{metalness:.75,roughness:.3});
     box(g,0,1.5,27.8,1.3,8,6.6,plaster).name='stair-central-wall';
     for(const x of [-.655,.655])box(g,x,-.68,27.8,.025,3.66,6.6,lower);
@@ -142,7 +181,8 @@ export class ThreeSchoolView {
     const rise=dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI+(source.scene==='classroom'?source.player.angle*ease:0);
     const p=source.player;const walking=source.keys.has('forward')||source.keys.has('back');const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const nearDoll=source.scene==='classroom'&&facingDoll(p,3.8);const dollDistance=Math.hypot(DOLL_GAZE.x-p.x,DOLL_GAZE.z-p.z);
-    const targetDollLook=nearDoll?-.95*THREE.MathUtils.clamp((3.8-dollDistance)/1.5,0,1)*(1-ease):0;
+    const headDistance=Math.hypot(DOLL.x-p.x,DOLL.z-DOLL.height*.78-p.z);
+    const targetDollLook=nearDoll?-Math.min(3.2,1.30/Math.max(.35,headDistance))*THREE.MathUtils.clamp((3.8-dollDistance)/1.5,0,1)*(1-ease):0;
     const viewDt=Math.min(.05,Math.max(0,(time-(this.lastViewTime??time-50))/1000));this.lastViewTime=time;
     this.dollLook=(this.dollLook??targetDollLook)+(targetDollLook-(this.dollLook??targetDollLook))*(1-Math.exp(-viewDt*12));
     const dollLook=source.scene==='classroom'?this.dollLook:0;
