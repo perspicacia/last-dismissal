@@ -1,3 +1,4 @@
+import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=five-classrooms-1';
 import {DOLL, dollRise} from './doll-event.js';
 import { classroomWindowColumn } from './campus-view.js';
 import { drawSceneDepth } from './scene-depth.js';
@@ -36,9 +37,9 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
   const faces=[];
   const polygon=(vertices,color)=>{const pts=vertices.map(v=>project(...v));if(pts.every(Boolean))faces.push({pts,color,d:pts.reduce((s,v)=>s+v.d,0)/pts.length});};
   const box=(x,y,z,width,height,depth,colors)=>{const l=x-width/2,r=x+width/2,n=z-depth/2,f=z+depth/2,t=y+height;polygon([[l,t,n],[r,t,n],[r,t,f],[l,t,f]],colors[0]);polygon([[l,y,n],[r,y,n],[r,t,n],[l,t,n]],colors[1]);polygon([[l,y,f],[r,y,f],[r,t,f],[l,t,f]],colors[1]);polygon([[l,y,n],[l,y,f],[l,t,f],[l,t,n]],colors[2]);polygon([[r,y,n],[r,y,f],[r,t,f],[r,t,n]],colors[2]);};
-  for(const desk of kind==='classroom'?CLASSROOM_DESKS:[]){const {x,z,width,depth}=desk;for(const dx of [-.43,.43])for(const dz of [-.22,.22])box(x+dx,0,z+dz,.045,.72,.045,['#95a6a2','#65736e','#3d504d']);box(x,.71,z,width,.06,depth,['#9c8360','#6d563c','#7a644a']);box(x,.53,z,.96,.08,.48,['#4c4739','#554936','#4a3c2f']);box(x,.38,z-.72,.55,.055,.46,['#897854','#5d533d','#746548']);box(x,.43,z-.96,.55,.43,.065,['#8f7d56','#716247','#514b3b']);for(const dx of [-.2,.2])for(const dz of [-.15,.15])box(x+dx,0,z-.72+dz,.035,.4,.035,['#8a9992','#5f7168','#34493d']);}
+  for(const desk of regularClassroom(kind)?CLASSROOM_DESKS:[]){const {x,z,width,depth}=desk;for(const dx of [-.43,.43])for(const dz of [-.22,.22])box(x+dx,0,z+dz,.045,.72,.045,['#95a6a2','#65736e','#3d504d']);box(x,.71,z,width,.06,depth,['#9c8360','#6d563c','#7a644a']);box(x,.53,z,.96,.08,.48,['#4c4739','#554936','#4a3c2f']);box(x,.38,z-.72,.55,.055,.46,['#897854','#5d533d','#746548']);box(x,.43,z-.96,.55,.43,.065,['#8f7d56','#716247','#514b3b']);for(const dx of [-.2,.2])for(const dz of [-.15,.15])box(x+dx,0,z-.72+dz,.035,.4,.035,['#8a9992','#5f7168','#34493d']);}
   // Teacher's desk anchors the classroom front.
-  const teacher=CLASSROOM_TEACHER_DESK;if(kind==='classroom')box(teacher.x,0,teacher.z,teacher.width,teacher.height,teacher.depth,['#948064','#51493a','#685b47']);
+  const teacher=CLASSROOM_TEACHER_DESK;if(regularClassroom(kind))box(teacher.x,0,teacher.z,teacher.width,teacher.height,teacher.depth,['#948064','#51493a','#685b47']);
   if(kind==='music'){
     box(3.38,0,7.35,.8,1.4,2.45,['#53382c','#211b18','#35231b']);
     box(2.98,.82,7.35,.32,.055,2.15,['#e0ddcd','#b9b9ad','#ccc8ba']);
@@ -59,5 +60,8 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
   faces.sort((a,b)=>b.d-a.d);for(const face of faces){c.fillStyle=face.color;c.strokeStyle='#10202980';c.lineWidth=.7;c.beginPath();face.pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.stroke();}
   drawSceneDepth(c,project,p,{classroom:true});
   if(doll&&kind==='classroom'){const rise=dollRise(doll.state),image=rise>.25?doll.scary:doll.image;const pos=project(DOLL.x,rise>.2?.04:.16,DOLL.z-.6);if(pos&&image?.naturalWidth){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2*(1-rise));c.drawImage(image,-DOLL.height*unit/3,-DOLL.height*unit,DOLL.height*unit*2/3,DOLL.height*unit);c.restore();}}
+  const ambience=ROOM_AMBIENCE[kind];
+  if(ambience?.student&&doll?.image?.naturalWidth){const a=ambience.student,pos=project(a.x,a.y+.09,a.z-a.height/2);if(pos){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2);c.drawImage(doll.image,-a.height*unit/3,-a.height*unit/2,a.height*unit*2/3,a.height*unit);c.restore();}}
+  if(ambience?.ghost&&doll?.ghost?.naturalWidth){const a=ambience.ghost,pos=project(-4.28,a.y,a.z);if(pos){const height=a.height*lens/pos.d;c.save();c.beginPath();c.rect(0,0,w,h);c.clip();c.globalAlpha=.72;c.drawImage(doll.ghost,pos.x-height/3,pos.y-height/2,height*2/3,height);c.restore();}}
   const shade=c.createRadialGradient(w/2,h/2,w*.15,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#000915c0');c.fillStyle=shade;c.fillRect(0,0,w,h);
 }
