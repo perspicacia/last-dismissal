@@ -1,3 +1,4 @@
+import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import {ROOMS,RABBIT_SPOT} from './exploration.js';
 import {buildRoomProps} from './room-props.js';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
@@ -170,7 +171,7 @@ export class ThreeSchoolView {
     for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':d.userData.label]);
     assign(this.refs.clock,source.clockFace);
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
-    assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);for(const rabbit of Object.values(this.refs.roomRabbits||{}))assign(rabbit,source.mascotOpen);
+    assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);for(const rabbit of Object.values(this.refs.roomRabbits||{}))assign(rabbit,source.mouthOpen?source.mascotOpen:source.mascot);
     assign(this.refs.ghost,source.windowGhost);
     if(!this.dollVolumeReady&&source.dollImage?.naturalWidth){
       const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;}
@@ -183,7 +184,13 @@ export class ThreeSchoolView {
     this.refs.rabbit.visible=!source.exploration;
     for(const [room,rabbit] of Object.entries(this.refs.roomRabbits||{})){
       rabbit.visible=Boolean(source.exploration?.ended&&source.scene===room);
-      if(rabbit.visible){const t=window.matchMedia('(prefers-reduced-motion: reduce)').matches?1:THREE.MathUtils.clamp((time-source.caughtAt)/700,0,1),rush=1-Math.pow(1-t,3);const p=source.player;const goal={x:p.x+Math.sin(p.angle)*.80,z:p.z+Math.cos(p.angle)*.80};rabbit.position.set(THREE.MathUtils.lerp(RABBIT_SPOT.x,goal.x,rush),THREE.MathUtils.lerp(1.05,1.25,rush),THREE.MathUtils.lerp(RABBIT_SPOT.z,goal.z,rush));rabbit.rotation.y=p.angle;const growth=1+.15*rush;rabbit.scale.set(-growth,growth,1);}
+      if(rabbit.visible){
+        const arrival=rabbitArrival((time-source.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const p=source.player,goal={x:p.x+Math.sin(p.angle)*.80,z:p.z+Math.cos(p.angle)*.80};
+        rabbit.position.set(THREE.MathUtils.lerp(RABBIT_SPOT.x,goal.x,arrival.rush),arrival.centerY,THREE.MathUtils.lerp(RABBIT_SPOT.z,goal.z,arrival.rush));
+        const size=rabbitSize(source.mouthOpen?source.mascotOpen:source.mascot,arrival.growth);
+        rabbit.scale.set(size.width,size.height,1);
+      }
     }
     this.refs.rabbit.position.z=source.rabbitZ??(source.anomaly==='figure'?16:22);
     if(source.survival){const door=this.scenes.classroom.getObjectByName('sliding-classroom-door');const closed=source.survival.doorUntil>source.survival.elapsed;for(const leaf of door.userData.leaves)leaf.position.z=closed?0:leaf.userData.side*.72;}this.refs.ghost.visible=source.anomaly==='window';this.refs.dollPrint.visible=source.anomaly==='doll';this.refs.dollPrintBack.visible=source.anomaly==='doll';
