@@ -50,3 +50,15 @@ test('학교 가구는 둥근 목재 판·금속 프레임·열린 수납칸·�
  const frame=scene.getObjectByName('chair-bent-frame');assert.equal(frame.geometry.type,'TubeGeometry');
  const photo=v.refs.photo.geometry.parameters;assert.equal(photo.width,1.05);assert.equal(photo.height,.70);
 });
+test('인형의 얼굴 면은 누웠을 때 위를 향하고 기립 후 플레이어를 향한다',()=>{
+ const v=buildView();v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.syncTextures=()=>{};
+ const old=globalThis.window;globalThis.window={matchMedia:()=>({matches:true})};
+ const source={anomaly:'doll',mouthOpen:false,player:{x:-1.05,z:4,angle:0},scene:'classroom',keys:new Set(),dollState:{phase:'lying'}};
+ const front=new THREE.Vector3(0,0,-.08),back=new THREE.Vector3(0,0,0);
+ try{
+  v.draw(source,0);v.scenes.classroom.updateMatrixWorld(true);
+  assert.ok(v.refs.doll.localToWorld(front.clone()).y>v.refs.doll.localToWorld(back.clone()).y);
+  source.dollState={phase:'standing'};v.draw(source,1000);v.scenes.classroom.updateMatrixWorld(true);
+  assert.ok(v.refs.doll.localToWorld(front.clone()).z>v.refs.doll.localToWorld(back.clone()).z);
+ }finally{globalThis.window=old;}
+});
