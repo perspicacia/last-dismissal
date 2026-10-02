@@ -5,5 +5,5 @@ document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 // Reproducible safe route through the ordinary classrooms; attack remains in dance.
 if(new URLSearchParams(location.search).has('safe'))Math.random=()=>.99;
-await import('../../game.js?v=music-ghost-polish-4');
+await import('../../game.js?v=doll-sides-stable-1');
 </script></body></html>

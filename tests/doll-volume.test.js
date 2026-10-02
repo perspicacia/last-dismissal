@@ -25,18 +25,50 @@ test('투명 배경은 제외하고 원본 투영면과 둥근 뒷면으로 닫�
  assertClosed(g);assert.equal(volumeFromImage({naturalWidth:0}),null);
 });
 
-test('눈·입·머리카락·목·옷의 사진은 모두 같은 평면과 원본 UV 비율을 유지한다',()=>{
+test('완만한 앞면에서도 원본 사진의 XY·UV 비율과 중앙 얼굴 비율을 보존한다',()=>{
  const w=30,h=45,pixels=new Uint8ClampedArray(w*h*4).fill(255),g=buildDollVolume(pixels,w,h,1.55,w,h);
  const a=g.getAttribute('position'),uv=g.getAttribute('uv'),normal=g.getAttribute('normal'),front=g.groups[0];
  const photoVertices=new Set(g.index.array.slice(front.start,front.start+front.count));
- const depth=a.getZ([...photoVertices][0]);
+ const faceDepth=[];
  for(const i of photoVertices){
-  assert.equal(a.getZ(i),depth,'photograph cannot drape over depth gradients');
   assert.ok(Math.abs(a.getX(i)-(uv.getX(i)-.5)*1.55*w/h)<1e-6);
   assert.ok(Math.abs(a.getY(i)-(uv.getY(i)-.5)*1.55)<1e-6);
-  assert.deepEqual([normal.getX(i),normal.getY(i),normal.getZ(i)],[0,0,-1]);
+  assert.ok(a.getZ(i)>=-.14001&&a.getZ(i)<=-.07099);
+  const u=uv.getX(i),v=1-uv.getY(i);
+  if(u>.35&&u<.65&&v>.14&&v<.25){faceDepth.push(a.getZ(i));assert.ok(normal.getZ(i)<-.99);}
  }
+ assert.ok(faceDepth.length>0);assert.ok(Math.max(...faceDepth)-Math.min(...faceDepth)<1e-6,'eyes and mouth keep the same frontal depth');
  assert.ok(Math.abs((g.boundingBox.max.x-g.boundingBox.min.x)/1.55-w/h)<1e-6);
+});
+
+test('머리카락 틈은 깊은 측면 홈이 되지 않고 앞면 UV·얇은 봉합선을 유지한다',()=>{
+ const w=96,h=144,pixels=new Uint8ClampedArray(w*h*4);
+ for(let y=4;y<50;y++)for(let x=22;x<75;x++)pixels.set([170,150,110,255],(y*w+x)*4);
+ // A fine strand gap within the head, fully transparent in the unchanged PNG.
+ for(let y=10;y<30;y++)for(let x=44;x<46;x++)pixels.fill(0,(y*w+x)*4,(y*w+x)*4+4);
+ const g=buildDollVolume(pixels,w,h,1.55,w,h),n=(w+1)*(h+1),a=g.getAttribute('position'),v=20*(w+1)+45;
+ assert.ok(a.getZ(v+n)-a.getZ(v)>.10,'hair gap cannot collapse to a 2 mm trench');
+ assert.equal(pixels[(20*w+45)*4+3],0,'original PNG alpha stays transparent');
+ assertClosed(g);
+});
+
+test('머리카락 밝고 어두운 세부 무늬는 뒤·옆으로 세로 반복되지 않는다',()=>{
+ const w=48,h=72,pixels=new Uint8ClampedArray(w*h*4);
+ for(let y=5;y<h-5;y++)for(let x=7;x<w-7;x++)pixels.set(x<24?[210,190,130,255]:[50,40,30,255],(y*w+x)*4);
+ const g=buildDollVolume(pixels,w,h,1.55,w,h),n=(w+1)*(h+1),colors=g.getAttribute('color');
+ for(const y of [10,20,40,60]){
+  const a=n+y*(w+1)+12,b=n+y*(w+1)+36;
+  for(const c of ['getX','getY','getZ'])assert.equal(colors[c](a),colors[c](b));
+ }
+});
+
+test('PNG 크기만 먼저 알려지거나 알파가 아직 비어 있으면 깨진 볼륨을 저장하지 않는다',()=>{
+ const prior=globalThis.document;let reads=0;
+ globalThis.document={createElement:()=>({getContext:()=>({drawImage(){},getImageData:()=>{reads++;return {data:new Uint8ClampedArray(288*432*4)};}})})};
+ try{
+  assert.equal(volumeFromImage({naturalWidth:1024,naturalHeight:1536,complete:false}),null);assert.equal(reads,0);
+  assert.equal(volumeFromImage({naturalWidth:1024,naturalHeight:1536,complete:true}),null);assert.equal(reads,1);
+ }finally{globalThis.document=prior;}
 });
 
 test('머리카락과 목의 오목한 경계에도 긴 측면 기둥 없이 얇은 봉합선만 남는다',()=>{
@@ -54,7 +86,7 @@ test('사진 뒤의 두께는 실루엣부터 내부까지 둥글게 변하며 �
  const {pixels,w,h}=rectangle(48,72),g=buildDollVolume(pixels,w,h,1.55,w,h),a=g.getAttribute('position'),n=(w+1)*(h+1);
  const thickness=(x,y)=>a.getZ(n+y*(w+1)+x)-a.getZ(y*(w+1)+x);
  assert.ok(thickness(8,28)>thickness(7,28));assert.ok(thickness(10,28)>thickness(8,28));
- assert.ok(thickness(24,28)>.15);assert.ok(thickness(24,61)>.10);
+ assert.ok(thickness(24,28)>.11);assert.ok(thickness(24,61)>.10);
  const front=g.groups[0];for(let i=front.start;i<front.start+front.count;i++)assert.ok(g.index.array[i]<n);
  assert.equal(g.groups[1].materialIndex,1);
 });

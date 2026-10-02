@@ -2,7 +2,7 @@ import {ROOMS} from './exploration.js?v=five-classrooms-1';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=music-ghost-polish-2';
+import { ThreeSchoolView } from './three-school.js?v=doll-sides-stable-1';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=classroom-hauntings-2';
 import { drawStairs } from './stairs.js';

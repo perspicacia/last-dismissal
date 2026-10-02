@@ -5,6 +5,10 @@ import {ThreeSchoolView} from '../three-school.js';
 import {buildOutdoors} from '../three-outdoors.js';
 function mockCanvas(){const gradient={addColorStop(){}};const ctx=new Proxy({}, {get:(_,k)=>()=>String(k).startsWith('create')?gradient:undefined,set:()=>true});return {width:512,height:512,getContext:()=>ctx};}
 function buildView(){const old=globalThis.document;globalThis.document={createElement:mockCanvas};try{const v=Object.create(ThreeSchoolView.prototype);v.scenes={};v.refs={};v.textures=[];v.build('corridor');v.build('classroom');return v;}finally{globalThis.document=old;}}
+test('크기가 먼저 알려진 미완료 토끼 PNG를 빈 분할 캐시로 확정하지 않는다',()=>{
+ const v=Object.create(ThreeSchoolView.prototype),image={naturalWidth:1024,naturalHeight:1536,complete:false};
+ assert.equal(v.partsFor(image),null);assert.equal(v.rabbitPartCache.has(image),false);
+});
 test('3D 카메라는 기존 오른쪽 회전과 화면 좌우를 보존하고 문·시계 글자를 반전하지 않는다',()=>{
   const v=buildView(),camera=new THREE.PerspectiveCamera(70,1,.05,160);camera.position.set(0,1.5,-1.8);camera.lookAt(0,1.5,-2.8);camera.updateMatrixWorld();
   v.scenes.corridor.updateMatrixWorld(true);
