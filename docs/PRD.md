@@ -21,8 +21,10 @@
 - 문·토끼 녹음 효과음: [specs/reference-horror-audio.md](../specs/reference-horror-audio.md), [출처](../assets/audio/README.md)
 - 학생 인형: [원본 외형 우선 명세](../specs/student-doll-original-look.md). 3D 시안의 얼굴/머리 느낌이 달라 일반 게임은 원본 PNG 기반 외형으로 복구했다. [GLB 시안](../specs/student-doll-glb.md)은 개발용 비교에 보존하며 실제 3D 외형 보완과 리깅/표정은 후속 범위다. [진단 기록](student-doll-3d-plan.md).
 
-- 3-1 책상과 음악실 의자에는 정적인 학생 인형, 3-3·무용실 창밖에는 공격하지 않는 귀신을 배치한다. [교실 확장 명세](../specs/classrooms-doll-depth.md).
+- 3-1 책상에는 정적인 학생 인형, 음악실 의자에는 어린 남자아이 귀신, 3-3·무용실 창밖에는 공격하지 않는 귀신을 배치한다. [교실 확장 명세](../specs/classrooms-doll-depth.md).
 
 - 교실 환경 공포와 음향: 3-1 주인 없는 공, 3-2 구석 그림자, 창밖 귀신 근접 미소, 입장 문 소리·간헐적 아기 울음·괴물 토끼 포효. [명세](../specs/classroom-hauntings.md).
 - 음악실 악기·악보 디테일, 창밖 귀신 곡선 치아·여자 웃음, 문 끼리릭 음색을 보완한다. 시작 화면은 영문 게임명과 필요한 조작만 남기고 최종 디자인은 후속 범위다. [명세](../specs/music-ghost-polish.md).
 - 학생 인형은 머리카락 틈의 깊은 홈·측면 질감 반복과 미완료 이미지 캐시를 수정한다. 기존 사진·배치·공포 판정을 보존한다. [명세](../specs/student-doll-sides.md).
+
+- 음악실 피아노 의자의 학생 인형은 사용자 요청에 따라 정적인 어린 남자아이 귀신으로 교체한다. [명세](../specs/piano-boy-ghost.md). 새 투명 자산의 제작만 승인되었으며 기존 캐릭터의 추가 이미지 제작 중단은 유지한다.

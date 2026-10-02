@@ -1,9 +1,10 @@
-import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=five-classrooms-1';
+import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=piano-boy-1';
 import {ROOM_HAUNTINGS,windowGaze,bouncePose,ghostSmileAmount} from './room-hauntings.js';
 import {drawGhostSmile} from './ghost-smile-shape.js';
 import {DOLL, dollRise} from './doll-event.js';
 import { classroomWindowColumn } from './campus-view.js';
 import { drawSceneDepth } from './scene-depth.js?v=classroom-hauntings-2';
+import {pianoBoyQuad,drawPianoBoy,pianoBoyLook} from './piano-boy.js';
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
 export const CLASSROOM_TEACHER_DESK = { x: -.5, z: 8.7, width: 2, depth: .65, height: .72 };
 export const CLASSROOM_DESKS = [-2.5, 1.2, 2.8].flatMap(x => [3.2, 5, 6.8].map(z => ({x,z,width:1.1,depth:.65,height:.76})));
@@ -22,7 +23,7 @@ export function moveClassroomPlayer(player, keys, dt, blockers=null) {
 
 // Geometry uses the same world units as movement; desks cannot be walked through.
 export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classroom') {
-  const horizon=h*.48,lens=w*.68;
+  const lens=w*.68,horizon=h*.48+pianoBoyLook(p,doll?.boy,ROOM_AMBIENCE[kind]?.boy)*lens;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
   c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
   // Perspective wooden boards, knots and faint cold window reflections.
@@ -68,7 +69,9 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
     for(const z of [2.6,5.4,8.5])box(-4,0,z,.05,1.15,.05,['#aaa','#666','#888']);
     for(const y of [.73,1.13])box(-4,y,5.5,.08,.08,6.2,['#ab9570','#7d684e','#8b795b']);
   }
-  faces.sort((a,b)=>b.d-a.d);for(const face of faces){c.fillStyle=face.color;c.strokeStyle='#10202980';c.lineWidth=.7;c.beginPath();face.pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.stroke();}
+  const boy=ROOM_AMBIENCE[kind]?.boy,quad=pianoBoyQuad(project,doll?.boy,boy);
+  if(quad){for(const [x,y,width,depth] of [[boy.x,.009,.32,.30],[2.68,boy.y+.003,.36,.44]])polygon([[x-width/2,y,boy.z-depth/2],[x+width/2,y,boy.z-depth/2],[x+width/2,y,boy.z+depth/2],[x-width/2,y,boy.z+depth/2]],'#00000060');faces.push({d:quad.reduce((sum,p)=>sum+p.d,0)/4,draw:()=>drawPianoBoy(c,project,doll.boy,boy)});}
+  faces.sort((a,b)=>b.d-a.d);for(const face of faces){if(face.draw){face.draw();continue;}c.fillStyle=face.color;c.strokeStyle='#10202980';c.lineWidth=.7;c.beginPath();face.pts.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.fill();c.stroke();}
   drawSceneDepth(c,project,p,{classroom:true});
   if(doll&&kind==='classroom'){const rise=dollRise(doll.state),image=rise>.25?doll.scary:doll.image;const pos=project(DOLL.x,rise>.2?.04:.16,DOLL.z-.6);if(pos&&image?.naturalWidth){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2*(1-rise));c.drawImage(image,-DOLL.height*unit/3,-DOLL.height*unit,DOLL.height*unit*2/3,DOLL.height*unit);c.restore();}}
   const ambience=ROOM_AMBIENCE[kind];

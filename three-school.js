@@ -1,14 +1,15 @@
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
-import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=five-classrooms-1';
+import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=piano-boy-1';
 import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=doll-sides-stable-1';
 import {loadStudentModel,prepareStudentModel} from './student-model.js?v=student-glb-1';
 import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js';
+import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
-import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=music-ghost-polish-1';
+import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=piano-boy-1';
 
 import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 
@@ -138,6 +139,11 @@ export class ThreeSchoolView {
   }
   addAmbience(parent,kind){
     const config=ROOM_AMBIENCE[kind];if(!config)return;
+    if(config.boy){const p=config.boy,mesh=this.picture(parent,null,1,1,[p.x,0,p.z],-Math.PI/2);
+      mesh.name='piano-boy-ghost';mesh.visible=false;Object.assign(mesh.material,{transparent:true,alphaTest:.08,roughness:1});mesh.castShadow=true;mesh.receiveShadow=true;this.refs.pianoBoy=mesh;
+      this.contactShadow(parent,p.x,.009,p.z,.32,.30).name='piano-boy-feet-shadow';
+      this.contactShadow(parent,2.68,p.y+.003,p.z,.36,.44).name='piano-boy-seat-shadow';
+    }
     if(config.student){const p=config.student,root=new THREE.Group(),tilt=new THREE.Group();root.name='ambience-student-doll';root.position.set(p.x,p.y,p.z);root.rotation.y=Math.PI;root.scale.setScalar(p.height/DOLL.height);tilt.rotation.x=Math.PI/2;root.add(tilt);parent.add(root);
       const mesh=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);Object.assign(mesh.material,{transparent:true,alphaTest:.55,roughness:1});mesh.castShadow=true;mesh.receiveShadow=true;(this.refs.ambienceDolls??=[]).push(mesh);
       this.contactShadow(parent,p.x,p.y+.003,p.z-p.height*.5,p.height*.48,p.height);
@@ -242,6 +248,9 @@ export class ThreeSchoolView {
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
     assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);for(const rabbit of Object.values(this.refs.roomRabbits||{})){const image=source.mouthOpen?source.mascotOpen:source.mascot;const parts=this.partsFor(image);if(parts){assign(rabbit.userData.body,parts.body);assign(rabbit.userData.arms[0],parts.left);assign(rabbit.userData.arms[1],parts.right);}}
     assign(this.refs.ghost,source.windowGhost);for(const ghost of this.refs.ambienceGhosts||[])assign(ghost,source.windowGhost);
+    if(this.refs.pianoBoy){const pose=pianoBoyLayout(source.pianoBoy,ROOM_AMBIENCE.music.boy);this.refs.pianoBoy.visible=Boolean(pose);
+      if(pose){assign(this.refs.pianoBoy,source.pianoBoy);this.refs.pianoBoy.scale.set(-pose.width,pose.height,1);this.refs.pianoBoy.position.y=pose.centerY;}
+    }
     if(!this.dollVolumeReady&&source.dollImage?.naturalWidth){
       const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;}
     }
@@ -276,6 +285,8 @@ export class ThreeSchoolView {
     const ambience=ROOM_AMBIENCE[source.scene]?.student;
     if(ambience){const dx=ambience.x-p.x,dz=ambience.z-ambience.height*.5-p.z,distance=Math.hypot(dx,dz);const facing=(dx*Math.sin(p.angle)+dz*Math.cos(p.angle))/Math.max(.001,distance);
       if(distance<3.5&&facing>.7)targetDollLook=-(1.5-ambience.y-.18)/Math.max(.5,distance)*THREE.MathUtils.clamp((3.5-distance)/1.2,0,1);}
+    const boy=ROOM_AMBIENCE[source.scene]?.boy,boyPose=pianoBoyLayout(source.pianoBoy,boy);
+    if(boyPose)targetDollLook=pianoBoyLook(p,source.pianoBoy,boy);
     const corner=ROOM_HAUNTINGS[source.scene]?.corner;if(corner){const dx=corner.x-p.x,dz=corner.z-p.z,distance=Math.hypot(dx,dz);if(distance<4&&(dx*Math.sin(p.angle)+dz*Math.cos(p.angle))/Math.max(.001,distance)>.85)targetDollLook=-.94/Math.max(.6,distance);}
     const nearGhost=ROOM_AMBIENCE[source.scene]?.ghost;if(nearGhost&&ghostSmileAmount(p,nearGhost,{active:!source.exploration?.ended}))targetDollLook=(nearGhost.y+nearGhost.height*.327-1.5)/Math.max(.6,Math.hypot(nearGhost.x-p.x,nearGhost.z-p.z));
     const viewDt=Math.min(.05,Math.max(0,(time-(this.lastViewTime??time-50))/1000));this.lastViewTime=time;
@@ -284,7 +295,7 @@ export class ThreeSchoolView {
     for(const [room,group] of Object.entries(this.refs.hauntings||{})){const result=updateRoomHauntings(group,{player:p,time:time/1000,dt:viewDt,reduced,active:source.scene===room&&!source.exploration?.ended});if(source.scene===room){({ballActive,ballHeight,cornerVisible}=result);}}
     if(source.canvas)Object.assign(source.canvas.dataset,{ballActive:String(ballActive),ballHeight:(ballHeight??0).toFixed(3),ghostSmile:ghostSmile.toFixed(2),cornerVisible:String(cornerVisible)});
     this.dollLook=(this.dollLook??targetDollLook)+(targetDollLook-(this.dollLook??targetDollLook))*(1-Math.exp(-viewDt*12));
-    const dollLook=source.scene==='classroom'||ambience||nearGhost?this.dollLook:0;
+    const dollLook=source.scene==='classroom'||ambience||nearGhost||boyPose?this.dollLook:0;
     const descent=source.scene==='corridor'&&p.x>.65?-.65*THREE.MathUtils.clamp((p.z-21.5)/2,0,1)*Math.max(0,Math.cos(p.angle)):0;
     this.camera.position.set(p.x,1.5+(!reduced&&walking?Math.sin(time/130)*.012:0),-p.z);this.camera.lookAt(p.x+Math.sin(p.angle),this.camera.position.y+descent+dollLook,-p.z-Math.cos(p.angle));
     this.camera.updateMatrixWorld();this.scenes[source.scene].updateMatrixWorld(true);
