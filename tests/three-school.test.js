@@ -43,3 +43,10 @@ test('게시판 사진은 원본 비율을 유지하고 보드 안쪽에 여백�
  const photo=buildView().refs.photo,{width,height}=photo.geometry.parameters;
  assert.ok(width<1.78);assert.ok(height<.98);assert.ok(Math.abs(width/height-1.5)<.001);assert.equal(photo.position.y,1.61);
 });
+test('학교 가구는 둥근 목재 판·금속 프레임·열린 수납칸·고무 발을 갖는다',()=>{
+ const v=buildView(),scene=v.scenes.classroom;
+ for(const name of ['desk-rounded-top','desk-cubby-bottom','desk-rubber-foot','chair-rounded-seat','chair-wood-back','chair-bent-frame','chair-rubber-foot'])assert.ok(scene.getObjectByName(name));
+ const top=scene.getObjectByName('desk-rounded-top');assert.equal(top.geometry.type,'ExtrudeGeometry');
+ const frame=scene.getObjectByName('chair-bent-frame');assert.equal(frame.geometry.type,'TubeGeometry');
+ const photo=v.refs.photo.geometry.parameters;assert.equal(photo.width,1.05);assert.equal(photo.height,.70);
+});

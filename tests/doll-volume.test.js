@@ -13,3 +13,8 @@ test('doll volume excludes transparent backdrop, tapers edges, and has closed de
  assert.ok([...edges.values()].every(n=>n===2));
  assert.equal(volumeFromImage({naturalWidth:0}),null);
 });
+test('눈·입·턱은 동일한 깊이를 유지해 얼굴의 투영 비율이 늘어나지 않는다',()=>{
+ for(const v of [.14,.20,.26,.32])assert.equal(dollDepth(.5,v),dollDepth(.5,.14));
+ const w=24,h=36,p=new Uint8ClampedArray(w*h*4).fill(255),g=buildDollVolume(p,w,h,1.55,24,36),a=g.getAttribute('position');
+ const face=[];for(let y=5;y<=10;y++)face.push(a.getZ(y*25+12));assert.ok(face.every(z=>z===face[0]));
+});
