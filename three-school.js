@@ -5,6 +5,7 @@ import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=doll-sides-stable-1';
 import {loadStudentModel,prepareStudentModel} from './student-model.js?v=student-glb-1';
+import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=music-ghost-polish-1';
@@ -24,7 +25,7 @@ export class ThreeSchoolView {
     this.renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFShadowMap;
-    this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;
+    this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.0;
     this.scenes={};this.refs={};this.build('corridor');for(const room of ROOMS)this.build(room.id);this.syncTextures(source);this.resize();
     canvas.dataset.rendererReady='three';
     this.loadStudentModel();
@@ -46,10 +47,22 @@ export class ThreeSchoolView {
     if(source.canvas)Object.assign(source.canvas.dataset,{studentModel:useSolid?'glb':'image-volume',dollReady:String(useSolid||Boolean(this.dollVolumeReady))});
     return useSolid;
   }
-  resetHauntings(){this.lastViewTime=null;this.dollLook=0;for(const group of Object.values(this.refs.hauntings||{}))updateRoomHauntings(group,{player:this.source.player,time:0,dt:0,active:false});for(const ghost of this.refs.ambienceGhosts||[])updateGhostSmile(ghost.userData.smile,ghost,this.source.player,ghost.userData.config,{active:false});if(this.source.canvas)Object.assign(this.source.canvas.dataset,{ballActive:'false',ballHeight:'0',ghostSmile:'0',cornerVisible:'false'});}
+  resetHauntings(){this.lastViewTime=null;this.dollLook=0;this.lighting?.reset();this.applyCorridorLighting(CORRIDOR_LAMPS.map(()=>1));for(const group of Object.values(this.refs.hauntings||{}))updateRoomHauntings(group,{player:this.source.player,time:0,dt:0,active:false});for(const ghost of this.refs.ambienceGhosts||[])updateGhostSmile(ghost.userData.smile,ghost,this.source.player,ghost.userData.config,{active:false});if(this.source.canvas)Object.assign(this.source.canvas.dataset,{ballActive:'false',ballHeight:'0',ghostSmile:'0',cornerVisible:'false'});}
+  applyCorridorLighting(levels){
+    for(const [i,lamp] of (this.refs.corridorLamps||[]).entries()){
+      lamp.light.intensity=lamp.power*levels[i];
+      lamp.bulb.material.emissiveIntensity=.02+lamp.glow*levels[i];
+    }
+    recordLighting(this.source?.canvas,levels);
+  }
+  updateLighting(source,time,reduced){
+    this.lighting??=new SchoolLighting();
+    const levels=this.lighting.update(time,{active:source.scene==='corridor'&&!source.exploration?.ended,reduced});
+    this.applyCorridorLighting(levels);recordLighting(source.canvas,levels);
+  }
   resize(){const w=Math.max(1,this.source.canvas.clientWidth),h=Math.max(1,this.source.canvas.clientHeight);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=THREE.MathUtils.radToDeg(2*Math.atan(h/(w*.68)*.5));this.camera.updateProjectionMatrix();}
   build(kind){
-    const scene=new THREE.Scene();scene.background=new THREE.Color('#10212c');scene.fog=new THREE.FogExp2('#1a2c35',.013);scene.scale.z=-1;this.scenes[kind]=scene;
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#0b171f');scene.fog=new THREE.FogExp2('#14242c',.013);scene.scale.z=-1;this.scenes[kind]=scene;
     const g=new THREE.Group();scene.add(g);const classroom=kind!=='corridor',half=classroom?4.4:3,end=classroom?9.8:24.6;
     const plaster=material('#d0cbb8',{map:plasterTexture()}),lower=material('#365d60'),trim=material('#a7aa99'),base=material('#183934'),wood=material('#b69b73',{map:woodTexture(),roughness:.48,bumpScale:.013});wood.bumpMap=wood.map;
     const floor=box(g,0,-.075,end/2,half*2,.15,end,wood);floor.castShadow=false;
@@ -102,10 +115,16 @@ export class ThreeSchoolView {
       for(const x of [92,420]){pc.beginPath();pc.ellipse(x,78,24,22,-.1,0,Math.PI*2);pc.fill();for(let i=0;i<5;i++){pc.beginPath();pc.ellipse(x-24+i*12,43-(i%3)*5,5,20,.08,0,Math.PI*2);pc.fill();}}
       this.refs.dollPrint=this.picture(g,print,1.45,.32,[-2.643,1.96,5],Math.PI/2);Object.assign(this.refs.dollPrint.material,{transparent:true,alphaTest:.1,depthWrite:false});this.refs.dollPrint.visible=false;this.refs.dollPrintBack=this.refs.dollPrint.clone();this.refs.dollPrintBack.position.z=15;g.add(this.refs.dollPrintBack);
     }
-    const ambient=new THREE.HemisphereLight('#baceda','#756751',.85);if(kind==='classroom33')ambient.intensity=.58;scene.add(ambient);
-    const moon=new THREE.DirectionalLight('#b7cfdf',1.1);moon.position.set(classroom?-16:16,24,12);moon.target.position.set(0,0,end/2);scene.add(moon,moon.target);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);Object.assign(moon.shadow.camera,{left:-30,right:30,top:40,bottom:-40,near:.5,far:90});moon.shadow.bias=-.0004;moon.shadow.normalBias=.035;
-    const fixture=material('#d1d6c7',{emissive:'#dfedcf',emissiveIntensity:1.3}),housing=material('#65726d');
-    for(let z=classroom?2:3;z<end;z+=classroom?4:5){box(g,0,2.94,z,1.25,.085,.43,housing);box(g,0,2.88,z,1.13,.035,.34,fixture);const light=new THREE.PointLight('#e0e5c8',13,11,2);light.position.set(0,2.65,z);scene.add(light);}
+    const ambient=new THREE.HemisphereLight('#baceda','#756751',kind==='classroom33'?.34:.45);scene.add(ambient);
+    const moon=new THREE.DirectionalLight('#b7cfdf',.7);moon.position.set(classroom?-16:16,24,12);moon.target.position.set(0,0,end/2);scene.add(moon,moon.target);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);Object.assign(moon.shadow.camera,{left:-30,right:30,top:40,bottom:-40,near:.5,far:90});moon.shadow.bias=-.0004;moon.shadow.normalBias=.035;
+    const housing=material('#65726d');
+    if(!classroom)this.refs.corridorLamps=[];
+    for(const z of classroom?[2,6]:CORRIDOR_LAMPS){
+      const fixture=material('#8b9486',{emissive:'#dfedcf',emissiveIntensity:.92});
+      box(g,0,2.94,z,1.25,.085,.43,housing);const bulb=box(g,0,2.88,z,1.13,.035,.34,fixture);
+      const light=new THREE.PointLight('#e0e5c8',8.5,11,2);light.position.set(0,2.65,z);scene.add(light);
+      if(!classroom)this.refs.corridorLamps.push({bulb,light,power:8.5,glow:.9});
+    }
     scene.add(buildOutdoors({side:classroom?'classroom':'corridor'}));
   }
   contactShadow(parent,x,y,z,width,length){
@@ -256,6 +275,7 @@ export class ThreeSchoolView {
     const corner=ROOM_HAUNTINGS[source.scene]?.corner;if(corner){const dx=corner.x-p.x,dz=corner.z-p.z,distance=Math.hypot(dx,dz);if(distance<4&&(dx*Math.sin(p.angle)+dz*Math.cos(p.angle))/Math.max(.001,distance)>.85)targetDollLook=-.94/Math.max(.6,distance);}
     const nearGhost=ROOM_AMBIENCE[source.scene]?.ghost;if(nearGhost&&ghostSmileAmount(p,nearGhost,{active:!source.exploration?.ended}))targetDollLook=(nearGhost.y+nearGhost.height*.327-1.5)/Math.max(.6,Math.hypot(nearGhost.x-p.x,nearGhost.z-p.z));
     const viewDt=Math.min(.05,Math.max(0,(time-(this.lastViewTime??time-50))/1000));this.lastViewTime=time;
+    this.updateLighting(source,time,reduced);
     let ballActive=false,ballHeight=0,cornerVisible=false,ghostSmile=0;
     for(const [room,group] of Object.entries(this.refs.hauntings||{})){const result=updateRoomHauntings(group,{player:p,time:time/1000,dt:viewDt,reduced,active:source.scene===room&&!source.exploration?.ended});if(source.scene===room){({ballActive,ballHeight,cornerVisible}=result);}}
     if(source.canvas)Object.assign(source.canvas.dataset,{ballActive:String(ballActive),ballHeight:(ballHeight??0).toFixed(3),ghostSmile:ghostSmile.toFixed(2),cornerVisible:String(cornerVisible)});

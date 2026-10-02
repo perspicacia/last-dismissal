@@ -1,4 +1,5 @@
-export function drawSceneDepth(c,project,player,{classroom=false}={}) {
+import {CORRIDOR_LAMPS} from './school-lighting.js';
+export function drawSceneDepth(c,project,player,{classroom=false,lampLevels=null}={}) {
   const faces=[];
   const polygon=(vertices,color)=>{const p=vertices.map(v=>project(...v));if(p.every(Boolean))faces.push({p,color,d:p.reduce((s,a)=>s+a.d,0)/p.length});};
   const box=(x,y,z,wx,hy,dz,colors)=>{
@@ -21,11 +22,12 @@ export function drawSceneDepth(c,project,player,{classroom=false}={}) {
     for(const start of [4,14])if(Math.abs(player.z-(start+1))<9)frame(-1,start+.24,start+1.76,.02,2.61,['#a28b68','#4a4636','#796a50']);
     if(Math.abs(player.z-9)<8){for(const z of [8.18,9.82])box(-2.92,.62,z,.16,1.9,.055,['#aca07e','#3b4433','#766c4c']);for(const y of [.60,2.52])box(-2.92,y,9,.16,.065,1.7,['#aca07e','#3b4433','#766c4c']);}
   }
-  for(const z of classroom?[2.3,5.3,8.3]:[2,6,10,14,18,22]) {
+  for(const [i,z] of (classroom?[2.3,5.3,8.3]:CORRIDOR_LAMPS).entries()) {
     if(Math.abs(player.z-z)>12)continue;
     box(0,2.83,z+.2,1.25,.13,.48,['#85978c','#3f5550','#667c70']);
     // Light diffuser is a luminous bottom face of the metal fixture.
-    polygon([[-.54,2.825,z+.035],[.54,2.825,z+.035],[.54,2.825,z+.365],[-.54,2.825,z+.365]],'#d5e4d2');
+    const level=lampLevels?.[i]??1;
+    polygon([[-.54,2.825,z+.035],[.54,2.825,z+.035],[.54,2.825,z+.365],[-.54,2.825,z+.365]],`rgb(${Math.round(53+160*level)},${Math.round(66+162*level)},${Math.round(60+150*level)})`);
     for(const x of [-.44,.44])box(x,2.95,z+.2,.025,.05,.025,['#8caaa0','#536b61','#536b61']);
   }
   faces.sort((a,b)=>b.d-a.d);

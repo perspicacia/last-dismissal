@@ -43,6 +43,7 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 ## 3D 화면과 검증
 
+- 밤 학교의 기본 노출·주변광·천장등을 낮췄다. 복도 다섯 전등은 위치마다 다른 시점에 약 1~2초간 꺼졌다 켜지고, 교실은 고정 조명이다. 새 게임은 점멸 시계를 초기화하며 동작 줄이기 환경에서는 고정 조명으로 표시한다. [조명 명세](specs/horror-lighting.md), 개발용 비교 `http://127.0.0.1:8080/tests/fixtures/lighting-review.html` (`?compat`는 Canvas 호환).
 - Three.js 0.186.1 (MIT). `package-lock.json` 버전을 고정하고 배포 모듈·라이선스를 `vendor/`에 보관한다. 라이브러리 갱신 시 `npm ci` 후 `node_modules/three/build/three.module.js`, `three.core.js` 및 LICENSE를 vendor에 동기화한다.
 - WebGL2 지원 브라우저가 필요하다. 3D 초기화 실패 시 기존 Canvas 화면으로 전환하며 시작 화면에 호환 화면 안내를 표시한다. 모바일 성능은 별도 확인이 필요하다.
 - 토끼와 창밖 귀신은 기존 투명 이미지의 빌보드다. 공간·가구·나무·계단의 3D 전환과 캐릭터 모델링 완료를 구분한다.

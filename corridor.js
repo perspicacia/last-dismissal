@@ -2,9 +2,10 @@ import {ROOMS} from './exploration.js?v=five-classrooms-1';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=student-glb-1';
+import { ThreeSchoolView } from './three-school.js?v=horror-lighting-1';
+import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js';
 import { drawClockFace, drawWallClock } from './clock.js';
-import { drawSceneDepth } from './scene-depth.js?v=classroom-hauntings-2';
+import { drawSceneDepth } from './scene-depth.js?v=horror-lighting-1';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
@@ -54,7 +55,7 @@ export class Corridor {
   enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
   leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
   move(keys,dt) {return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene]):movePlayer(this.player,keys,dt);}
-  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
+  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
   setActive(value) {this.active=value;this.keys.clear();}
   nudge(action) {
     if(!this.active||this.caughtAt!=null) return;
@@ -182,9 +183,11 @@ export class Corridor {
   draw(time) {
     if(this.view3D){this.view3D.draw(this,time);return;}
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
-    this.updateExterior(time);
-    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.lighting??=new SchoolLighting();
+    const levels=this.lighting.update(time,{active:this.scene==='corridor'&&!this.exploration?.ended,reduced:reduce});recordLighting(this.canvas,levels);
+    this.updateExterior(time);
+    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
@@ -222,7 +225,7 @@ export class Corridor {
     // Ceiling fixtures projected into the same world as the walls.
     const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z;const d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.12?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon-(y-1.5)*lens/d,d}:null;};
     drawStairs(c,project,p);
-    drawSceneDepth(c,project,p);
+    drawSceneDepth(c,project,p,{lampLevels:levels});
     drawWallClock(c,project,this.clockFace);
     if(this.tutorial){
       const desk=project(2,0,4);
@@ -251,5 +254,6 @@ export class Corridor {
       c.restore();
     }
     const shade=c.createRadialGradient(w/2,h/2,w*.12,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#020a07bb');c.fillStyle=shade;c.fillRect(0,0,w,h);
+    shadeCanvasSchool(c,w,h,levels,p);
   }
 }
