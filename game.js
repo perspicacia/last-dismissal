@@ -1,6 +1,6 @@
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
 import {SchoolAudio} from './audio.js?v=rabbit-scream-1';
-import {Corridor} from './corridor.js?v=rabbit-arrival-1';
+import {Corridor} from './corridor.js?v=rabbit-arms-4';
 import {ROOMS,nearbyRoom,newExploration,advanceExploration} from './exploration.js';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
 let state=null,endingTimer,audioError='';

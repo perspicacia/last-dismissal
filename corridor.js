@@ -1,6 +1,7 @@
+import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=rabbit-arrival-1';
+import { ThreeSchoolView } from './three-school.js?v=rabbit-arms-4';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
@@ -52,7 +53,7 @@ export class Corridor {
   enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
   leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
   move(keys,dt) {return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene]):movePlayer(this.player,keys,dt);}
-  reset(anomaly) {this.caughtAt=null;this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
+  reset(anomaly) {this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
   setActive(value) {this.active=value;this.keys.clear();}
   nudge(action) {
     if(!this.active||this.caughtAt!=null) return;
@@ -174,7 +175,8 @@ export class Corridor {
     const size=rabbitSize(img,arrival.growth),width=size.width*lens/distance,height=size.height*lens/distance;
     const x=w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/distance;
     const y=h*.48+(1.5-arrival.centerY)*lens/distance;
-    c.drawImage(img,x-width/2,y-height/2,width,height);
+    this.rabbitPartCache??=new WeakMap();if(!this.rabbitPartCache.has(img))this.rabbitPartCache.set(img,rabbitParts(img));
+    drawRabbitPose(c,this.rabbitPartCache.get(img),x,y,width,height,raisedArms((time-this.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches));
   }
   draw(time) {
     if(this.view3D){this.view3D.draw(this,time);return;}
