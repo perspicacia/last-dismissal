@@ -1,11 +1,11 @@
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=doll-sidewalls-5';
+import { ThreeSchoolView } from './three-school.js?v=rabbit-survival-2';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=doll-sidewalls-5';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=rabbit-survival-2';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
@@ -43,6 +43,7 @@ export class Corridor {
     new ResizeObserver(()=>this.resize()).observe(canvas);
     window.addEventListener('blur',()=>this.keys.clear());
     document.addEventListener('visibilitychange',()=>this.keys.clear());
+    this.focused=document.hasFocus();window.addEventListener('blur',()=>this.focused=false);window.addEventListener('focus',()=>this.focused=true);
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
@@ -141,8 +142,8 @@ export class Corridor {
   }
   notify() {
     if(this.scene==='classroom'){this.item=facingDoll(this.player)?'doll':null;this.atStairs=false;this.onPosition({item:this.item,stairs:false,names,player:this.player,scene:this.scene});return;}
-    const open=revealsTeeth(this.player,this.anomaly,this.mouthOpen);
-    if(open && !this.mouthOpen) this.onReveal();
+    const open=this.survival?this.survival.phase==='warning':revealsTeeth(this.player,this.anomaly,this.mouthOpen);
+    if(!this.survival&&open && !this.mouthOpen) this.onReveal();
     this.mouthOpen=open;
     this.canvas.dataset.mascotMouth=open?'open':'closed';
     const item=nearbyItem(this.player,this.anomaly);const stairs=this.player.z>22;
@@ -152,11 +153,11 @@ export class Corridor {
   updateDoll(dt){const before=this.dollState?.phase;this.dollState=advanceDoll(this.dollState||newDollState(),{scene:this.scene,anomaly:this.anomaly,player:this.player,dt,ready:Boolean(this.dollImage?.naturalWidth&&this.dollScary?.naturalWidth)});if(before==='lying'&&this.dollState.phase==='rising')this.onReveal('doll');this.canvas.dataset.dollPhase=this.dollState.phase;}
   frame(time) {
     const dt=Math.min((time-this.last)/1000,.05);this.last=time;
-    if(this.active && !document.hidden){
+    if(this.active && !document.hidden && this.focused){
       const before=this.player;this.player=this.move(this.keys,dt);
       const distance=Math.hypot(this.player.x-before.x,this.player.z-before.z);this.steps+=distance;
       if(this.steps>.95){this.steps=0;this.onStep();}
-      this.updateDoll(dt);this.notify();this.draw(time);
+      this.updateDoll(dt);this.onTick?.(dt);this.notify();this.draw(time);
     }
     requestAnimationFrame(t=>this.frame(t));
   }
@@ -214,7 +215,7 @@ export class Corridor {
 
       }
     }
-    const figure=project(1.6,0,this.anomaly==='figure'?16:22);
+    const figure=project(1.6,0,this.rabbitZ??(this.anomaly==='figure'?16:22));
     const sprite=this.mouthOpen && this.mascotOpen.complete && this.mascotOpen.naturalWidth ? this.mascotOpen : this.mascot;
     if(figure && sprite.complete && sprite.naturalWidth){
       const height=2.1*lens/figure.d, width=height*sprite.naturalWidth/sprite.naturalHeight;

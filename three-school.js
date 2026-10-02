@@ -1,5 +1,5 @@
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
-import {volumeFromImage} from './doll-volume.js?v=rounded-sidewalls-5';
+import {volumeFromImage} from './doll-volume.js?v=rabbit-survival-1';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js';
@@ -84,20 +84,20 @@ export class ThreeSchoolView {
     const grain=document.createElement('canvas');grain.width=grain.height=256;const ctx=grain.getContext('2d');ctx.fillStyle='#c4936d';ctx.fillRect(0,0,256,256);
     for(let i=0;i<110;i++){ctx.strokeStyle=i%3?'#62351f20':'#f4cea32a';ctx.beginPath();ctx.moveTo(i*2.37,0);ctx.bezierCurveTo(i*2.37+3,80,i*2.37-3,190,i*2.37,256);ctx.stroke();}
     const wood=material('#cda182',{map:canvasTexture(grain),roughness:.65}),edge=material('#865335'),groove=material('#39291f'),metal=material('#989993',{metalness:.75,roughness:.38}),glass=material('#2b4549',{metalness:.25,roughness:.2});
-    box(g,.07,1.33,0,.13,2.66,2.1,groove);
+    box(g,.07,1.33,0,.13,2.66,2.1,material('#071316',{roughness:1}));
     for(const side of [-1,1]){
-      const center=side*.465;
-      box(g,.12,1.29,center,.065,2.52,.91,wood).name='sliding-leaf';
+      const center=side*.465,leaf=new THREE.Group();leaf.userData.side=side;g.add(leaf);(g.userData.leaves??=[]).push(leaf);
+      box(leaf,.12,1.29,center,.065,2.52,.91,wood).name='sliding-leaf';
       // Small glazed opening and its proud wooden surround.
-      box(g,.164,1.96,center,.025,.36,.55,glass).name='door-glass';
-      for(const yy of [1.735,2.185])box(g,.183,yy,center,.055,.07,.69,edge);
-      for(const zz of [center-.31,center+.31])box(g,.183,1.96,zz,.055,.45,.07,edge);
+      box(leaf,.164,1.96,center,.025,.36,.55,glass).name='door-glass';
+      for(const yy of [1.735,2.185])box(leaf,.183,yy,center,.055,.07,.69,edge);
+      for(const zz of [center-.31,center+.31])box(leaf,.183,1.96,zz,.055,.45,.07,edge);
       for(const yy of [.35,.74,1.13,1.52]){
-        box(g,.157,yy,center,.015,.30,.69,edge);box(g,.171,yy,center,.022,.27,.66,wood);
+        box(leaf,.157,yy,center,.015,.30,.69,edge);box(leaf,.171,yy,center,.022,.27,.66,wood);
       }
       const handleZ=side*.81;
-      box(g,.18,.98,handleZ,.03,.27,.063,metal).name='recessed-handle';
-      box(g,.198,.98,handleZ,.01,.20,.029,groove);
+      box(leaf,.18,.98,handleZ,.03,.27,.063,metal).name='recessed-handle';
+      box(leaf,.198,.98,handleZ,.01,.20,.029,groove);
     }
     for(const zz of [-1.02,1.02])box(g,.15,1.33,zz,.22,2.66,.12,wood);
     box(g,.15,2.625,0,.22,.13,2.16,wood);box(g,.235,2.54,0,.035,.035,1.91,groove).name='upper-slide-rail';
@@ -177,7 +177,8 @@ export class ThreeSchoolView {
   }
   draw(source,time){
     const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
-    this.refs.rabbit.position.z=source.anomaly==='figure'?16:22;this.refs.ghost.visible=source.anomaly==='window';this.refs.dollPrint.visible=source.anomaly==='doll';this.refs.dollPrintBack.visible=source.anomaly==='doll';
+    this.refs.rabbit.position.z=source.rabbitZ??(source.anomaly==='figure'?16:22);
+    if(source.survival){const door=this.scenes.classroom.getObjectByName('sliding-classroom-door');const closed=source.survival.doorUntil>source.survival.elapsed;for(const leaf of door.userData.leaves)leaf.position.z=closed?0:leaf.userData.side*.72;}this.refs.ghost.visible=source.anomaly==='window';this.refs.dollPrint.visible=source.anomaly==='doll';this.refs.dollPrintBack.visible=source.anomaly==='doll';
     const rise=dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI*(1-ease)+(source.scene==='classroom'?source.player.angle*ease:0);
     const p=source.player;const walking=source.keys.has('forward')||source.keys.has('back');const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const nearDoll=source.scene==='classroom'&&facingDoll(p,3.8);const dollDistance=Math.hypot(DOLL_GAZE.x-p.x,DOLL_GAZE.z-p.z);

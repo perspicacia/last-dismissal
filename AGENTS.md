@@ -1,11 +1,11 @@
 # 프로젝트 작업 규칙
 
 - 게임의 목적과 범위는 [docs/PRD.md](docs/PRD.md), 실행 방법과 구조는 [README.md](README.md)를 참고한다. 캐릭터 설정은 [CHARACTERS.md](CHARACTERS.md)를 참고한다.
-- 기능별 요구사항과 완료 조건은 `specs/`의 해당 문서를 따른다. 현재 기본 게임 명세는 [specs/gameplay.md](specs/gameplay.md)다. 새 기능은 구현 전에 명세와 Issue로 범위를 정한다.
+- 기능별 요구사항과 완료 조건은 `specs/`의 해당 문서를 따른다. 현재 기본 게임 명세는 [specs/rabbit-survival.md](specs/rabbit-survival.md)다. [specs/gameplay.md](specs/gameplay.md)는 이전 관찰 버전 기록이다. 새 기능은 구현 전에 명세와 Issue로 범위를 정한다.
 - 기능 개발은 `codex/<작업명>` 별도 브랜치에서 진행한다. 테스트·플레이 확인 → 커밋·Push·PR → 리뷰 후 `main` 병합 → 통합 검증 순서로 작업한다. 배포는 요청된 경우에 진행한다.
 - 병렬로 코드를 수정할 때는 작업자별 별도 워크트리를 사용하고 담당 파일·범위를 정한다.
 - 게임 로직 변경 후 관련 테스트와 시작 → 플레이 → 종료(탈출) → 재시작 흐름을 확인한다. UI·음향 변경은 실제 브라우저에서도 확인한다.
-- 토끼·학생 인형·창밖 귀신은 게임에 연결되어 있다. 학생 인형의 기립 조건은 [specs/classroom-doll.md](specs/classroom-doll.md)를 따른다. 음향은 음소거 상태에서도 판정할 수 있게 유지한다.
+- 현재 생존 플레이의 공격자는 토끼다. 학생 인형은 정적인 장식이며 창밖 귀신은 후속 범위다. 이전 학생 인형의 기립 조건은 [specs/classroom-doll.md](specs/classroom-doll.md)를 따른다. 음향은 음소거 상태에서도 판정할 수 있게 유지한다.
 - 완료 보고에는 변경 내용, 실행한 검증, 결과, 미확인 사항을 포함한다. 테스트 통과와 실제 플레이 확인을 구분한다.
 - 작업 후 [docs/progress.md](docs/progress.md)에 완료한 일, 검증 결과, 미확인 사항과 다음 작은 작업을 기록한다.
 

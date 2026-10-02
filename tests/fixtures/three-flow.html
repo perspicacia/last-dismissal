@@ -1,7 +1,7 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><title>3D 진행 흐름 검증</title><body><p>검증 게임 준비 중…</p><script type="module">
-// Real UI/controller with deterministic normal or doll-first anomaly corridors.
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>3D 생존 흐름 검증</title><body><p>검증 게임 준비 중…</p><script type="module">
+// Current real survival UI/controller; compat optionally forces Canvas fallback.
 const html=await fetch('../../index.html').then(r=>r.text());const page=new DOMParser().parseFromString(html,'text/html');page.querySelector('script[src^="game.js"]').remove();
-document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D 진행 흐름 검증';document.body.innerHTML=page.body.innerHTML;
+document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D 생존 흐름 검증';document.body.innerHTML=page.body.innerHTML;
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
-Math.random=()=>new URLSearchParams(location.search).has('doll')?.999:.1;await import('../../game.js?v=doll-sidewalls-5');
+await import('../../game.js?v=rabbit-survival-2');
 </script></body></html>
