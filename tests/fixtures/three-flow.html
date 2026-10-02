@@ -5,5 +5,14 @@ document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 // Reproducible safe route through the ordinary classrooms; attack remains in dance.
 if(new URLSearchParams(location.search).has('safe'))Math.random=()=>.99;
-await import('../../game.js?v=doll-sides-stable-1');
+// Exercise the real controller/audio graph without emitting sound on the user's
+// device. The analyser remains upstream so PCM activity is still measurable.
+if(new URLSearchParams(location.search).has('silent')){
+ const Audio=window.AudioContext||window.webkitAudioContext,create=Audio.prototype.createAnalyser;
+ Audio.prototype.createAnalyser=function(){
+  const analyser=create.call(this),connect=analyser.connect.bind(analyser),sink=this.createGain();sink.gain.value=0;
+  analyser.connect=destination=>{connect(sink);sink.connect(destination);return destination;};return analyser;
+ };
+}
+await import('../../game.js?v=reference-audio-1');
 </script></body></html>

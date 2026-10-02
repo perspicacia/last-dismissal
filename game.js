@@ -1,5 +1,5 @@
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
-import {SchoolAudio} from './audio.js?v=music-ghost-polish-1';
+import {SchoolAudio} from './audio.js?v=reference-audio-1';
 import {Corridor} from './corridor.js?v=doll-sides-stable-1';
 import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=five-classrooms-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
@@ -9,12 +9,18 @@ let state=null,endingTimer,audioError='',hauntingAudio=newHauntingAudio();
 function show(id){document.body.dataset.screen=id;document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
 function updateAudioStatus(){const status=$('audio-status'),message=audioError||(!audio.ctx?'BGM 대기':audio.muted||audio.volume===0?'BGM 음소거':audio.ctx.state==='running'?'BGM 재생 중':'BGM 일시 정지 · 소리 확인');if(status.textContent!==message)status.textContent=message;status.dataset.level=String(audio.level().toFixed(5));const needsHelp=Boolean(audioError)||Boolean(audio.ctx&&audio.ctx.state!=='running'&&!audio.muted&&state&&!state.ended);status.classList.toggle('sr-only',!needsHelp);$('sound-test').hidden=!needsHelp;}
 setInterval(updateAudioStatus,500);
-async function enableAudio(test=false){audioError='';try{await(test?audio.test():audio.start());}catch{audioError='재생 실패 · 소리 확인';}updateAudioStatus();}
+async function enableAudio(test=false){audioError='';try{await(test?audio.test():audio.start());}catch{audioError='재생 실패 · 소리 확인';}$('audio-status').dataset.recordedDoor=String(audio.recordedBuffers.has('door-slide'));$('audio-status').dataset.recordedRabbit=String(audio.recordedBuffers.has('jumpscare'));updateAudioStatus();}
 const corridor=new Corridor($('corridor'),({player,scene})=>{
  $('position').dataset.scene=scene;for(const key of ['x','z','angle'])$('position').dataset[key]=player[key].toFixed(2);
  updateUI();
 },()=>audio.footstep(corridor.scene==='corridor'?'corridor':'classroom'));
-audio.onEffect=kind=>{const canvas=$('corridor');canvas.dataset.soundEffect=kind;canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);const key=kind==='baby-cry'?'babyCryCount':kind==='door-slide'?'doorSlideCount':kind==='ghost-laugh'?'ghostLaughCount':kind==='jumpscare'?'roarCount':null;if(key)canvas.dataset[key]=String(Number(canvas.dataset[key]||0)+1);};
+audio.onEffect=(kind,details)=>{
+ const canvas=$('corridor'),source=details?.source||'synthesis';
+ canvas.dataset.soundEffect=kind;canvas.dataset.soundSource=source;
+ canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);
+ const key=kind==='baby-cry'?'babyCryCount':kind==='door-slide'?'doorSlideCount':kind==='ghost-laugh'?'ghostLaughCount':kind==='jumpscare'?'roarCount':null;
+ if(key){canvas.dataset[key]=String(Number(canvas.dataset[key]||0)+1);canvas.dataset[key.replace('Count','Source')]=source;}
+};
 corridor.onTick=dt=>{
  if(!state)return;
  if(state.ended){updateArrival();return;}
@@ -40,7 +46,7 @@ function updateUI(){
 }
 async function start(){
  clearTimeout(endingTimer);audio.clearEffects();hauntingAudio=newHauntingAudio();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);corridor.screamTriggered=false;
- $('jumpscare').hidden=true;for(const key of ['soundCount','babyCryCount','doorSlideCount','ghostLaughCount','roarCount'])$('corridor').dataset[key]='0';$('corridor').dataset.soundEffect='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
+ $('jumpscare').hidden=true;for(const key of ['soundCount','babyCryCount','doorSlideCount','ghostLaughCount','roarCount'])$('corridor').dataset[key]='0';for(const key of ['soundEffect','soundSource','babyCrySource','doorSlideSource','ghostLaughSource','roarSource'])$('corridor').dataset[key]='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
 }
 function updateArrival(){
  const arrival=rabbitArrival((performance.now()-corridor.caughtAt)/1000);
