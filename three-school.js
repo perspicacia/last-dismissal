@@ -1,3 +1,4 @@
+import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import {ROOMS,RABBIT_SPOT} from './exploration.js';
 import {buildRoomProps} from './room-props.js';
@@ -71,7 +72,7 @@ export class ThreeSchoolView {
       this.refs.dollRoot=root;this.refs.dollTilt=tilt;this.refs.doll=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);
       Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;this.refs.doll.receiveShadow=true;
       tilt.rotation.x=Math.PI/2;}
-      (this.refs.roomRabbits??={})[kind]=this.sprite(g,2.1,1.05,[RABBIT_SPOT.x,1.05,RABBIT_SPOT.z]);this.refs.roomRabbits[kind].visible=false;
+      (this.refs.roomRabbits??={})[kind]=this.rabbitRig(g);this.refs.roomRabbits[kind].visible=false;
     }else{
       const print=document.createElement('canvas');print.width=512;print.height=112;const pc=print.getContext('2d');pc.fillStyle='#e9e1c9b0';
       for(const x of [92,420]){pc.beginPath();pc.ellipse(x,78,24,22,-.1,0,Math.PI*2);pc.fill();for(let i=0;i<5;i++){pc.beginPath();pc.ellipse(x-24+i*12,43-(i%3)*5,5,20,.08,0,Math.PI*2);pc.fill();}}
@@ -110,6 +111,12 @@ export class ThreeSchoolView {
     return g;
   }
   picture(group,image,w,h,position,angle=0){const mat=material('#ffffff',{side:THREE.DoubleSide});const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(...position);m.rotation.y=angle;m.scale.x=-1;group.add(m);if(image)mat.map=canvasTexture(image);return m;}
+  rabbitRig(parent){
+    const root=new THREE.Group();root.name='rabbit-arm-rig';parent.add(root);
+    const body=this.sprite(root,2.1,1.05,[0,0,0]);
+    const arms=[LEFT_ARM,RIGHT_ARM].map((arm,i)=>{const sprite=this.sprite(root,2.1,1.05,[0,0,.003]);sprite.name=i?'rabbit-right-arm':'rabbit-left-arm';sprite.center.set(arm.pivot.x,1-arm.pivot.y);return sprite;});
+    root.userData={body,arms};return root;
+  }
   sprite(group,h,y,position){const m=new THREE.Sprite(new THREE.SpriteMaterial({color:'#c2c8ba',transparent:true,alphaTest:.06}));m.position.set(...position);m.scale.set(h*2/3,h,1);group.add(m);return m;}
   furnitureMaterials(){
     if(this.furnitureMats)return this.furnitureMats;
@@ -164,14 +171,16 @@ export class ThreeSchoolView {
     }
     box(g,-1.65,5.4,27.8,2.15,.16,6.6,plaster).name='stair-ceiling-up';box(g,1.65,3.08,27.8,2.15,.16,6.6,plaster);
   }
+  partsFor(image){this.rabbitPartCache??=new WeakMap();if(!image?.naturalWidth)return null;if(!this.rabbitPartCache.has(image))this.rabbitPartCache.set(image,rabbitParts(image));return this.rabbitPartCache.get(image);}
   syncTextures(source){
     if(!this.refs.photo)return;
     for(const t of this.textures)t.dispose();this.textures=[];
-    const assign=(mesh,image)=>{if(!image||(!image.getContext&&!image.naturalWidth))return;const t=canvasTexture(image);this.textures.push(t);mesh.material.map=t;mesh.material.needsUpdate=true;};
+    const textureCache=new Map();
+    const assign=(mesh,image)=>{if(!image||(!image.getContext&&!image.naturalWidth))return;let t=textureCache.get(image);if(!t){t=canvasTexture(image);textureCache.set(image,t);this.textures.push(t);}mesh.material.map=t;mesh.material.needsUpdate=true;};
     for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':d.userData.label]);
     assign(this.refs.clock,source.clockFace);
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
-    assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);for(const rabbit of Object.values(this.refs.roomRabbits||{}))assign(rabbit,source.mouthOpen?source.mascotOpen:source.mascot);
+    assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);for(const rabbit of Object.values(this.refs.roomRabbits||{})){const image=source.mouthOpen?source.mascotOpen:source.mascot;const parts=this.partsFor(image);if(parts){assign(rabbit.userData.body,parts.body);assign(rabbit.userData.arms[0],parts.left);assign(rabbit.userData.arms[1],parts.right);}}
     assign(this.refs.ghost,source.windowGhost);
     if(!this.dollVolumeReady&&source.dollImage?.naturalWidth){
       const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;}
@@ -189,7 +198,11 @@ export class ThreeSchoolView {
         const p=source.player,goal={x:p.x+Math.sin(p.angle)*.80,z:p.z+Math.cos(p.angle)*.80};
         rabbit.position.set(THREE.MathUtils.lerp(RABBIT_SPOT.x,goal.x,arrival.rush),arrival.centerY,THREE.MathUtils.lerp(RABBIT_SPOT.z,goal.z,arrival.rush));
         const size=rabbitSize(source.mouthOpen?source.mascotOpen:source.mascot,arrival.growth);
-        rabbit.scale.set(size.width,size.height,1);
+        rabbit.rotation.y=p.angle;
+        rabbit.userData.body.scale.set(size.width,size.height,1);
+        const pose=raisedArms((time-source.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        if(source.canvas)source.canvas.dataset.rabbitArms=pose.lift.toFixed(2);
+        for(const [i,arm] of [LEFT_ARM,RIGHT_ARM].entries()){const sprite=rabbit.userData.arms[i];sprite.scale.set(size.width*(1+.2*pose.lift),size.height*(1+.2*pose.lift),1);sprite.position.set((arm.pivot.x-.5)*size.width,(.5-arm.pivot.y)*size.height,.003);sprite.material.rotation=-(i?pose.right:pose.left);}
       }
     }
     this.refs.rabbit.position.z=source.rabbitZ??(source.anomaly==='figure'?16:22);
