@@ -1,4 +1,4 @@
-import {effectSamples} from './sound-effects.js';
+import {effectSamples} from './sound-effects.js?v=rabbit-scream-1';
 export class SchoolAudio {
   constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
   async start() {

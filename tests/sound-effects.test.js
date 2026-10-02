@@ -13,3 +13,9 @@ test('발소리 간격·좌우 음색, 등장 음향 모두 master 출력으로 
 test('음소거·음량 0·오디오 중단에서는 효과음을 재생하지 않는다',()=>{
  const {audio,sources}=mockAudio();audio.muted=true;assert.equal(audio.footstep(),false);assert.equal(audio.jumpscare(),false);audio.muted=false;audio.volume=0;assert.equal(audio.jumpscare(),false);audio.volume=.5;audio.ctx.state='suspended';assert.equal(audio.footstep(),false);assert.equal(sources.length,0);const unsupported=new SchoolAudio();assert.equal(unsupported.jumpscare(),false);assert.doesNotThrow(()=>unsupported.clearEffects());
 });
+
+test('비명은 단발 충격으로 꺼지지 않고 중간까지 유성 소리를 유지한다',()=>{
+ const samples=effectSamples('jumpscare',16000);
+ const rms=(a,b)=>Math.sqrt(samples.slice(Math.floor(a*16000),Math.floor(b*16000)).reduce((sum,x)=>sum+x*x,0)/Math.floor((b-a)*16000));
+ assert.ok(rms(.3,.65)>.12);assert.ok(rms(.8,.85)<rms(.3,.65));
+});
