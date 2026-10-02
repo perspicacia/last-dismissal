@@ -4,11 +4,9 @@ import * as THREE from './vendor/three.module.js';
 // plane; round shoulders, skirt and limbs provide depth without warping it.
 export function dollDepth(u,v){
   const ellipsoid=(x,y,rx,ry,r)=>r*Math.sqrt(Math.max(0,1-((u-x)/rx)**2-((v-y)/ry)**2));
-  if(v<.34){
-    const cheek=Math.max(0,.34-u,u-.69)/.22;
-    return .025+.095*Math.sqrt(Math.max(0,1-cheek*cheek));
-  }
-  return .014+Math.max(
+  const cheek=Math.max(0,.34-u,u-.69)/.22;
+  const head=.025+.095*Math.sqrt(Math.max(0,1-cheek*cheek));
+  const body=.014+Math.max(
     ellipsoid(.52,.41,.23,.16,.088),
     ellipsoid(.52,.61,.27,.18,.078),
     ellipsoid(.31,.57,.085,.16,.059),
@@ -16,6 +14,10 @@ export function dollDepth(u,v){
     ellipsoid(.46,.82,.08,.19,.066),
     ellipsoid(.60,.82,.08,.19,.066)
   );
+  if(v<=.32)return head;
+  if(v>=.40)return body;
+  const t=(v-.32)/.08,blend=t*t*(3-2*t);
+  return head*(1-blend)+body*blend;
 }
 export function buildDollVolume(pixels,width,height,worldHeight=1.55,columns=192,rows=288){
   const positions=[],uvs=[],colors=[],front=[],sides=[],active=[];const stride=columns+1,count=stride*(rows+1),worldWidth=worldHeight*width/height;

@@ -55,3 +55,7 @@ test('몸통은 둥글게 부풀고 이미지 너비·높이 비율은 유지된
  const smaller=buildDollVolume(p,w,h,.775,w,h);
  assert.ok(Math.abs(smaller.boundingBox.min.z/g.boundingBox.min.z-.5)<1e-6);
 });
+
+test("목 경계에서 머리 두께가 갑자기 끊기지 않는다",()=>{
+ for(let v=.319;v<.402;v+=.002)assert.ok(Math.abs(dollDepth(.5,v+.002)-dollDepth(.5,v))<.006);
+});

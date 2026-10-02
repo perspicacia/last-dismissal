@@ -1,13 +1,14 @@
+import {ROOMS} from './exploration.js?v=five-classrooms-1';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=rabbit-arms-4';
+import { ThreeSchoolView } from './three-school.js?v=five-classrooms-1';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=rabbit-survival-2';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=five-classrooms-1';
 import {ROOM_BLOCKERS} from './room-props.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
@@ -91,7 +92,7 @@ export class Corridor {
       c.fillStyle='#eee4c6';c.fillRect(219,7,74,18);c.fillStyle='#283931';c.font='bold 15px sans-serif';c.textAlign='center';c.fillText(this.anomaly==='door'?'404':'3-2',256,21);
 
     });
-    this.roomDoorTextures={};for(const [z,label] of [[5,'3-2'],[15,'음악실'],[21,'무용실']]){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const c=canvas.getContext('2d');c.drawImage(this.door,0,0);c.fillStyle='#eee4c6';c.fillRect(219,7,74,18);c.fillStyle='#283931';c.font='bold 13px sans-serif';c.textAlign='center';c.fillText(label,256,21);this.roomDoorTextures[z]=canvas;}
+    this.roomDoorTextures={};for(const {z,label:roomLabel} of ROOMS){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const label=roomLabel.replace(' 교실','');const c=canvas.getContext('2d');c.drawImage(this.door,0,0);c.fillStyle='#eee4c6';c.fillRect(219,7,74,18);c.fillStyle='#283931';c.font='bold 13px sans-serif';c.textAlign='center';c.fillText(label,256,21);this.roomDoorTextures[z]=canvas;}
     this.board=this.texture(c=>{
       c.fillStyle='#171e15';c.fillRect(45,38,422,168);c.fillStyle='#7b7150';c.fillRect(52,44,408,155);
       // A side wall maps 512px to 2m horizontally, 256px to 3m vertically.
@@ -182,7 +183,7 @@ export class Corridor {
     if(this.view3D){this.view3D.draw(this,time);return;}
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
     this.updateExterior(time);
-    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary},this.scene);if(this.caughtAt!=null)this.drawCatch(time);return;}
+    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost},this.scene);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
@@ -211,7 +212,7 @@ export class Corridor {
       const side=tx<tz,dist=side?tx:tz,perp=Math.max(.02,dist*Math.cos(offset));depth[x/2]=perp;
       let tex=this.wall,u;
       if(side){const z=p.z+dz*dist;u=((z%2)+2)%2/2;
-        if(dx<0){if(z>=4&&z<6)tex=this.exploration?this.roomDoorTextures[5]:this.door;else if(z>=8&&z<10)tex=this.board;else if(z>=14&&z<16)tex=this.exploration?this.roomDoorTextures[15]:this.door;else if(this.exploration&&z>=20&&z<22)tex=this.roomDoorTextures[21];}
+        if(dx<0){if(this.exploration){const room=ROOMS.find(r=>Math.abs(z-r.z)<1);if(room)tex=this.roomDoorTextures[room.z];else if(z>=8&&z<10)tex=this.board;}else{if(z>=4&&z<6)tex=this.door;else if(z>=8&&z<10)tex=this.board;else if(z>=14&&z<16)tex=this.door;}}
         else {if((z>=4&&z<8)||(z>=12&&z<16))tex=this.windowViews[Math.floor(z/2)*2]?.texture||this.window;else if(z>=18&&z<20)tex=this.clock;}
       } else {u=(p.x+dx*dist+3)/6;if(dz>0)tex=this.end;}
       const height=3*lens/perp,top=horizon-height*.5;

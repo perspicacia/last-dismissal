@@ -1,7 +1,7 @@
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
 import {SchoolAudio} from './audio.js?v=rabbit-scream-1';
-import {Corridor} from './corridor.js?v=rabbit-arms-4';
-import {ROOMS,nearbyRoom,newExploration,advanceExploration} from './exploration.js';
+import {Corridor} from './corridor.js?v=five-classrooms-1';
+import {ROOMS,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=five-classrooms-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
 let state=null,endingTimer,audioError='';
 function show(id){document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
@@ -27,7 +27,7 @@ function updateUI(){
  if(room)$('room-action').textContent=`${room.label} 들어가기`;
  $('inspect').hidden=true;$('classroom-tools').hidden=!inside||state.ended;$('door-toggle').hidden=true;
  $('room-return').disabled=false;
- $('survival-time').textContent=`둘러본 교실 ${state.visited.length} / 3`;
+ $('survival-time').textContent=`둘러본 교실 ${state.visited.length} / ${ROOMS.length}`;
  const message=state.ended?'뒤늦게 눈이 마주쳤다.':inside?'조용한 교실. 안쪽을 살펴보자.':'아직 누군가 학교에 남아 있다.';
  if($('threat-status').textContent!==message)$('threat-status').textContent=message;
  $('survival-hud').dataset.phase=state.ended?'warning':'exploring';
