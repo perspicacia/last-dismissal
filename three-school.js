@@ -1,5 +1,5 @@
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
-import {volumeFromImage} from './doll-volume.js?v=face-stable-2';
+import {volumeFromImage} from './doll-volume.js?v=rounded-sidewalls-5';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js';
@@ -178,7 +178,7 @@ export class ThreeSchoolView {
   draw(source,time){
     const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
     this.refs.rabbit.position.z=source.anomaly==='figure'?16:22;this.refs.ghost.visible=source.anomaly==='window';this.refs.dollPrint.visible=source.anomaly==='doll';this.refs.dollPrintBack.visible=source.anomaly==='doll';
-    const rise=dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI+(source.scene==='classroom'?source.player.angle*ease:0);
+    const rise=dollRise(source.dollState),ease=1-Math.pow(1-rise,3);this.refs.dollTilt.rotation.x=Math.PI/2*(1-ease);this.refs.dollRoot.rotation.y=Math.PI*(1-ease)+(source.scene==='classroom'?source.player.angle*ease:0);
     const p=source.player;const walking=source.keys.has('forward')||source.keys.has('back');const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const nearDoll=source.scene==='classroom'&&facingDoll(p,3.8);const dollDistance=Math.hypot(DOLL_GAZE.x-p.x,DOLL_GAZE.z-p.z);
     const headDistance=Math.hypot(DOLL.x-p.x,DOLL.z-DOLL.height*.78-p.z);

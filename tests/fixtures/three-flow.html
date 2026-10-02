@@ -3,5 +3,5 @@
 const html=await fetch('../../index.html').then(r=>r.text());const page=new DOMParser().parseFromString(html,'text/html');page.querySelector('script[src^="game.js"]').remove();
 document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D 진행 흐름 검증';document.body.innerHTML=page.body.innerHTML;
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
-Math.random=()=>new URLSearchParams(location.search).has('doll')?.999:.1;await import('../../game.js?v=doll-furniture-3');
+Math.random=()=>new URLSearchParams(location.search).has('doll')?.999:.1;await import('../../game.js?v=doll-sidewalls-5');
 </script></body></html>
