@@ -118,7 +118,7 @@ export function createGhostSmile(config) {
   return group;
 }
 
-export function updateGhostSmile(overlay, ghost, player, config, {dt = 1 / 60, reduced = false, active = true} = {}) {
+export function updateGhostSmile(overlay, ghost, player, config, {dt = 1 / 60, reduced = false, active = true, camera = null} = {}) {
   const data = overlay.userData, target = ghostSmileAmount(player, config, {active});
   const step = 1 - Math.exp(-Math.max(0, Math.min(.1, Number.isFinite(dt) ? dt : 0)) * 5);
   data.amount = !active ? 0 : reduced ? target : data.amount + (target - data.amount) * step;
@@ -127,8 +127,24 @@ export function updateGhostSmile(overlay, ghost, player, config, {dt = 1 / 60, r
   const tilt = reduced ? 0 : amount * .12;
   if (ghost?.material) ghost.material.rotation = tilt;
   overlay.position.set(config.x, config.y, config.z);
-  if (player) overlay.rotation.set(0, Math.atan2(player.x - config.x, player.z - config.z), 0);
-  overlay.rotateZ(tilt);
+  if (camera && ghost) {
+    // Sprite vertices are formed in camera space, after the scene reflection.
+    // Give the mouth the same complete billboard basis (including pitch), then
+    // convert that world matrix back through its possibly reflected parent.
+    const world = new THREE.Matrix4().extractRotation(camera.matrixWorld);
+    world.setPosition(ghost.getWorldPosition(new THREE.Vector3()));
+    world.multiply(new THREE.Matrix4().makeRotationZ(tilt));
+    if (overlay.parent) {
+      overlay.parent.updateWorldMatrix(true, false);
+      overlay.matrix.copy(overlay.parent.matrixWorld).invert().multiply(world);
+    } else overlay.matrix.copy(world);
+    overlay.matrixAutoUpdate = false;
+    overlay.matrixWorldNeedsUpdate = true;
+  } else {
+    overlay.matrixAutoUpdate = true;
+    if (player) overlay.rotation.set(0, Math.atan2(player.x - config.x, player.z - config.z), 0);
+    overlay.rotateZ(tilt);
+  }
   data.mouth.scale.set(config.height * (.5 + amount * .5), config.height * (.22 + amount * .78), config.height);
   data.opening.material.opacity = amount;
   for (const tooth of data.teeth) tooth.material.opacity = amount * .8;

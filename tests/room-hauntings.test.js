@@ -53,3 +53,35 @@ test('귀신 미소는 가까이 바라볼 때만 서서히 나타나고 떠나�
   updateGhostSmile(overlay, ghost, watching, ghostConfig, {active: false});
   assert.equal(overlay.visible, false); assert.equal(overlay.userData.amount, 0); assert.equal(ghost.material.rotation, 0);
 });
+
+test('미소 입은 반전된 교실에서도 카메라 상하 기울임과 Sprite의 얼굴 투영을 함께 따른다', () => {
+  for (const reflected of [false, true]) for (const faceY of [1.3, 2.25, .7]) {
+    const scene = new THREE.Scene(), parent = new THREE.Group(); scene.add(parent);
+    scene.scale.z = reflected ? -1 : 1;
+    const ghost = new THREE.Sprite(new THREE.SpriteMaterial());
+    ghost.position.set(ghostConfig.x, ghostConfig.y, ghostConfig.z);
+    ghost.scale.set(ghostConfig.height * 2 / 3, ghostConfig.height, 1); parent.add(ghost);
+    const overlay = createGhostSmile(ghostConfig); parent.add(overlay);
+    const camera = new THREE.PerspectiveCamera(70, 1, .05, 100);
+    const sign = reflected ? -1 : 1;
+    camera.position.set(watching.x, 1.5, watching.z * sign);
+    camera.lookAt(ghostConfig.x, faceY, ghostConfig.z * sign); camera.updateMatrixWorld(true);
+    for (let i = 0; i < 60; i++) updateGhostSmile(overlay, ghost, watching, ghostConfig, {camera});
+    scene.updateMatrixWorld(true);
+    assert.equal(overlay.matrixAutoUpdate, false);
+    const center = ghost.getWorldPosition(new THREE.Vector3());
+    const billboard = new THREE.Matrix4().extractRotation(camera.matrixWorld).setPosition(center)
+      .multiply(new THREE.Matrix4().makeRotationZ(ghost.material.rotation));
+    // The photographic mouth coordinate and overlay mouth share a camera basis;
+    // only the tiny toward-camera depth prevents transparent z-fighting.
+    const anchor = overlay.userData.mouth.position.clone();
+    const actual = overlay.localToWorld(anchor.clone()).project(camera);
+    const expected = anchor.clone().applyMatrix4(billboard).project(camera);
+    assert.ok(actual.distanceTo(expected) < 1e-10);
+    const horizontal = new THREE.Vector3(1, 0, 0).transformDirection(overlay.matrixWorld);
+    const spriteHorizontal = new THREE.Vector3(1, 0, 0).transformDirection(billboard);
+    assert.ok(horizontal.distanceTo(spriteHorizontal) < 1e-10);
+    updateGhostSmile(overlay, ghost, watching, ghostConfig, {active: false, camera});
+    assert.equal(overlay.visible, false); assert.equal(ghost.material.rotation, 0);
+  }
+});
