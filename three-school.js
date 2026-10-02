@@ -1,14 +1,14 @@
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=five-classrooms-1';
-import {buildRoomProps} from './room-props.js';
+import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=classroom-hauntings-1';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
-import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=classroom-hauntings-2';
+import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=music-ghost-polish-1';
 
-import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js';
+import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 
 const material=(color,options={})=>new THREE.MeshStandardMaterial({color,roughness:.82,...options});
 function box(group,x,y,z,w,h,d,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}

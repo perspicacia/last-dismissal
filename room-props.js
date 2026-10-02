@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
-import {buildAcousticGuitar, buildUprightPiano} from './music-instruments.js';
-import {buildOpenScore} from './music-sheet.js';
+import {buildAcousticGuitar, buildUprightPiano} from './music-instruments.js?v=music-ghost-polish-2';
+import {buildOpenScore} from './music-sheet.js?v=music-ghost-polish-2';
 
 // Feet stay within these envelopes; the central inspection aisle remains clear.
 export const ROOM_BLOCKERS = {

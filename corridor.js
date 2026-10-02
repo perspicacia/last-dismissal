@@ -2,13 +2,13 @@ import {ROOMS} from './exploration.js?v=five-classrooms-1';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=classroom-hauntings-1';
+import { ThreeSchoolView } from './three-school.js?v=music-ghost-polish-2';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=classroom-hauntings-2';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=classroom-hauntings-2';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=music-ghost-polish-1';
 import {ROOM_BLOCKERS} from './room-props.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 

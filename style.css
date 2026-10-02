@@ -9,3 +9,13 @@ body.playing main{max-width:none;padding:0}body.playing header,body.playing .sit
 body.playing .inspect-action{bottom:110px}
 
 .survival-hud{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:4;text-align:center;width:min(90%,540px);pointer-events:none}.survival-hud span{font:13px monospace;color:#d6dfd8}.survival-hud p{font-size:14px;margin:10px 0;padding:8px 14px;background:#101d24dc;color:#e3ebe7;border:1px solid #617875}.survival-hud[data-phase="warning"] p{background:#381b1bf0;border-color:#b87b64;color:#fff0da}.jumpscare{position:absolute;inset:0;z-index:10;display:flex;justify-content:center;align-items:center;background:#090c0e}.jumpscare img{height:150%;width:100%;object-fit:contain;animation:catch-arrival .3s ease-out}.classroom-tools{gap:8px}body.playing .classroom-tools{top:auto;bottom:74px;right:16px;flex-wrap:wrap;max-width:90%}body.playing .classroom-tools button[aria-pressed="true"]{border-color:#a2c0b3;background:#28443e}body.playing .classroom-tools button:disabled{opacity:.7;cursor:default}#caught-result{color:#c9d0c3}@keyframes catch-arrival{from{transform:scale(.85)}to{transform:scale(1)}}@media(prefers-reduced-motion:reduce){.jumpscare img{animation:none}}
+
+/* Temporary minimal title screen; the final visual direction comes later. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+body[data-screen="intro"] header{justify-content:flex-end;border-bottom:0}
+body[data-screen="intro"] .brand{display:none}
+#intro{display:flex;flex-direction:column;justify-content:center;gap:42px;min-height:calc(100svh - 126px);max-width:100%;padding:50px 0 100px}
+#intro .intro-title{font:clamp(46px,8.5vw,106px)/1.03 Georgia,serif;letter-spacing:-.025em;max-inline-size:12ch;text-wrap:balance;margin:0}
+#intro .intro-title em{display:block}
+#intro .start-actions{margin:0}
+@media(max-width:600px){#intro{min-height:calc(100svh - 122px);gap:34px;padding:40px 0 80px}body[data-screen="intro"] .audio-controls{flex-direction:row;align-items:center;gap:14px}body[data-screen="intro"] .audio-controls label{font-size:12px}}

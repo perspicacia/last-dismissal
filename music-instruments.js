@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import {buildOpenScore} from './music-sheet.js';
+import {buildOpenScore} from './music-sheet.js?v=music-ghost-polish-2';
 
 const material = (color, options = {}) => new THREE.MeshStandardMaterial({color, roughness: .48, ...options});
 function mesh(parent, name, geometry, mat, position = [0, 0, 0]) {
