@@ -1,5 +1,6 @@
-import {SchoolAudio} from './audio.js?v=survival-audio-1';
-import {Corridor} from './corridor.js?v=hidden-rooms-2';
+import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
+import {SchoolAudio} from './audio.js?v=rabbit-scream-1';
+import {Corridor} from './corridor.js?v=rabbit-arrival-1';
 import {ROOMS,nearbyRoom,newExploration,advanceExploration} from './exploration.js';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
 let state=null,endingTimer,audioError='';
@@ -13,7 +14,8 @@ const corridor=new Corridor($('corridor'),({player,scene})=>{
 },()=>audio.footstep(corridor.scene==='corridor'?'corridor':'classroom'));
 audio.onEffect=kind=>{const canvas=$('corridor');canvas.dataset.soundEffect=kind;canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);};
 corridor.onTick=dt=>{
- if(!state||state.ended)return;
+ if(!state)return;
+ if(state.ended){updateArrival();return;}
  state=advanceExploration(state,dt,corridor.scene,corridor.player);
  corridor.exploration=state;updateUI();if(state.ended)finish();
 };
@@ -35,13 +37,19 @@ function updateUI(){
  corridor.exploration=state;
 }
 async function start(){
- clearTimeout(endingTimer);audio.clearEffects();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);
+ clearTimeout(endingTimer);audio.clearEffects();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);corridor.screamTriggered=false;
  $('jumpscare').hidden=true;$('corridor').dataset.soundCount='0';$('corridor').dataset.soundEffect='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
 }
+function updateArrival(){
+ const arrival=rabbitArrival((performance.now()-corridor.caughtAt)/1000);
+ corridor.mouthOpen=arrival.teeth;
+ $('corridor').dataset.mascotMouth=arrival.teeth?'open':'closed';
+ if(arrival.teeth&&!corridor.screamTriggered){corridor.screamTriggered=true;audio.jumpscare();}
+}
 function finish(){
- corridor.keys.clear();corridor.caughtAt=performance.now();corridor.mouthOpen=true;updateUI();audio.jumpscare();
+ corridor.keys.clear();corridor.caughtAt=performance.now();corridor.mouthOpen=false;corridor.screamTriggered=false;updateUI();
  // Keep drawing the room-space lunge, but block movement and all actions.
- endingTimer=setTimeout(()=>{if(!state?.ended)return;corridor.setActive(false);show('gameover');$('caught-result').textContent=`${ROOMS.find(r=>r.id===state.rabbitRoom).label}에 숨어 있었다. 다시 들어가면 다른 방에 있을 수도 있다.`;$('retry').focus();},1050);
+ endingTimer=setTimeout(()=>{if(!state?.ended)return;corridor.setActive(false);show('gameover');$('caught-result').textContent=`${ROOMS.find(r=>r.id===state.rabbitRoom).label}에 숨어 있었다. 다시 들어가면 다른 방에 있을 수도 있다.`;$('retry').focus();},ARRIVAL.end*1000);
 }
 function interact(){
  if(!state||state.ended)return;
@@ -50,7 +58,7 @@ function interact(){
 }
 function leaveRoom(){if(!state||state.ended)return;corridor.leaveClassroom();updateUI();$('corridor').focus();}
 $('room-action').onclick=interact;$('room-return').onclick=leaveRoom;
-function restart(){clearTimeout(endingTimer);state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
+function restart(){clearTimeout(endingTimer);state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
 const keyActions={ArrowUp:'forward',ArrowDown:'back',ArrowLeft:'left',ArrowRight:'right',w:'forward',s:'back',a:'left',d:'right'};
 document.addEventListener('keydown',e=>{
  if(e.target.tagName==='INPUT')return;

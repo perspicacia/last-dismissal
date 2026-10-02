@@ -1,5 +1,6 @@
+import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=hidden-rooms-2';
+import { ThreeSchoolView } from './three-school.js?v=rabbit-arrival-1';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js';
 import { drawStairs } from './stairs.js';
@@ -163,7 +164,18 @@ export class Corridor {
     }
     requestAnimationFrame(t=>this.frame(t));
   }
-  drawCatch(time){const c=this.ctx,w=this.canvas.width,h=this.canvas.height,img=this.mascotOpen;if(!img.naturalWidth)return;const t=window.matchMedia('(prefers-reduced-motion: reduce)').matches?1:Math.min(1,(time-this.caughtAt)/650);c.fillStyle=`rgba(0,0,0,${t*.5})`;c.fillRect(0,0,w,h);const size=h*(.5+2*t*t);c.drawImage(img,img.naturalWidth*.22,img.naturalHeight*.23,img.naturalWidth*.56,img.naturalHeight*.30,w/2-size/2,h/2-size/2,size,size);}
+  drawCatch(time){
+    const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
+    const arrival=rabbitArrival((time-this.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const img=arrival.teeth?this.mascotOpen:this.mascot;if(!img.naturalWidth)return;
+    const dx=(0-p.x)*(1-arrival.rush)+Math.sin(p.angle)*.80*arrival.rush;
+    const dz=(6.8-p.z)*(1-arrival.rush)+Math.cos(p.angle)*.80*arrival.rush;
+    const distance=Math.max(.08,dx*Math.sin(p.angle)+dz*Math.cos(p.angle)),lens=w*.68;
+    const size=rabbitSize(img,arrival.growth),width=size.width*lens/distance,height=size.height*lens/distance;
+    const x=w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/distance;
+    const y=h*.48+(1.5-arrival.centerY)*lens/distance;
+    c.drawImage(img,x-width/2,y-height/2,width,height);
+  }
   draw(time) {
     if(this.view3D){this.view3D.draw(this,time);return;}
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
