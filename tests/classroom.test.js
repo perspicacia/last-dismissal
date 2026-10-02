@@ -20,3 +20,8 @@ test('teacher desk blocks repeated steps toward front wall and leaves side passa
   let p={x:-.5,z:8,angle:0};for(let i=0;i<6;i++)p=moveClassroomPlayer(p,new Set(['forward']),.05);assert.equal(p.z,8);
   let side={x:-2.1,z:8,angle:0};for(let i=0;i<6;i++)side=moveClassroomPlayer(side,new Set(['forward']),.05);assert.ok(side.z>9);
 });
+
+test('특별 교실 입장·복귀와 소품 충돌은 중앙 통로를 유지한다',async()=>{
+ const {ROOM_BLOCKERS}=await import('../room-props.js');
+ for(const id of ['music','dance']){let p={...CLASSROOM_SPAWN};for(let i=0;i<35;i++)p=moveClassroomPlayer(p,new Set(['forward']),.05,ROOM_BLOCKERS[id]);assert.ok(p.z>7);const d=ROOM_BLOCKERS[id][0];const hit=moveClassroomPlayer({x:d.x,z:d.z-d.depth/2-.23,angle:0},new Set(['forward']),.05,ROOM_BLOCKERS[id]);assert.ok(hit.z<d.z-d.depth/2);const c=Object.create(Corridor.prototype);Object.assign(c,{scene:'corridor',player:{x:0,z:15,angle:0},keys:new Set(),canvas:{dataset:{}},onPosition(){},onReveal(){}});c.enterClassroom(id);assert.equal(c.scene,id);c.leaveClassroom();assert.equal(c.scene,'corridor');assert.equal(c.player.z,15);}
+});

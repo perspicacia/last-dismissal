@@ -1,0 +1,9 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>교실 외형·돌진 검증</title><style>body{margin:0;background:#132127;color:white;font-family:sans-serif}nav{padding:12px}button{padding:10px;margin-right:8px}canvas{width:100vw;height:calc(100vh - 60px);display:block}</style><nav><button data-room="classroom">3-2 교실</button><button data-room="music">음악실</button><button data-room="dance">무용실</button><button id="catch">돌진 마지막 시점</button><button id="corridor-view">복도 이름표</button></nav><canvas id="view" data-renderer="three" tabindex="0" aria-label="교실 외형 검증"></canvas><script type="module">
+import {Corridor} from '../../corridor.js?v=hidden-rooms-2';
+const c=new Corridor(document.querySelector('canvas'),()=>{},()=>{});c.exploration={ended:false};c.tutorial=false;
+function room(id){c.reset(null);c.enterClassroom(id);c.exploration={ended:false};c.draw(performance.now());}
+for(const b of document.querySelectorAll('[data-room]'))b.onclick=()=>room(b.dataset.room);
+document.querySelector('#catch').onclick=()=>{if(c.scene==='corridor')room('music');c.player={x:0,z:3.93,angle:0};c.exploration={ended:true};c.caughtAt=performance.now()-700;c.draw(performance.now());};
+document.querySelector('#corridor-view').onclick=()=>{c.reset(null);c.exploration={ended:false};c.player={x:1.8,z:14.8,angle:-Math.PI/2};c.draw(performance.now());};
+room('music');setInterval(()=>c.draw(performance.now()),120);
+</script></html>

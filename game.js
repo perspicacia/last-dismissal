@@ -1,9 +1,8 @@
 import {SchoolAudio} from './audio.js?v=survival-audio-1';
-import {Corridor} from './corridor.js?v=rabbit-survival-2';
-import {schoolAction} from './school-route.js';
-import {newSurvival,advanceSurvival,toggleDoor,doorClosed,rabbitPosition,SURVIVAL} from './survival.js?v=rabbit-survival-2';
+import {Corridor} from './corridor.js?v=hidden-rooms-2';
+import {ROOMS,nearbyRoom,newExploration,advanceExploration} from './exploration.js';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
-let state=null,endingTimer,audioError='',lastPhase='';
+let state=null,endingTimer,audioError='';
 function show(id){document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
 function updateAudioStatus(){const status=$('audio-status');status.textContent=audioError||(!audio.ctx?'BGM 대기':audio.muted||audio.volume===0?'BGM 음소거':audio.ctx.state==='running'?'BGM 재생 중':'BGM 일시 정지 · 소리 확인');status.dataset.level=String(audio.level().toFixed(5));}
 setInterval(updateAudioStatus,500);
@@ -11,53 +10,47 @@ async function enableAudio(test=false){audioError='';try{await(test?audio.test()
 const corridor=new Corridor($('corridor'),({player,scene})=>{
  $('position').dataset.scene=scene;for(const key of ['x','z','angle'])$('position').dataset[key]=player[key].toFixed(2);
  updateUI();
-},()=>audio.footstep(corridor.scene));
+},()=>audio.footstep(corridor.scene==='corridor'?'corridor':'classroom'));
 audio.onEffect=kind=>{const canvas=$('corridor');canvas.dataset.soundEffect=kind;canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);};
 corridor.onTick=dt=>{
  if(!state||state.ended)return;
- const previous=state;
- state=advanceSurvival(state,dt,corridor.scene);
- if(state.defended>previous.defended)audio.result(true);
- if(state.phase!==lastPhase){lastPhase=state.phase;if(state.phase==='warning')audio.cue('mascot-reveal');}
- corridor.survival=state;corridor.rabbitZ=rabbitPosition(state);corridor.mouthOpen=state.phase==='warning';
- if(state.ended)finish();
+ state=advanceExploration(state,dt,corridor.scene,corridor.player);
+ corridor.exploration=state;updateUI();if(state.ended)finish();
 };
 function updateUI(){
  if(!state)return;
- const inside=corridor.scene==='classroom',closed=doorClosed(state),recovery=Math.max(0,Math.ceil(state.recoveryUntil-state.elapsed));
- $('floor').textContent=inside?'3-2 교실':'3층 동쪽 복도';
- $('room-action').hidden=inside||!schoolAction(corridor.player,corridor.scene,false)||state.ended;
- $('inspect').hidden=true;$('classroom-tools').hidden=!inside||state.ended;
- $('door-toggle').disabled=!closed&&recovery>0;
- $('door-toggle').textContent=closed?`문 열기 · ${Math.ceil(state.doorUntil-state.elapsed)}초 남음`:recovery?`문이 걸렸다 · ${recovery}초`:'문 닫기';
- $('door-toggle').setAttribute('aria-pressed',String(closed));
- $('room-return').disabled=closed;
- $('survival-time').textContent=`하교까지 ${Math.ceil(SURVIVAL.duration-state.elapsed)}초`;
- const message=state.phase==='warning'?(closed?'문 너머로 발소리가 들린다.':'토끼가 다가온다. 교실로 피해서 문을 닫자.'):state.phase==='retreat'?'발소리가 멀어진다.':closed?'잠시 숨을 고른다. 문은 곧 다시 열린다.':'복도를 살펴보자. 토끼는 어디에 있지?';
+ const inside=corridor.scene!=='corridor',room=nearbyRoom(corridor.player,corridor.scene);
+ $('floor').textContent=ROOMS.find(r=>r.id===corridor.scene)?.label||'3층 동쪽 복도';
+ $('room-action').hidden=inside||!room||state.ended;
+ if(room)$('room-action').textContent=`${room.label} 들어가기`;
+ $('inspect').hidden=true;$('classroom-tools').hidden=!inside||state.ended;$('door-toggle').hidden=true;
+ $('room-return').disabled=false;
+ $('survival-time').textContent=`둘러본 교실 ${state.visited.length} / 3`;
+ const message=state.ended?'뒤늦게 눈이 마주쳤다.':inside?'조용한 교실. 안쪽을 살펴보자.':'아직 누군가 학교에 남아 있다.';
  if($('threat-status').textContent!==message)$('threat-status').textContent=message;
- $('survival-hud').dataset.phase=state.phase;
- $('corridor').dataset.survivalPhase=state.phase;$('corridor').dataset.doorClosed=String(closed);
- corridor.survival=state;corridor.rabbitZ=rabbitPosition(state);corridor.mouthOpen=state.phase==='warning';
+ $('survival-hud').dataset.phase=state.ended?'warning':'exploring';
+ $('corridor').dataset.survivalPhase=state.ended?'caught':'exploring';
+ $('corridor').dataset.rabbitVisible=String(state.ended);
+ $('corridor').dataset.visited=state.visited.join(',');
+ corridor.exploration=state;
 }
 async function start(){
- clearTimeout(endingTimer);audio.clearEffects();lastPhase='watch';state=newSurvival();corridor.survival=state;corridor.rabbitZ=22;corridor.tutorial=false;corridor.reset(null);
+ clearTimeout(endingTimer);audio.clearEffects();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);
  $('jumpscare').hidden=true;$('corridor').dataset.soundCount='0';$('corridor').dataset.soundEffect='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();await enableAudio();
 }
 function finish(){
- corridor.setActive(false);updateUI();
- if(state.outcome==='escaped'){show('ending');audio.end();$('result').textContent=`토끼의 접근을 ${state.defended}번 막고 학교를 나왔다.`;$('again').focus();return;}
- $('jumpscare').hidden=false;audio.jumpscare();
- endingTimer=setTimeout(()=>{if(state?.outcome!=='caught')return;$('jumpscare').hidden=true;show('gameover');$('caught-result').textContent=`${Math.floor(state.elapsed)}초 동안 버텼다. 다음에는 토끼가 다가올 때 교실 문을 닫자.`;$('retry').focus();},1200);
+ corridor.keys.clear();corridor.caughtAt=performance.now();corridor.mouthOpen=true;updateUI();audio.jumpscare();
+ // Keep drawing the room-space lunge, but block movement and all actions.
+ endingTimer=setTimeout(()=>{if(!state?.ended)return;corridor.setActive(false);show('gameover');$('caught-result').textContent=`${ROOMS.find(r=>r.id===state.rabbitRoom).label}에 숨어 있었다. 다시 들어가면 다른 방에 있을 수도 있다.`;$('retry').focus();},1050);
 }
-function changeDoor(){if(!state||state.ended)return;const before=state;state=toggleDoor(state,corridor.scene);if(before!==state)audio.inspect();updateUI();corridor.draw(performance.now());$('corridor').focus();}
 function interact(){
  if(!state||state.ended)return;
- if(corridor.scene==='classroom'){changeDoor();return;}
- if(schoolAction(corridor.player,corridor.scene,false)){corridor.enterClassroom();updateUI();audio.inspect();$('corridor').focus();}
+ if(corridor.scene!=='corridor'){leaveRoom();return;}
+ const room=nearbyRoom(corridor.player,corridor.scene);if(room){corridor.enterClassroom(room.id);updateUI();audio.inspect();$('corridor').focus();}
 }
-$('room-action').onclick=interact;$('door-toggle').onclick=changeDoor;
-$('room-return').onclick=()=>{if(!state||state.ended||doorClosed(state))return;corridor.leaveClassroom();updateUI();$('corridor').focus();};
-function restart(){clearTimeout(endingTimer);state=null;corridor.survival=null;corridor.rabbitZ=undefined;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
+function leaveRoom(){if(!state||state.ended)return;corridor.leaveClassroom();updateUI();$('corridor').focus();}
+$('room-action').onclick=interact;$('room-return').onclick=leaveRoom;
+function restart(){clearTimeout(endingTimer);state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
 const keyActions={ArrowUp:'forward',ArrowDown:'back',ArrowLeft:'left',ArrowRight:'right',w:'forward',s:'back',a:'left',d:'right'};
 document.addEventListener('keydown',e=>{
  if(e.target.tagName==='INPUT')return;
