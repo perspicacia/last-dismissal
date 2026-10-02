@@ -84,3 +84,12 @@ test('새 일반 교실과 정적인 분위기 인형·창밖 귀신이 각 방�
  assert.ok(v.scenes.classroom33.getObjectByName('ambience-window-ghost').position.x<-4.4);assert.ok(v.scenes.dance.getObjectByName('ambience-window-ghost').position.x<-4.4);
  assert.ok(v.scenes.classroom.getObjectByName('doll-contact-shadow'));
 });
+
+
+test('공·미소의 방별 상태는 종료·재시작 후 남지 않고 귀신 얼굴로 시선이 올라간다',()=>{
+ const v=buildView(),priorDocument=globalThis.document,priorWindow=globalThis.window;
+ globalThis.document={createElement:mockCanvas};try{v.build('classroom31');v.build('classroom33');}finally{globalThis.document=priorDocument;}
+ globalThis.window={matchMedia:()=>({matches:false})};v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.syncTextures=()=>{};const canvas={dataset:{}};
+ const source={canvas,scene:'classroom31',anomaly:null,mouthOpen:false,player:{x:-3.7,z:5.25,angle:-Math.PI/2},keys:new Set(),exploration:{ended:false}};v.source=source;
+ try{v.draw(source,0);v.draw(source,50);assert.equal(canvas.dataset.ballActive,'true');assert.ok(Number(canvas.dataset.ballHeight)>-.065);source.scene='classroom33';source.player={x:-2.3,z:5.25,angle:-Math.PI/2};for(let t=100;t<2100;t+=50)v.draw(source,t);assert.ok(Number(canvas.dataset.ghostSmile)>.9);assert.ok(v.camera.getWorldDirection(new THREE.Vector3()).y>0);source.exploration.ended=true;v.draw(source,2150);assert.equal(canvas.dataset.ghostSmile,'0.00');assert.equal(canvas.dataset.ballActive,'false');v.resetHauntings();assert.equal(canvas.dataset.ballHeight,'0');assert.equal(canvas.dataset.cornerVisible,'false');}finally{globalThis.window=priorWindow;}
+});

@@ -1,7 +1,8 @@
 import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=five-classrooms-1';
+import {ROOM_HAUNTINGS,windowGaze,bouncePose,ghostSmileAmount} from './room-hauntings.js';
 import {DOLL, dollRise} from './doll-event.js';
 import { classroomWindowColumn } from './campus-view.js';
-import { drawSceneDepth } from './scene-depth.js';
+import { drawSceneDepth } from './scene-depth.js?v=classroom-hauntings-2';
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
 export const CLASSROOM_TEACHER_DESK = { x: -.5, z: 8.7, width: 2, depth: .65, height: .72 };
 export const CLASSROOM_DESKS = [-2.5, 1.2, 2.8].flatMap(x => [3.2, 5, 6.8].map(z => ({x,z,width:1.1,depth:.65,height:.76})));
@@ -29,11 +30,20 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
   for(let sx=0;sx<w;sx+=3){const offset=Math.atan((sx-w/2)/lens),a=p.angle+offset,dx=Math.sin(a),dz=Math.cos(a),tx=Math.abs(dx)<1e-9?Infinity:((dx>0?4.4:-4.4)-p.x)/dx,tz=Math.abs(dz)<1e-9?Infinity:((dz>0?9.8:0)-p.z)/dz,side=tx<tz,dist=side?tx:tz,depth=dist*Math.cos(offset),wx=p.x+dx*dist,wz=p.z+dz*dist;const height=3*lens/depth,top=horizon-height*.5;
     const drawBand=(from,to,color)=>{c.fillStyle=color;c.fillRect(sx,top+from*height,3,(to-from)*height+1);};
     drawBand(0,.57,'#738e90');drawBand(.57,.97,'#234650');drawBand(.56,.58,'#adb3a1');drawBand(.97,1,'#14262b');
-    if(side&&dx<0&&wz>1.8&&wz<8.9){drawBand(.15,.5,'#384b47');drawBand(.17,.48,'#091d2a');const frame=((wz-1.8)%1.45);if(exterior)c.drawImage(exterior,classroomWindowColumn(wz,exterior.width),0,1,exterior.height,sx,top+.17*height,3,.31*height);if(frame<.085)drawBand(.15,.5,'#847e64');drawBand(.31,.325,'#938e76');drawBand(.49,.515,'#a1a591');}
+    if(side&&dx<0&&wz>1.8&&wz<8.9){drawBand(.15,.74,'#384b47');drawBand(.17,.72,'#091d2a');const frame=((wz-1.8)%1.45);if(exterior)c.drawImage(exterior,classroomWindowColumn(wz,exterior.width),0,1,exterior.height,sx,top+.17*height,3,.55*height);if(frame<.085)drawBand(.15,.74,'#847e64');drawBand(.439,.461,'#938e76');drawBand(.725,.75,'#a1a591');}
     if(!side&&dz>0&&wx>-3.2&&wx<2.8){drawBand(.18,.53,'#bdb6a0');drawBand(.2,.505,'#123631');drawBand(.50,.53,'#817256');if(wx>-.8&&wx<1.2)drawBand(.32,.326,'#9dad99');}
     if(!side&&dz<0){if(wx<-2.7){drawBand(.23,.92,'#6e7561');if((wx+4.4)%.55<.035)drawBand(.23,.92,'#354637');drawBand(.49,.51,'#394b3c');drawBand(.72,.74,'#394b3c');}if(wx>-.75&&wx<.75){drawBand(.13,1,'#76654d');drawBand(.18,.44,'#112b39');drawBand(.6,.62,'#b7b29b');}}
     c.fillStyle=`rgba(0,8,18,${Math.min(.7,depth*.045)})`;c.fillRect(sx,top,3,height);
   }
+  const haunting=doll?.haunting||{scene:kind,ballTime:0,smile:0,last:time};
+  if(haunting.scene!==kind){Object.assign(haunting,{scene:kind,ballTime:0,smile:0,last:time});}
+  const dt=Math.min(.05,Math.max(0,(time-haunting.last)/1000));haunting.last=time;
+  const reduced=typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches,active=!doll?.ended;
+  const clipWindows=()=>{c.beginPath();for(let a=1.8;a<8.9;a+=1.45)for(const [low,high] of [[.84,1.615],[1.69,2.50]]){const b=Math.min(a+1.45,8.9),points=[[-4.28,low,a+.05],[-4.28,high,a+.05],[-4.28,high,b-.05],[-4.28,low,b-.05]].map(v=>project(...v));if(points.every(Boolean)){points.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();}}c.clip();};
+  const ball=ROOM_HAUNTINGS[kind]?.ball;
+  if(ball){const watching=active&&!reduced&&windowGaze(p,ball);if(watching)haunting.ballTime+=dt;const pose=bouncePose(haunting.ballTime,{...ball,reduced}),pos=project(ball.x,pose.height,ball.z);if(pos){c.save();clipWindows();const r=ball.radius*lens/pos.d;c.fillStyle='#93613c';c.beginPath();c.arc(pos.x,pos.y,r,0,Math.PI*2);c.fill();c.strokeStyle='#261d17';c.lineWidth=Math.max(1,r*.04);c.stroke();c.beginPath();c.ellipse(pos.x,pos.y,r*.44,r,pose.rotation,0,Math.PI*2);c.stroke();c.restore();}haunting.ballActive=watching;haunting.ballHeight=pose.height;}
+  const ghost=ROOM_AMBIENCE[kind]?.ghost;
+  if(ghost&&doll?.ghost?.naturalWidth){const pos=project(ghost.x,ghost.y,ghost.z),target=ghostSmileAmount(p,ghost,{active});haunting.smile=active?(reduced?target:haunting.smile+(target-haunting.smile)*(1-Math.exp(-dt*5))):0;if(pos){const height=ghost.height*lens/pos.d,width=height*2/3;c.save();clipWindows();c.translate(pos.x,pos.y);c.rotate(-haunting.smile*.12);c.drawImage(doll.ghost,-width/2,-height/2,width,height);if(haunting.smile>.02){c.globalAlpha=haunting.smile;c.translate(width*.006,height*(.173-.5));c.scale(height,height);c.fillStyle='#100c0c';c.beginPath();c.moveTo(-.035,-.014);c.bezierCurveTo(-.02,.001,.02,.001,.035,-.014);c.bezierCurveTo(.03,.012,.016,.022,0,.022);c.bezierCurveTo(-.016,.022,-.03,.012,-.035,-.014);c.fill();c.fillStyle='#b6baa5';for(let i=0;i<7;i++)c.fillRect(-.025+i*.007,-.001,.004,.005);}c.restore();}}
   const faces=[];
   const polygon=(vertices,color)=>{const pts=vertices.map(v=>project(...v));if(pts.every(Boolean))faces.push({pts,color,d:pts.reduce((s,v)=>s+v.d,0)/pts.length});};
   const box=(x,y,z,width,height,depth,colors)=>{const l=x-width/2,r=x+width/2,n=z-depth/2,f=z+depth/2,t=y+height;polygon([[l,t,n],[r,t,n],[r,t,f],[l,t,f]],colors[0]);polygon([[l,y,n],[r,y,n],[r,t,n],[l,t,n]],colors[1]);polygon([[l,y,f],[r,y,f],[r,t,f],[l,t,f]],colors[1]);polygon([[l,y,n],[l,y,f],[l,t,f],[l,t,n]],colors[2]);polygon([[r,y,n],[r,y,f],[r,t,f],[r,t,n]],colors[2]);};
@@ -62,6 +72,7 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
   if(doll&&kind==='classroom'){const rise=dollRise(doll.state),image=rise>.25?doll.scary:doll.image;const pos=project(DOLL.x,rise>.2?.04:.16,DOLL.z-.6);if(pos&&image?.naturalWidth){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2*(1-rise));c.drawImage(image,-DOLL.height*unit/3,-DOLL.height*unit,DOLL.height*unit*2/3,DOLL.height*unit);c.restore();}}
   const ambience=ROOM_AMBIENCE[kind];
   if(ambience?.student&&doll?.image?.naturalWidth){const a=ambience.student,pos=project(a.x,a.y+.09,a.z-a.height/2);if(pos){const unit=lens/pos.d;c.save();c.translate(pos.x,pos.y);c.rotate(-Math.PI/2);c.drawImage(doll.image,-a.height*unit/3,-a.height*unit/2,a.height*unit*2/3,a.height*unit);c.restore();}}
-  if(ambience?.ghost&&doll?.ghost?.naturalWidth){const a=ambience.ghost,pos=project(-4.28,a.y,a.z);if(pos){const height=a.height*lens/pos.d;c.save();c.beginPath();c.rect(0,0,w,h);c.clip();c.globalAlpha=.72;c.drawImage(doll.ghost,pos.x-height/3,pos.y-height/2,height*2/3,height);c.restore();}}
+
+  const corner=ROOM_HAUNTINGS[kind]?.corner;if(corner){const pos=project(corner.x,.48,corner.z);if(pos){const unit=lens/pos.d;c.fillStyle='#111c1b';c.beginPath();c.ellipse(pos.x,pos.y,.27*unit,.43*unit,0,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(pos.x,pos.y-.30*unit,.14*unit,.18*unit,0,0,Math.PI*2);c.fill();c.fillStyle='#929a80';for(const x of [-.04,.04]){c.beginPath();c.ellipse(pos.x+x*unit,pos.y-.31*unit,.009*unit,.005*unit,0,0,Math.PI*2);c.fill();}}}
   const shade=c.createRadialGradient(w/2,h/2,w*.15,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#000915c0');c.fillStyle=shade;c.fillRect(0,0,w,h);
 }

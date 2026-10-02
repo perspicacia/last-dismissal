@@ -15,7 +15,7 @@ export function drawSceneDepth(c,project,player,{classroom=false}={}) {
     box(side*(classroom?4.395:2.995),y0-.16,(z0+z1)/2,.015,.04,length+.25,['#19372a88','#102a2388','#102a2388']);
   };
   if(classroom){
-    for(let z=1.8;z<8.9;z+=1.45)frame(-1,z+.04,z+1.40,1.47,2.49,['#789184','#31564f','#52756b']);
+    for(let z=1.8;z<8.9;z+=1.45)frame(-1,z+.04,z+1.40,.82,2.49,['#789184','#31564f','#52756b']);
   } else {
     for(const start of [4,6,12,14])if(Math.abs(player.z-(start+1))<9)frame(1,start+.16,start+1.84,.82,2.57,['#789184','#284e49','#547469']);
     for(const start of [4,14])if(Math.abs(player.z-(start+1))<9)frame(-1,start+.24,start+1.76,.02,2.61,['#a28b68','#4a4636','#796a50']);
