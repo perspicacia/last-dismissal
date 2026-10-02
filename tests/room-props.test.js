@@ -95,3 +95,27 @@ test('original practice score draws dense notation on both bound pages without r
   assert.equal(createScoreTexture(), null, 'headless node builds remain safe');
   const grain = woodGrainTexture();assert.ok(grain.image.data.length > 0);
 });
+
+test('printed score reads left to right from each player seat in the reflected school scene', () => {
+  const scene = new THREE.Scene();scene.scale.z = -1;
+  const props = buildRoomProps('music');scene.add(props);scene.updateMatrixWorld(true);
+  const seats = [['music-stand', [-2.4, 1.33, -6.95]], ['upright-piano', [2.68, 1.164, -7.35]]];
+  for (const [name, seat] of seats) {
+    const paper = props.getObjectByName(name).getObjectByName('sheet-music-paper');
+    const camera = new THREE.PerspectiveCamera(70, 16 / 9, .05, 100);
+    camera.position.set(...seat);camera.lookAt(paper.getWorldPosition(new THREE.Vector3()));camera.updateMatrixWorld(true);
+    const position = paper.geometry.attributes.position, uv = paper.geometry.attributes.uv;
+    const screen = [];
+    for (let i = 0; i < position.count; i++) {
+      const point = new THREE.Vector3().fromBufferAttribute(position, i).applyMatrix4(paper.matrixWorld).project(camera);
+      screen.push({x: point.x, y: point.y, u: uv.getX(i), v: uv.getY(i)});
+    }
+    const mean = (axis, field, value) => {
+      const points = screen.filter(point => point[field] === value);
+      return points.reduce((sum, point) => sum + point[axis], 0) / points.length;
+    };
+    assert.ok(mean('x', 'u', 0) < mean('x', 'u', 1), `${name}: left side of the texture projects to screen left`);
+    assert.ok(mean('y', 'v', 1) > mean('y', 'v', 0), `${name}: title and upper staff remain above the lower staff`);
+    assert.ok(screen.every(point => Number.isFinite(point.x) && Number.isFinite(point.y)));
+  }
+});

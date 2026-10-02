@@ -109,7 +109,13 @@ export function buildOpenScore(width = .56, height = .4, options) {
   const book = new THREE.Group();book.name = 'open-practice-score';
   const texture = createScoreTexture(options);
   const paper = new THREE.MeshStandardMaterial({color: texture ? '#ffffff' : '#e5dfc9', map: texture, roughness: .94});
-  const pages = new THREE.Mesh(new THREE.PlaneGeometry(width, height), paper);
+  const geometry = new THREE.PlaneGeometry(width, height);
+  // The school reflects its scene on Z to preserve the original movement axes.
+  // Turning the printed face toward -Z therefore reverses U on screen; reverse
+  // only the page UV, keeping its front normal and tilt facing the player.
+  const uv = geometry.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i));
+  const pages = new THREE.Mesh(geometry, paper);
   pages.name = 'sheet-music-paper';pages.rotation.y = Math.PI;pages.position.z = -.008;
   pages.userData = {...SCORE_LAYOUT, front: '-z', originalScore: true};book.add(pages);
   const backing = new THREE.Mesh(new THREE.BoxGeometry(width + .006, height + .004, .008), new THREE.MeshStandardMaterial({color: '#d4cbae', roughness: .95}));
