@@ -3,7 +3,7 @@ import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=five-classrooms-1';
 import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
-import {volumeFromImage} from './doll-volume.js?v=classroom-hauntings-1';
+import {volumeFromImage} from './doll-volume.js?v=doll-sides-stable-1';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=music-ghost-polish-1';
@@ -189,12 +189,12 @@ export class ThreeSchoolView {
     }
     box(g,-1.65,5.4,27.8,2.15,.16,6.6,plaster).name='stair-ceiling-up';box(g,1.65,3.08,27.8,2.15,.16,6.6,plaster);
   }
-  partsFor(image){this.rabbitPartCache??=new WeakMap();if(!image?.naturalWidth)return null;if(!this.rabbitPartCache.has(image))this.rabbitPartCache.set(image,rabbitParts(image));return this.rabbitPartCache.get(image);}
+  partsFor(image){this.rabbitPartCache??=new WeakMap();if(!image?.naturalWidth||image.complete===false)return null;if(!this.rabbitPartCache.has(image))this.rabbitPartCache.set(image,rabbitParts(image));return this.rabbitPartCache.get(image);}
   syncTextures(source){
     if(!this.refs.photo)return;
     for(const t of this.textures)t.dispose();this.textures=[];
     const textureCache=new Map();
-    const assign=(mesh,image)=>{if(!image||(!image.getContext&&!image.naturalWidth))return;let t=textureCache.get(image);if(!t){t=canvasTexture(image);textureCache.set(image,t);this.textures.push(t);}mesh.material.map=t;mesh.material.needsUpdate=true;};
+    const assign=(mesh,image)=>{if(!image||image.complete===false||(!image.getContext&&!image.naturalWidth))return;let t=textureCache.get(image);if(!t){t=canvasTexture(image);textureCache.set(image,t);this.textures.push(t);}mesh.material.map=t;mesh.material.needsUpdate=true;};
     for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':d.userData.label]);
     assign(this.refs.clock,source.clockFace);
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
