@@ -2,6 +2,8 @@
 
 Issue #60. 사용자가 `docs/student-doll-3d-plan.md`의 가장 작은 교체안을 채택했다.
 
+현재 상태: 외형이 원본과 너무 다르다는 후속 피드백으로 일반 게임의 기본 적용을 해제했다. [원본 외형 우선 명세](student-doll-original-look.md)가 최신 규칙이다. 아래는 보존된 GLB 시안의 제작/검증 기록이다.
+
 ## 범위
 
 - 현재 탐색의 3-2 바닥 인형 한 개를 정적 `assets/models/student-doll.glb`로 교체한다.

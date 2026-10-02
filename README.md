@@ -39,7 +39,7 @@
 
 Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 기존 투명 이미지의 빌보드를 공간 안에서 이동시키며, 관절형 3D 모델은 아니다. 기본/이빨 이미지 각각의 원본 비율을 유지한다. 기존 이미지에서 팔을 런타임으로 분리해 어깨를 중심으로 회전하고, 이빨/비명 시점에 양팔을 올린다. [만세 연출 명세](specs/rabbit-raised-arms.md). 등장 시점은 [토끼 등장 명세](specs/rabbit-arrival.md)를 따른다. 음악실에는 피아노·악보·보면대, 무용실에는 벽 거울·연습 바·스피커를 배치한다. 거울의 실시간 플레이어 반사는 후속 범위다.
 
-학생 인형은 3-2 바닥, 3-1 책상, 음악실 피아노 의자의 장식이다. 현재 탐색의 3-2 바닥 인형은 얼굴·뒤통수·옷·팔다리와 실제 깊이가 있는 정적 GLB 모델이다. 3-1 책상과 음악실 의자는 기존 2.5D 인형을 유지한다. 3-3과 무용실에는 공격하지 않는 창밖 귀신을 배치한다. 방 확장 명세는 [specs/classrooms-doll-depth.md](specs/classrooms-doll-depth.md), 새 모델 명세는 [specs/student-doll-glb.md](specs/student-doll-glb.md)다. 새 모델의 표정·기립 애니메이션, 창밖 귀신 공격, 탈출 조건은 후속 범위다.
+학생 인형은 3-2 바닥, 3-1 책상, 음악실 피아노 의자의 장식이다. 새 GLB 시안이 원본과 너무 다르다는 피드백으로 일반 게임은 모든 방에서 기존 PNG 기반 2.5D 외형을 유지한다. 원본 얼굴·유리 눈·금발 컬·세일러복이 외형 기준이다. [최신 외형 명세](specs/student-doll-original-look.md). 3-3과 무용실에는 공격하지 않는 창밖 귀신을 배치한다. 방 확장은 [specs/classrooms-doll-depth.md](specs/classrooms-doll-depth.md), 보존된 모델 시안은 [specs/student-doll-glb.md](specs/student-doll-glb.md)다. 원본과 닮은 실제 3D 모델·표정/기립 애니메이션과 창밖 귀신 공격·탈출 조건은 후속 범위다.
 
 ## 3D 화면과 검증
 
@@ -52,9 +52,9 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 교실 금발 인형: 현재 탐색 플레이에서는 바닥에 누워 있는 장식이다. 이전 이상현상 기립 연출은 개발용 비교 화면에서 보존한다. [상세 조건](specs/classroom-doll.md).
 
-학생 인형의 이전 2.5D 화면은 `doll-volume.js`에서 기존 사진의 XY·UV 비율을 보존하는 닫힌 메시로 만든다. 3-1·음악실과 이전 이상현상 비교 화면, GLB 로딩 실패 시 이 표현을 유지한다. [측면 왜곡 수정 명세](specs/student-doll-sides.md). Canvas 호환도 기존 이미지 렌더를 유지한다.
+학생 인형의 기본 2.5D 화면은 `doll-volume.js`에서 기존 사진의 XY·UV 비율을 보존하는 닫힌 메시로 만든다. 일반 게임과 기본 교실 비교에 사용하고, Canvas 호환은 기존 이미지를 렌더한다. [측면 왜곡 수정 명세](specs/student-doll-sides.md). 낮은 측면·후면에서 납작하게 보이는 구조적 한계는 남는다.
 
-`student-model.js`는 로컬 `GLTFLoader`로 `assets/models/student-doll.glb`를 읽는다. 원본 사진을 늘리지 않고 만든 1.55m 정적 모델이며, 금발 단발·호박색 유리 눈·남색 세일러복과 도자기 관절을 표현한다. 누운 자세의 실제 경계로 바닥 높이를 계산한다. 처음 3D 외형은 기존 이미지보다 단순한 조형이며 정확한 사진 재현은 아니다. 리깅/새 표정은 아직 없다. 자산에는 메시·PBR 재질·절차적 천/머리 무늬가 포함되며 추가 캐릭터 이미지는 생성하지 않았다.
+개발용 GLB 비교는 `http://127.0.0.1:8080/tests/fixtures/room-review.html?model=glb`에서 명시적으로 선택한다. 일반 실행에서는 GLB를 자동 로딩/대체하지 않는다. `student-model.js`는 이 비교에서 로컬 `GLTFLoader`로 `assets/models/student-doll.glb`를 읽는다. 1.55m 정적 모델이며 실제 누운 경계로 바닥 높이를 계산한다. 원본보다 단순한 시안으로 리깅/새 표정은 없다. 자산에는 메시·PBR 재질·절차적 천/머리 무늬가 포함되며 추가 캐릭터 이미지는 생성하지 않았다.
 
 모델 재생성은 `npm ci` 후 `npm run model:student`다. `modeling/student-doll.js`가 조형/재질 소스이고 `modeling/build-student-doll.mjs`가 Three.js GLTFExporter로 내보낸다. 일반 플레이에는 Node 또는 모델링 도구가 필요 없다. [자산 정보](assets/models/README.md). 개발용 정면/양옆/후면/누운 자세 확인: `http://127.0.0.1:8080/tests/fixtures/student-model-review.html`.
 
@@ -62,6 +62,6 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 음악실 소품은 `music-instruments.js`의 곡선 통기타·88건반 목재 업라이트 피아노와 `music-sheet.js`의 창작 악보로 보완했다. 열린 악보에는 오선·음자리표·마디·빔·슬러·제본을 그리며, 보면대의 악보 면은 연주자 의자 방향이다. `ghost-smile-shape.js`는 3D/Canvas가 공유하는 곡선 입과 위아래 날카로운 치아를 정의한다. 소품은 완전한 사진 재현이 아니며, 악보는 외부 악곡을 복제한 것이 아닌 분위기용 창작 기보다.
 
-누운 인형의 찌그러짐 피드백이 반복되어 [실제 3D 전환 진단](docs/student-doll-3d-plan.md)을 작성했다. 사용자가 3-2 한 개의 정적 GLB 교체를 채택했고, 현재 탐색에 연결했다. 다른 방으로 확대하기 전에 외형을 검토한다.
+누운 인형의 찌그러짐 피드백으로 [실제 3D 전환 진단](docs/student-doll-3d-plan.md)과 정적 GLB 시안을 만들었다. 사용자는 시안의 외형 차이를 지적해 원본 모습 복구를 요청했다. 후속 모델은 원본과 닮은 정면/양옆/누운 외형을 검토한 뒤 게임에 적용한다.
 
 녹음 효과음의 개발용 확인 화면은 `http://127.0.0.1:8080/tests/fixtures/reference-audio-review.html`이다. 검증 버튼은 장치 출력을 차단한 그래프에서 디코딩·호출·음소거·종료를 확인하며 실제 청감 확인은 파일 플레이어로 한다. 실제 게임 컨트롤러 검증은 `tests/fixtures/three-flow.html?safe&silent`에서 토끼를 무용실에 고정하고 소리 출력 없이 할 수 있다. 일반 플레이에는 이 검증 버튼/설정이 없다.

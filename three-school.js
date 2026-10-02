@@ -28,9 +28,13 @@ export class ThreeSchoolView {
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.0;
     this.scenes={};this.refs={};this.build('corridor');for(const room of ROOMS)this.build(room.id);this.syncTextures(source);this.resize();
     canvas.dataset.rendererReady='three';
-    this.loadStudentModel();
+    // Keep the adopted image identity until a matching 3D sculpt is approved.
+    this.previewStudentModel=canvas.dataset.studentModelPreview==='true';
+    if(this.previewStudentModel)this.loadStudentModel();
+    else canvas.dataset.studentModelStatus='original';
   }
   async loadStudentModel(load=loadStudentModel){
+    this.previewStudentModel=true;
     const data=this.source.canvas.dataset;data.studentModelStatus='loading';
     try{
       const asset=await load(),model=prepareStudentModel(asset,DOLL.height);
@@ -39,7 +43,7 @@ export class ThreeSchoolView {
     }catch{data.studentModelStatus='fallback';this.updateStudentModel(this.source);}
   }
   updateStudentModel(source){
-    const solid=this.refs.dollSolid,useSolid=Boolean(solid&&source.exploration);
+    const solid=this.refs.dollSolid,useSolid=Boolean(this.previewStudentModel&&solid&&source.exploration);
     if(solid)solid.visible=useSolid;
     const face=this.refs.dollFace||this.refs.doll.material;
     this.refs.doll.visible=!useSolid&&Boolean(face.map)&&Boolean(this.dollVolumeReady);

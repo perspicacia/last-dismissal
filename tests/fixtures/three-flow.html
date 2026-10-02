@@ -5,6 +5,7 @@ document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 // A failed optional character asset must never prevent entering/restarting.
 if(new URLSearchParams(location.search).has('modelFail')){const fetchAsset=window.fetch;window.fetch=(url,...args)=>String(url instanceof Request?url.url:url).includes('student-doll.glb')?Promise.reject(new Error('Intentional model failure')):fetchAsset(url,...args);}
+if(new URLSearchParams(location.search).get('model')==='glb'||new URLSearchParams(location.search).has('modelFail'))document.querySelector('#corridor').dataset.studentModelPreview='true';
 // Exercise the real controller/audio graph without emitting sound on the user's
 // device. The analyser remains upstream so PCM activity is still measurable.
 if(new URLSearchParams(location.search).has('silent')){
@@ -14,7 +15,7 @@ if(new URLSearchParams(location.search).has('silent')){
   analyser.connect=destination=>{connect(sink);sink.connect(destination);return destination;};return analyser;
  };
 }
-await import('../../game.js?v=horror-lighting-1');
+await import('../../game.js?v=student-original-1');
 // Preserve the first sound-clock draw and force the following exploration draw.
 // Then restore random before Three.js creates UUIDs or audio creates noise.
 // Capturing the real start/retry click runs before the ordinary game handler.

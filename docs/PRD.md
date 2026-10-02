@@ -19,7 +19,7 @@
 - 캐릭터: [CHARACTERS.md](../CHARACTERS.md)
 - 기록: [docs/progress.md](progress.md)
 - 문·토끼 녹음 효과음: [specs/reference-horror-audio.md](../specs/reference-horror-audio.md), [출처](../assets/audio/README.md)
-- 채택한 학생 인형 3D 전환: [진단 기록](student-doll-3d-plan.md), [3-2 정적 GLB 명세](../specs/student-doll-glb.md). 현재 탐색의 3-2 바닥 인형만 우선 교체한다. 다른 방과 리깅/표정 전환은 후속 범위다.
+- 학생 인형: [원본 외형 우선 명세](../specs/student-doll-original-look.md). 3D 시안의 얼굴/머리 느낌이 달라 일반 게임은 원본 PNG 기반 외형으로 복구했다. [GLB 시안](../specs/student-doll-glb.md)은 개발용 비교에 보존하며 실제 3D 외형 보완과 리깅/표정은 후속 범위다. [진단 기록](student-doll-3d-plan.md).
 
 - 3-1 책상과 음악실 의자에는 정적인 학생 인형, 3-3·무용실 창밖에는 공격하지 않는 귀신을 배치한다. [교실 확장 명세](../specs/classrooms-doll-depth.md).
 
