@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
 import {ThreeSchoolView} from '../three-school.js';
 import {buildOutdoors} from '../three-outdoors.js';
+import {ROOM_AMBIENCE} from '../exploration.js';
+import {pianoBoyLayout} from '../piano-boy.js';
 function mockCanvas(){const gradient={addColorStop(){}};const ctx=new Proxy({}, {get:(_,k)=>()=>String(k).startsWith('create')?gradient:undefined,set:()=>true});return {width:512,height:512,getContext:()=>ctx};}
 function buildView(){const old=globalThis.document;globalThis.document={createElement:mockCanvas};try{const v=Object.create(ThreeSchoolView.prototype);v.scenes={};v.refs={};v.textures=[];v.build('corridor');v.build('classroom');return v;}finally{globalThis.document=old;}}
 test('복도 소등은 해당 광원과 발광 표면만 바꾸고 교실·게임 상태를 보존한다',()=>{
@@ -96,9 +98,20 @@ test('탐색에서는 복도 토끼를 숨기고 해당 방 발견 뒤에만 공
 test('새 일반 교실과 정적인 분위기 인형·창밖 귀신이 각 방에 있다',()=>{
  const v=buildView(),old=globalThis.document;globalThis.document={createElement:mockCanvas};try{v.build('classroom31');v.build('classroom33');v.build('music');v.build('dance');}finally{globalThis.document=old;}
  for(const id of ['classroom31','classroom33']){assert.ok(v.scenes[id].getObjectByName('school-desk'));assert.ok(v.scenes[id].getObjectByName('sliding-classroom-door'));assert.ok(v.refs.roomRabbits[id]);}
- assert.ok(v.scenes.classroom31.getObjectByName('ambience-student-doll'));assert.ok(v.scenes.music.getObjectByName('ambience-student-doll'));
+ assert.ok(v.scenes.classroom31.getObjectByName('ambience-student-doll'));assert.equal(v.scenes.music.getObjectByName('ambience-student-doll'),undefined);assert.ok(v.scenes.music.getObjectByName('piano-boy-ghost'));
  assert.ok(v.scenes.classroom33.getObjectByName('ambience-window-ghost').position.x<-4.4);assert.ok(v.scenes.dance.getObjectByName('ambience-window-ghost').position.x<-4.4);
  assert.ok(v.scenes.classroom.getObjectByName('doll-contact-shadow'));
+});
+
+test('피아노 귀신은 로딩 후만 표시하고 갱신·재시작에서 중복 또는 의자 관통을 만들지 않는다',()=>{
+ const v=buildView(),old=globalThis.document;globalThis.document={createElement:mockCanvas};try{v.build('music');}finally{globalThis.document=old;}
+ const ghost=v.refs.pianoBoy,source={canvas:{dataset:{}},pianoBoy:{naturalWidth:1024,naturalHeight:1536,complete:false}};v.source=source;
+ assert.equal(ghost.visible,false);v.syncTextures(source);assert.equal(ghost.visible,false);
+ source.pianoBoy.complete=true;v.syncTextures(source);assert.equal(ghost.visible,true);assert.equal(ghost.material.map.image,source.pianoBoy);
+ const pose=pianoBoyLayout(source.pianoBoy,ROOM_AMBIENCE.music.boy);assert.equal(ghost.scale.x,-pose.width);assert.equal(ghost.scale.y,pose.height);assert.equal(ghost.rotation.y,-Math.PI/2);assert.equal(ghost.position.y,pose.centerY);
+ const bench=v.scenes.music.getObjectByName('music-stool');assert.ok(ghost.position.x<bench.position.x-.21);assert.equal(ghost.position.z,bench.position.z);
+ v.syncTextures(source);v.resetHauntings();let count=0;v.scenes.music.traverse(o=>{if(o.name==='piano-boy-ghost')count++;});assert.equal(count,1);assert.equal(ghost.visible,true);
+ source.pianoBoy={complete:true,naturalWidth:0,naturalHeight:0};v.syncTextures(source);assert.equal(ghost.visible,false);
 });
 
 

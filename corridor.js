@@ -1,15 +1,15 @@
-import {ROOMS} from './exploration.js?v=five-classrooms-1';
+import {ROOMS} from './exploration.js?v=piano-boy-1';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=student-original-1';
+import { ThreeSchoolView } from './three-school.js?v=piano-boy-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=horror-lighting-1';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=music-ghost-polish-1';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=piano-boy-1';
 import {ROOM_BLOCKERS} from './room-props.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
@@ -21,6 +21,10 @@ export class Corridor {
     this.windowGhost = new Image();
     this.windowGhost.onload = () => this.buildTextures();
     this.windowGhost.src = new URL('./assets/window-ghost.png', import.meta.url).href;
+    this.pianoBoy=new Image();this.canvas.dataset.pianoBoyStatus='loading';
+    this.pianoBoy.onload=()=>{this.canvas.dataset.pianoBoyStatus='ready';this.view3D?.syncTextures(this);};
+    this.pianoBoy.onerror=()=>{this.canvas.dataset.pianoBoyStatus='unavailable';this.view3D?.syncTextures(this);};
+    this.pianoBoy.src=new URL('./assets/piano-boy-ghost.png',import.meta.url).href;
     this.mascot = new Image();
     this.mascot.src = new URL('./assets/mascot-rabbit.png', import.meta.url).href;
     this.mascotOpen = new Image();
@@ -187,7 +191,7 @@ export class Corridor {
     this.lighting??=new SchoolLighting();
     const levels=this.lighting.update(time,{active:this.scene==='corridor'&&!this.exploration?.ended,reduced:reduce});recordLighting(this.canvas,levels);
     this.updateExterior(time);
-    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
+    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);

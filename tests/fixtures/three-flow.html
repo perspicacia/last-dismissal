@@ -15,7 +15,7 @@ if(new URLSearchParams(location.search).has('silent')){
   analyser.connect=destination=>{connect(sink);sink.connect(destination);return destination;};return analyser;
  };
 }
-await import('../../game.js?v=student-original-1');
+await import('../../game.js?v=piano-boy-1');
 // Preserve the first sound-clock draw and force the following exploration draw.
 // Then restore random before Three.js creates UUIDs or audio creates noise.
 // Capturing the real start/retry click runs before the ordinary game handler.
