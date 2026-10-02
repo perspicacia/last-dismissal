@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {GHOST_SMILE_DESIGN, traceGhostPath} from './ghost-smile-shape.js';
 
 // Metres in the school's unreflected scene coordinates. These props never
 // participate in movement, rabbit discovery, or a game-over decision.
@@ -100,21 +101,50 @@ export function createGhostSmile(config) {
   group.position.set(config.x, config.y, config.z);
   const mouth = new THREE.Group(); mouth.name = 'ghost-smile-mouth';
   mouth.position.set(config.height * 2 / 3 * .006, config.height * (.5 - .173), .018); group.add(mouth);
-  const shape = new THREE.Shape();
-  shape.moveTo(-.048, .021); shape.bezierCurveTo(-.024, -.001, .024, -.001, .048, .021);
-  shape.bezierCurveTo(.04, -.020, .021, -.034, 0, -.035); shape.bezierCurveTo(-.021, -.034, -.040, -.020, -.048, .021);
-  const black = new THREE.MeshBasicMaterial({color: '#100c0c', side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false});
-  const opening = new THREE.Mesh(new THREE.ShapeGeometry(shape, 20), black); opening.name = 'ghost-smile-opening'; mouth.add(opening);
+  const shape = new THREE.Shape(); traceGhostPath(shape, GHOST_SMILE_DESIGN.mouth);
+  const makeMaterial = extra => new THREE.MeshBasicMaterial({side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false, ...extra});
+  const openingGeometry = new THREE.ShapeGeometry(shape, 32);
+  const openingColors = [];
+  for (let i = 0; i < openingGeometry.attributes.position.count; i++) {
+    const y = openingGeometry.attributes.position.getY(i), edge = Math.min(1, Math.abs(y + .009) / .022);
+    const color = new THREE.Color('#0f0e0e').lerp(new THREE.Color('#291d1a'), edge);
+    openingColors.push(color.r, color.g, color.b);
+  }
+  openingGeometry.setAttribute('color', new THREE.Float32BufferAttribute(openingColors, 3));
+  const opening = new THREE.Mesh(openingGeometry, makeMaterial({vertexColors: true}));
+  opening.name = 'ghost-smile-opening'; mouth.add(opening);
+  const shading = [];
+  for (const [radius, strength] of [[.0035, .12], [.002, .24]]) {
+    const outline = new THREE.Path(); traceGhostPath(outline, GHOST_SMILE_DESIGN.mouth);
+    const curve = new THREE.CatmullRomCurve3(outline.getPoints(48).map(p => new THREE.Vector3(p.x, p.y, -.0006)), true);
+    const lip = new THREE.Mesh(new THREE.TubeGeometry(curve, 96, radius, 6, true), makeMaterial({color: '#4b392e'}));
+    lip.name = 'ghost-smile-lip-shadow'; lip.userData.opacityScale = strength;
+    mouth.add(lip); shading.push(lip);
+  }
+  for (const path of [GHOST_SMILE_DESIGN.upperLip, GHOST_SMILE_DESIGN.lowerLip]) {
+    const edge = new THREE.Path(); traceGhostPath(edge, path);
+    const curve = new THREE.CatmullRomCurve3(edge.getPoints(48).map(p => new THREE.Vector3(p.x, p.y, .0007)));
+    const gum = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, .0014, 5, false), makeMaterial({color: '#43312c'}));
+    gum.name = 'ghost-smile-gum-shadow'; gum.userData.opacityScale = .82;
+    mouth.add(gum); shading.push(gum);
+  }
   const teeth = [];
-  for (let i = 0; i < 7; i++) {
-    const x = -.0315 + i * .0105, top = .006 + Math.abs(x) * .18;
-    const toothShape = new THREE.Shape(); toothShape.moveTo(x - .0042, top); toothShape.lineTo(x + .0041, top);
-    toothShape.lineTo(x + .0032, top - .011 - (i % 3) * .002); toothShape.lineTo(x - .0031, top - .011); toothShape.closePath();
-    const tooth = new THREE.Mesh(new THREE.ShapeGeometry(toothShape), new THREE.MeshBasicMaterial({color: i % 2 ? '#aeb29c' : '#c1c3ab', side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false}));
-    tooth.position.z = .001; mouth.add(tooth); teeth.push(tooth);
+  for (const design of GHOST_SMILE_DESIGN.teeth) {
+    const toothShape = new THREE.Shape(); traceGhostPath(toothShape, design.path);
+    const geometry = new THREE.ShapeGeometry(toothShape, 10), colors = [];
+    const root = new THREE.Color(design.rootColor), enamel = new THREE.Color(design.enamelColor), tip = new THREE.Color('#d1ccb5');
+    for (let i = 0; i < geometry.attributes.position.count; i++) {
+      const y = geometry.attributes.position.getY(i), progress = clamp((y - design.root) * design.direction / design.length);
+      const color = progress < .35 ? root.clone().lerp(enamel, progress / .35) : enamel.clone().lerp(tip, (progress - .35) / .65);
+      colors.push(color.r, color.g, color.b);
+    }
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    const tooth = new THREE.Mesh(geometry, makeMaterial({vertexColors: true}));
+    tooth.name = `ghost-smile-${design.row}-tooth`; tooth.userData.smileTooth = design;
+    tooth.position.z = .0016; mouth.add(tooth); teeth.push(tooth);
   }
   mouth.scale.setScalar(config.height);
-  Object.assign(group.userData, {amount: 0, mouth, opening, teeth});
+  Object.assign(group.userData, {amount: 0, mouth, opening, teeth, shading});
   return group;
 }
 
@@ -147,6 +177,7 @@ export function updateGhostSmile(overlay, ghost, player, config, {dt = 1 / 60, r
   }
   data.mouth.scale.set(config.height * (.5 + amount * .22), config.height * (.22 + amount * .44), config.height);
   data.opening.material.opacity = amount;
-  for (const tooth of data.teeth) tooth.material.opacity = amount * .8;
+  for (const tooth of data.teeth) tooth.material.opacity = amount * .96;
+  for (const shade of data.shading) shade.material.opacity = amount * shade.userData.opacityScale;
   return amount;
 }
