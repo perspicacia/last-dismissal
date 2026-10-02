@@ -5,6 +5,18 @@ import {ThreeSchoolView} from '../three-school.js';
 import {buildOutdoors} from '../three-outdoors.js';
 function mockCanvas(){const gradient={addColorStop(){}};const ctx=new Proxy({}, {get:(_,k)=>()=>String(k).startsWith('create')?gradient:undefined,set:()=>true});return {width:512,height:512,getContext:()=>ctx};}
 function buildView(){const old=globalThis.document;globalThis.document={createElement:mockCanvas};try{const v=Object.create(ThreeSchoolView.prototype);v.scenes={};v.refs={};v.textures=[];v.build('corridor');v.build('classroom');return v;}finally{globalThis.document=old;}}
+test('복도 소등은 해당 광원과 발광 표면만 바꾸고 교실·게임 상태를 보존한다',()=>{
+ const v=buildView(),source={canvas:{dataset:{}},scene:'corridor',exploration:{ended:false}};v.source=source;
+ assert.equal(new Set(v.refs.corridorLamps.map(l=>l.bulb.material)).size,5);
+ const classroom=v.scenes.classroom.children.filter(o=>o.isPointLight).map(o=>o.intensity);
+ v.updateLighting(source,0,false);for(let t=50;t<=3000;t+=50)v.updateLighting(source,t,false);
+ assert.equal(v.refs.corridorLamps[0].light.intensity,0);assert.equal(v.refs.corridorLamps[0].bulb.material.emissiveIntensity,.02);
+ assert.ok(v.refs.corridorLamps.slice(1).every(l=>l.light.intensity===l.power));
+ assert.deepEqual(v.scenes.classroom.children.filter(o=>o.isPointLight).map(o=>o.intensity),classroom);
+ assert.deepEqual(source.exploration,{ended:false});assert.equal(source.canvas.dataset.corridorLights,'0.00,1.00,1.00,1.00,1.00');
+ v.updateLighting(source,3050,true);assert.ok(v.refs.corridorLamps.every(l=>l.light.intensity===l.power));
+ v.resetHauntings();assert.equal(v.lighting.elapsed,0);assert.equal(source.canvas.dataset.corridorLights,'1.00,1.00,1.00,1.00,1.00');
+});
 test('크기가 먼저 알려진 미완료 토끼 PNG를 빈 분할 캐시로 확정하지 않는다',()=>{
  const v=Object.create(ThreeSchoolView.prototype),image={naturalWidth:1024,naturalHeight:1536,complete:false};
  assert.equal(v.partsFor(image),null);assert.equal(v.rabbitPartCache.has(image),false);
