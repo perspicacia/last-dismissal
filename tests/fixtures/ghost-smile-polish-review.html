@@ -1,0 +1,7 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>귀신 미소 검증</title><style>body{margin:0;background:#0b151a;color:#d9e1d5;font:14px sans-serif}nav{padding:12px;display:flex;gap:8px}button{background:#263c3e;color:#dde8dc;border:1px solid #637a70;padding:8px}canvas{width:100%;height:88vh;display:block}</style><nav><button id="near">근접 미소</button><button id="far">기본 표정</button><button id="compat">Canvas 비교</button></nav><canvas id="view" data-renderer="three"></canvas><script type="module">
+if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
+const {Corridor}=await import('../../corridor.js');
+const c=new Corridor(document.querySelector('canvas'),()=>{},()=>{});c.tutorial=false;c.scene='classroom33';c.player={x:-3.2,z:5.25,angle:-Math.PI/2};c.buildTextures();
+document.querySelector('#near').onclick=()=>{c.player={x:-3.2,z:5.25,angle:-Math.PI/2};};document.querySelector('#far').onclick=()=>{c.player={x:-1.5,z:5.25,angle:-Math.PI/2};};document.querySelector('#compat').onclick=()=>{location.search='?compat';};
+const frame=t=>{c.draw(t);c.canvas.dataset.reviewLook=String(c.view3D?.dollLook);requestAnimationFrame(frame);};requestAnimationFrame(frame);new ResizeObserver(()=>c.resize()).observe(c.canvas);
+</script></html>

@@ -35,3 +35,32 @@ test('백그라운드 지연·잘못된 dt가 울음을 한꺼번에 내지 않�
  state=tick(state,12).state;assert.equal(state.elapsed,0);assert.equal(newHauntingAudio(quiet).scene,null);
  const invalid=newHauntingAudio(()=>NaN);assert.equal(invalid.nextCry,12);
 });
+test('귀신 미소의 웃음은 한 방문에 한 번 소비하며 시선을 벗어나도 재발하지 않는다',()=>{
+ let state=enter('classroom33');
+ assert.equal(state.laughed,false);
+ const first=advanceHauntingAudio(state,.1,'classroom33',false,quiet,true);
+ assert.equal(first.laugh,true);assert.equal(first.cry,false);assert.equal(first.state.laughed,true);
+ assert.equal(state.laughed,false,'입력 상태를 변경하지 않는다');
+ state=first.state;
+ for(const smiling of [true,false,false,true,true]){
+  const next=advanceHauntingAudio(state,.1,'classroom33',false,quiet,smiling);
+  assert.equal(next.laugh,false);state=next.state;
+ }
+ state=tick(state,12).state;
+ assert.equal(state.laughed,true,'울음 주기가 초기화되어도 웃음은 이미 소비된 상태다');
+ assert.equal(advanceHauntingAudio(state,.1,'classroom33',false,quiet,true).laugh,false);
+});
+test('웃음은 방 변경·복귀·종료 후 재시작에서 다시 가능하며 음소거 중 신호도 소비된다',()=>{
+ const laughed=advanceHauntingAudio(enter('classroom33'),.1,'classroom33',false,quiet,true).state;
+ for(const [scene,ended] of [['corridor',false],['title',false],['classroom33',true]]){
+  const exited=advanceHauntingAudio(laughed,.1,scene,ended,quiet,true);
+  assert.equal(exited.laugh,false);assert.equal(exited.state.laughed,false);
+  const reentered=advanceHauntingAudio(exited.state,.1,'classroom33',false,quiet,true);
+  assert.equal(reentered.laugh,true);assert.equal(reentered.state.laughed,true);
+ }
+ const changed=advanceHauntingAudio(laughed,.1,'dance',false,quiet,false);
+ assert.equal(changed.laugh,false);assert.equal(changed.state.laughed,false);
+ const once=advanceHauntingAudio(changed.state,.1,'dance',false,quiet,true);
+ // A controller can discard this cue while muted; the clock never queues it.
+ assert.equal(advanceHauntingAudio(once.state,100,'dance',false,quiet,true).laugh,false);
+});

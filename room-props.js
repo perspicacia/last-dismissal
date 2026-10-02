@@ -1,4 +1,6 @@
 import * as THREE from './vendor/three.module.js';
+import {buildAcousticGuitar, buildUprightPiano} from './music-instruments.js?v=music-ghost-polish-2';
+import {buildOpenScore} from './music-sheet.js?v=music-ghost-polish-2';
 
 // Feet stay within these envelopes; the central inspection aisle remains clear.
 export const ROOM_BLOCKERS = {
@@ -38,39 +40,18 @@ function stool(parent, x, z, wood, steel) {
   for (const dx of [-.25, .25]) for (const dz of [-.14, .14]) rod(seat, 'stool-leg', [dx, .03, dz], [dx, .44, dz], .025, steel);
   return seat;
 }
-function score(parent, x, y, z, width = .5) {
-  const paper = mat('#e0ddc3'), ink = mat('#293338');
-  block(parent, 'sheet-music-paper', [x, y, z], [width, .38, .012], paper);
-  for (const section of [0, .15]) for (let line = 0; line < 5; line++)
-    block(parent, 'staff-line', [x, y + .1 - section - line * .016, z - .008], [width * .83, .003, .003], ink);
-  for (let n = 0; n < 7; n++) {
-    const nx = x - width * .3 + n * width * .09, ny = y + .075 - (n % 3) * .018;
-    const note = new THREE.Mesh(new THREE.SphereGeometry(.013, 8, 6), ink);
-    note.name = 'music-note'; note.scale.set(1.4, .65, .25); note.position.set(nx, ny, z - .012); parent.add(note);
-    block(parent, 'note-stem', [nx + .015, ny + .026, z - .012], [.004, .052, .004], ink);
-  }
-}
 function music(parent) {
-  const wood = mat('#6e3e26', {roughness: .4}), steel = metal(), ebony = mat('#181e1d'), ivory = mat('#d9d8c4');
-  const piano = group(parent, 'upright-piano', [3.38, 0, 7.35]); piano.rotation.y = Math.PI / 2;
-  block(piano, 'piano-body', [0, .65, .12], [2.35, 1.3, .62], wood);
-  block(piano, 'piano-top', [0, 1.32, .12], [2.45, .09, .72], wood);
-  block(piano, 'piano-keybed', [0, .78, -.34], [2.28, .14, .45], wood);
-  for (let key = 0; key < 35; key++) {
-    const x = -.99 + key * .058;
-    block(piano, 'piano-white-key', [x, .87, -.4], [.054, .055, .33], ivory);
-    if (![2, 6].includes(key % 7) && key < 34) block(piano, 'piano-black-key', [x + .029, .911, -.31], [.029, .045, .18], ebony);
-  }
-  block(piano, 'piano-score-ledge', [0, 1.05, -.23], [.85, .035, .15], wood);
-  score(piano, -.25, 1.25, -.215, .48); score(piano, .25, 1.25, -.215, .48);
-  for (const x of [-.15, 0, .15]) block(piano, 'piano-pedal', [x, .1, -.3], [.055, .04, .18], mat('#b0a06b', {metalness: .6}));
+  const wood = mat('#6e3e26', {roughness: .4}), steel = metal(), ebony = mat('#181e1d');
+  const piano = buildUprightPiano();piano.position.set(3.38, 0, 7.35);piano.rotation.y = Math.PI / 2;parent.add(piano);
   const bench = stool(parent, 2.68, 7.35, wood, steel); bench.rotation.y = Math.PI / 2;
 
   const stand = group(parent, 'music-stand', [-2.4, 0, 7.8]);
   rod(stand, 'stand-post', [0, .05, 0], [0, 1.2, 0], .022, steel);
   for (const angle of [0, 2.1, 4.2]) rod(stand, 'stand-foot', [0, .12, 0], [Math.sin(angle) * .3, .035, Math.cos(angle) * .3], .017, steel);
-  const tray = block(stand, 'score-tray', [0, 1.3, 0], [.7, .5, .025], ebony); tray.rotation.x = -.25;
-  score(stand, 0, 1.33, -.05, .55); stool(parent, -2.4, 6.95, wood, steel);
+  const scoreAssembly = group(stand, 'tilted-score-tray', [0, 1.33, 0]);scoreAssembly.rotation.x = .20;
+  block(scoreAssembly, 'score-tray', [0, 0, .012], [.7, .5, .025], ebony);
+  block(scoreAssembly, 'score-tray-lip', [0, -.25, -.015], [.7, .025, .08], ebony);
+  scoreAssembly.add(buildOpenScore());stool(parent, -2.4, 6.95, wood, steel);
 
   const drums = group(parent, 'drum-kit', [-2.65, 0, 4.8]);
   const shell = mat('#68372d'), skin = mat('#b6b8aa');
@@ -91,15 +72,11 @@ function music(parent) {
     const cymbal = new THREE.Mesh(new THREE.ConeGeometry(.28, .035, 24), mat('#b49a52', {metalness: .65, roughness: .4}));
     cymbal.name = 'cymbal'; cymbal.position.set(x, 1.26, .15); drums.add(cymbal);
   }
-  const guitar = group(parent, 'acoustic-guitar', [3.55, .12, 3.1]); guitar.rotation.z = -.12;
-  for (const [y, radius] of [[.36, .25], [.65, .19]]) {
-    const body = new THREE.Mesh(new THREE.SphereGeometry(radius, 18, 12), mat('#ac7438'));
-    body.name = 'guitar-body'; body.scale.set(1, 1.12, .26); body.position.set(0, y, 0); body.castShadow = true; guitar.add(body);
-  }
-  block(guitar, 'guitar-neck', [0, 1.03, 0], [.075, .73, .055], wood);
-  block(guitar, 'guitar-head', [0, 1.45, 0], [.1, .16, .06], wood);
-  const hole = new THREE.Mesh(new THREE.CircleGeometry(.075, 20), ebony); hole.name = 'guitar-sound-hole'; hole.position.set(0, .58, -.07); hole.rotation.y = Math.PI; guitar.add(hole);
-  for (let i = 0; i < 6; i++) rod(guitar, 'guitar-string', [-.024 + i * .01, .3, -.075], [-.024 + i * .01, 1.47, -.045], .0012, steel);
+  const guitar = buildAcousticGuitar();guitar.position.set(3.55, .12, 3.1);guitar.rotation.z = -.12;parent.add(guitar);
+  const guitarStand = group(parent, 'guitar-floor-stand', [3.55, 0, 3.1]);
+  rod(guitarStand, 'guitar-stand-back', [0, .04, .09], [0, .78, .09], .015, ebony);
+  for (const x of [-.15, .15]) rod(guitarStand, 'guitar-stand-cradle', [x, .30, .09], [x, .30, -.09], .014, ebony);
+  for (const [x, z] of [[-.22, -.14], [.22, -.14], [0, .25]]) rod(guitarStand, 'guitar-stand-foot', [0, .07, .09], [x, .02, z], .014, ebony);
 }
 function dance(parent) {
   const steel = metal(), frame = mat('#53605e'), glass = mat('#819b9c', {metalness: .82, roughness: .21});

@@ -8,6 +8,7 @@
 - 현재 탐색 플레이의 공격자는 토끼다. 학생 인형은 정적인 장식이며 창밖 귀신은 근접 미소를 보이는 분위기 요소다. 교실 연출·음향은 [specs/classroom-hauntings.md](specs/classroom-hauntings.md)를 따른다. 이전 학생 인형의 기립 조건은 [specs/classroom-doll.md](specs/classroom-doll.md)를 따른다. 음향은 음소거 상태에서도 판정할 수 있게 유지한다.
 - 완료 보고에는 변경 내용, 실행한 검증, 결과, 미확인 사항을 포함한다. 테스트 통과와 실제 플레이 확인을 구분한다.
 - 작업 후 [docs/progress.md](docs/progress.md)에 완료한 일, 검증 결과, 미확인 사항과 다음 작은 작업을 기록한다.
+- 음악실 소품·악보 방향·귀신 미소/웃음·임시 시작 화면은 [specs/music-ghost-polish.md](specs/music-ghost-polish.md)를 따른다. 기존 캐릭터 PNG는 보존하고 코드 기반 도형·음향을 사용한다.
 
 ## 역할 분담
 
