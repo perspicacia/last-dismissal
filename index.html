@@ -3,14 +3,27 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LAST DISMISSAL</title>
-  <link rel="stylesheet" href="style.css?v=music-ghost-polish-1">
+  <link rel="preload" href="assets/fonts/Lacquer-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="style.css?v=horror-title-1">
 </head>
 <body data-screen="intro">
 <main>
   <header><a href="./" class="brand">LAST DISMISSAL</a><div class="audio-controls"><span id="audio-status" class="sr-only" role="status">BGM 대기</span><button id="sound-test" hidden>소리 확인</button><button id="mute" aria-pressed="false">소리 켜짐</button><label>음량 <input id="volume" type="range" min="0" max="100" value="50"></label></div></header>
   <section id="intro" class="intro">
-    <h1 class="intro-title">LAST <em>DISMISSAL</em></h1>
-    <div class="start-actions"><button id="start" class="primary">학교에 들어가기 <span>→</span></button></div>
+    <div class="intro-poster" aria-hidden="true">
+      <div class="poster-hall"></div>
+      <div class="poster-cast">
+        <figure class="poster-figure poster-ghost"><img src="assets/window-ghost.png" width="1024" height="1536" alt="" decoding="async"></figure>
+        <figure class="poster-figure poster-doll"><img src="assets/doll-student-open-slit-eyes.png" width="1024" height="1536" alt="" decoding="async"></figure>
+        <figure class="poster-figure poster-boy"><img src="assets/piano-boy-ghost.png" width="1024" height="1536" alt="" decoding="async"></figure>
+        <figure class="poster-figure poster-rabbit"><img src="assets/mascot-rabbit-open.png" width="1024" height="1536" alt="" decoding="async" fetchpriority="high"></figure>
+      </div>
+      <div class="poster-shade"></div><div class="poster-scratches"></div>
+    </div>
+    <div class="intro-content">
+      <h1 class="intro-title"><span class="title-last">LAST</span> <em>DISMISSAL</em></h1>
+      <div class="start-actions"><button id="start" class="primary">학교에 들어가기 <span aria-hidden="true">→</span></button></div>
+    </div>
   </section>
   <section id="game" hidden>
     <div class="game-heading"><div><p class="eyebrow" id="mode">야간 자율학습 종료</p><h2 id="floor">3층 동쪽 복도</h2></div><div class="progress"><span id="progress-label">하교 기록 0 / 5</span><div id="marks" aria-hidden="true"></div></div></div>
