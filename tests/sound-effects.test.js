@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {effectSamples} from '../sound-effects.js';import {SchoolAudio} from '../audio.js';
 function mockAudio(){const audio=new SchoolAudio(),outputs=[],sources=[],gains=[];audio.master={};audio.ctx={state:'running',currentTime:0,sampleRate:8000,createBuffer(ch,n){const data=new Float32Array(n);return {getChannelData:()=>data};},createGain(){const gain={gain:{},connect(target){outputs.push(target);},disconnect(){}};gains.push(gain);return gain;},createBufferSource(){const source={connect(){},start(){this.started=true;},stop(){this.stopped=true;},disconnect(){this.disconnected=true;}};sources.push(source);return source;}};return {audio,outputs,sources,gains};}
 test('발소리·등장 효과음은 유한한 합성 파형이며 피크가 제한된다',()=>{
- for(const [kind,length,peak] of [['footstep',.24,.70],['jumpscare',.85,.85],['door-slide',1.05,.65],['baby-cry',1.7,.60],['ghost-laugh',1.85,.62]]){const data=effectSamples(kind,8000);assert.equal(data.length,Math.ceil(length*8000));assert.ok(data.every(Number.isFinite));assert.ok(Math.max(...data.map(Math.abs))<=peak+.00001);assert.ok(data.reduce((n,x)=>n+x*x,0)>.1);assert.equal(Math.abs(data[0]),0);}
+ for(const [kind,length,peak] of [['footstep',.24,.70],['jumpscare',.85,.85],['door-slide',1.05,.65],['baby-cry',1.7,.60],['ghost-laugh',1.85,.62],['cat-meow',1.55,.55]]){const data=effectSamples(kind,8000);assert.equal(data.length,Math.ceil(length*8000));assert.ok(data.every(Number.isFinite));assert.ok(Math.max(...data.map(Math.abs))<=peak+.00001);assert.ok(data.reduce((n,x)=>n+x*x,0)>.1);assert.equal(Math.abs(data[0]),0);}
  assert.notDeepEqual(effectSamples('footstep',8000,0),effectSamples('footstep',8000,1));
 });
 test('발소리 간격·좌우 음색, 등장 음향 모두 master 출력으로 연결된다',()=>{
@@ -14,7 +14,7 @@ test('음소거·음량 0·오디오 중단에서는 효과음을 재생하지 �
  const {audio,sources}=mockAudio();
  for(const mode of ['muted','zero','suspended']){
   audio.muted=mode==='muted';audio.volume=mode==='zero'?0:.5;audio.ctx.state=mode==='suspended'?'suspended':'running';
-  for(const method of ['footstep','jumpscare','doorSlide','babyCry','ghostLaugh'])assert.equal(audio[method](),false);
+  for(const method of ['footstep','jumpscare','doorSlide','babyCry','ghostLaugh','catMeow'])assert.equal(audio[method](),false);
  }
  assert.equal(sources.length,0);const unsupported=new SchoolAudio();assert.equal(unsupported.jumpscare(),false);assert.doesNotThrow(()=>unsupported.clearEffects());
 });
@@ -74,4 +74,13 @@ test('여자 웃음은 토끼 저음 포효와 구분되는 성대 음역과 여
  const rms=(a,b)=>Math.sqrt(laugh.slice(Math.floor(a*rate),Math.floor(b*rate)).reduce((sum,x)=>sum+x*x,0)/Math.floor((b-a)*rate));
  assert.ok(rms(.15,.25)>.02);assert.ok(rms(.82,.99)>.02);assert.ok(rms(1.43,1.55)>.02);
  assert.ok(rms(1.81,1.85)<rms(.82,.99));
+});
+test('고양이 울음은 여러 음색·부드러운 꼬리를 가지며 master 음량/정리를 따른다',()=>{
+ const rate=8000,meow=effectSamples('cat-meow',rate);
+ assert.notDeepEqual(meow,effectSamples('cat-meow',rate,1));assert.notDeepEqual(meow,effectSamples('baby-cry',rate));
+ assert.ok(meow.slice(2500,7000).some(x=>Math.abs(x)>.08));assert.ok(meow.slice(-400).every(x=>Math.abs(x)<.03));
+ const {audio,outputs,sources,gains}=mockAudio(),cues=[];audio.onEffect=kind=>cues.push(kind);
+ assert.equal(audio.catMeow(1),true);assert.equal(gains[0].gain.value,.16);assert.equal(outputs[0],audio.master);assert.deepEqual(cues,['cat-meow']);
+ const buffer=sources[0].buffer;sources[0].onended();assert.equal(audio.catMeow(1),true);assert.equal(sources[1].buffer,buffer);
+ audio.clearEffects();assert.equal(audio.effects.size,0);assert.equal(sources[1].stopped,true);
 });

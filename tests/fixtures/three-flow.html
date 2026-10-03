@@ -19,7 +19,7 @@ if(new URLSearchParams(location.search).has('facelessFail')){
  const src=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');
  Object.defineProperty(HTMLImageElement.prototype,'src',{...src,set(value){src.set.call(this,String(value).includes('faceless-student.png')?'/assets/intentional-missing-student.png':value);}});
 }
-await import('../../game.js?v=faceless-student-1');
+await import('../../game.js?v=windows-cat-3');
 // Preserve the first sound-clock draw and force the following exploration draw.
 // Then restore random before Three.js creates UUIDs or audio creates noise.
 // Capturing the real start/retry click runs before the ordinary game handler.
