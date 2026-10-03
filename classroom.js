@@ -9,7 +9,7 @@ import {facelessStudentQuad,drawFacelessStudent} from './faceless-student.js';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,windowPanes} from './school-windows.js';
 import {drawBlackCat} from './black-cat.js';
 import {buildSeatedGirl,seatedGirlLook,drawFigureVolume} from './ghost-figures.js?v=character-depth-6';
-import {boardCanvas,drawClassroomBoard} from './classroom-board.js?v=character-depth-6';
+import {boardCanvas,drawClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 const boards=new Map(),figures=new Map();
 function seatedGirl(){if(!figures.has('girl'))figures.set('girl',buildSeatedGirl());return figures.get('girl');}
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };

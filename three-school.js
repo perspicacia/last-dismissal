@@ -2,7 +2,7 @@ import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=character-depth-6';
 import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=character-depth-6';
-import {buildClassroomBoard} from './classroom-board.js?v=character-depth-6';
+import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,buildSchoolWindow,windowWood} from './school-windows.js';
 import {buildBlackCat,updateBlackCat} from './black-cat.js';
 import {catPose} from './cat-event.js';
@@ -14,7 +14,7 @@ import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
-import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=character-depth-6';
+import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=chalk-writing-1';
 
 import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 

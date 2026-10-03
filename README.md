@@ -60,6 +60,8 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 교실 금발 인형: 현재 탐색 플레이에서는 바닥에 누워 있는 장식이다. 이전 이상현상 기립 연출은 개발용 비교 화면에서 보존한다. [상세 조건](specs/classroom-doll.md).
 
+일반 교실 칠판은 로컬 Nanum Pen Script 손글씨에 분필 입자·불균일한 농담·작은 획 끊김·지우개 자국을 더한다. 반 이름과 당번 문구는 유지한다. 방별 고정 질감을 한 번 만들어 Three.js/Canvas가 공유하고 게임 난수는 소비하지 않는다. 서체 실패 시 시스템 서체로 표시한다. [글씨 명세](specs/chalkboard-writing.md), [서체 출처·라이선스](assets/fonts/README.md).
+
 학생 인형의 기본 2.5D 화면은 `doll-volume.js`에서 기존 사진의 XY·UV 비율을 보존하는 닫힌 메시로 만든다. 일반 게임과 기본 교실 비교에 사용하고, Canvas 호환은 기존 이미지를 렌더한다. [측면 왜곡 수정 명세](specs/student-doll-sides.md). 낮은 측면·후면에서 납작하게 보이는 구조적 한계는 남는다.
 
 개발용 GLB 비교는 `http://127.0.0.1:8080/tests/fixtures/room-review.html?model=glb`에서 명시적으로 선택한다. 일반 실행에서는 GLB를 자동 로딩/대체하지 않는다. `student-model.js`는 이 비교에서 로컬 `GLTFLoader`로 `assets/models/student-doll.glb`를 읽는다. 1.55m 정적 모델이며 실제 누운 경계로 바닥 높이를 계산한다. 원본보다 단순한 시안으로 리깅/새 표정은 없다. 자산에는 메시·PBR 재질·절차적 천/머리 무늬가 포함되며 추가 캐릭터 이미지는 생성하지 않았다.
