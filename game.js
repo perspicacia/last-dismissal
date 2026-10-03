@@ -59,7 +59,7 @@ function finish(){
  audio.clearEffects();hauntingAudio=newHauntingAudio();
  corridor.keys.clear();corridor.caughtAt=performance.now();corridor.mouthOpen=false;corridor.screamTriggered=false;updateUI();
  // Keep drawing the room-space lunge, but block movement and all actions.
- endingTimer=setTimeout(()=>{if(!state?.ended)return;corridor.setActive(false);audio.clearEffects();show('gameover');$('caught-result').textContent=`${ROOMS.find(r=>r.id===state.rabbitRoom).label}에 숨어 있었다. 다시 들어가면 다른 방에 있을 수도 있다.`;$('retry').focus();},ARRIVAL.end*1000);
+ endingTimer=setTimeout(()=>{if(!state?.ended)return;corridor.setActive(false);audio.clearEffects();show('gameover');$('retry').focus();},ARRIVAL.end*1000);
 }
 function interact(){
  if(!state||state.ended)return;
