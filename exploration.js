@@ -9,7 +9,7 @@ export function regularClassroom(kind){return ['classroom31','classroom','classr
 export const ROOM_AMBIENCE={
  classroom31:{student:{x:-2.5,y:.80,z:3.72,height:1.05}},
  music:{boy:{x:2.43,y:.525,z:7.35}},
- classroom33:{ghost:{x:-6.1,y:1.30,z:5.25,height:2.35}},
+ classroom33:{ghost:{x:-6.1,y:1.30,z:5.25,height:2.35},faceless:{x:3.55,z:9.35,height:1.7,angle:.42}},
  dance:{ghost:{x:-6.3,y:1.30,z:7.6,height:2.35}}
 };
 export const RABBIT_SPOT={x:0,z:6.8};

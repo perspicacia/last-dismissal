@@ -1,6 +1,6 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><title>3D 탐색 흐름 검증</title><body><p>검증 게임 준비 중…</p><script type="module">
 // Current real survival UI/controller; compat optionally forces Canvas fallback.
-const html=await fetch('../../index.html').then(r=>r.text());const page=new DOMParser().parseFromString(html,'text/html');page.querySelector('script[src^="game.js"]').remove();
+const html=await fetch('../../index.html',{cache:'no-store'}).then(r=>r.text());const page=new DOMParser().parseFromString(html,'text/html');page.querySelector('script[src^="game.js"]').remove();
 document.head.innerHTML='<base href="/">'+page.head.innerHTML;document.title='3D 탐색 흐름 검증';document.body.innerHTML=page.body.innerHTML;document.body.dataset.screen=page.body.dataset.screen;
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 // A failed optional character asset must never prevent entering/restarting.
@@ -15,7 +15,11 @@ if(new URLSearchParams(location.search).has('silent')){
   analyser.connect=destination=>{connect(sink);sink.connect(destination);return destination;};return analyser;
  };
 }
-await import('../../game.js?v=piano-boy-1');
+if(new URLSearchParams(location.search).has('facelessFail')){
+ const src=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');
+ Object.defineProperty(HTMLImageElement.prototype,'src',{...src,set(value){src.set.call(this,String(value).includes('faceless-student.png')?'/assets/intentional-missing-student.png':value);}});
+}
+await import('../../game.js?v=faceless-student-1');
 // Preserve the first sound-clock draw and force the following exploration draw.
 // Then restore random before Three.js creates UUIDs or audio creates noise.
 // Capturing the real start/retry click runs before the ordinary game handler.

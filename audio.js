@@ -3,6 +3,7 @@ import {loadRecordedEffects} from './recorded-effects.js?v=reference-audio-1';
 export class SchoolAudio {
   constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.recordedBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
   async start() {
+    const request=this.request=(this.request||0)+1;this.requested=true;
     const Audio = window.AudioContext || window.webkitAudioContext;
     if (!Audio) throw new Error('이 브라우저는 오디오 재생을 지원하지 않습니다.');
     if (!this.ctx) {
@@ -42,7 +43,9 @@ export class SchoolAudio {
     }
     this.ambient.gain.cancelScheduledValues(this.ctx.currentTime);
     this.ambient.gain.setTargetAtTime(.7, this.ctx.currentTime, .2);
-    await this.ctx.resume(); this.update();
+    await this.ctx.resume();
+    if(request!==this.request){if(!this.requested)await this.ctx.suspend();return;}
+    this.update();
     await this.loadEffectFiles();
   }
   loadEffectFiles(fetcher = globalThis.fetch) {
@@ -114,5 +117,5 @@ export class SchoolAudio {
   inspect() { this.tone(220,.15,.045); }
   result(correct) { if (correct) this.tone(440,.65,.09); else {this.tone(65,.8,.13); this.tone(69,.8,.1);} }
   end() { if (this.ctx) this.ambient.gain.setTargetAtTime(.12,this.ctx.currentTime,1); [261.6,329.6,392].forEach((f,i)=>this.tone(f,2,.08,i*.3)); }
-  async stop() { this.clearEffects(); if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; this.ambient.gain.cancelScheduledValues(this.ctx.currentTime); this.ambient.gain.value = .7; await this.ctx.suspend(); } }
+  async stop() { this.request=(this.request||0)+1;this.requested=false;this.clearEffects(); if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; this.ambient.gain.cancelScheduledValues(this.ctx.currentTime); this.ambient.gain.value = .7; await this.ctx.suspend(); } }
 }

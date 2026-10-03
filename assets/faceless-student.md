@@ -1,0 +1,11 @@
+# 얼굴 없는 교복 학생
+
+- 2026-10-03 사용자 요청으로 신규 캐릭터 한 개를 내장 image_gen 도구에서 제작했다. 기존 캐릭터 이미지는 변경하지 않았다.
+- 원본: `/Users/perspicacia/.codex/generated_images/01a0f669-ef7c-7ec3-86a8-aa865954cf4c/exec-e83c95a9-b5a1-4682-9a00-d6f820fb8e05.png`.
+- 게임 자산: `assets/faceless-student.png`, 1024×1536 RGBA, 바깥 모서리 알파 0. 원본을 수정 없이 복사했다. 알파 > 64의 실루엣 경계 `(316,11)–(709,1498)`를 기준으로 발끝을 바닥 2.5cm에 맞춘다. Three.js 알파 컷오프 .25는 낮은 알파의 제작 배경 헤이즈를 제외한다.
+- 낡은 회색 교복·짧은 검은 머리·눈/코/입 없는 매끈한 도자기 얼굴. 3-3 안쪽 칠판 옆 오른쪽 구석에서 교실 중앙을 바라보는 정적 분위기 귀신이다. 공격/새 소리는 없다. 이미지 평면 기반으로 완전한 관절형 3D 모델은 아니다.
+- 명세: [specs/faceless-student-upgrade.md](../specs/faceless-student-upgrade.md).
+
+## 최종 생성 프롬프트
+
+Use case: stylized-concept. Asset type: one original transparent full-body ghost character sprite for LAST DISMISSAL, a realistic night-school doll horror game. Create ONE tall slender teenage schoolboy-shaped porcelain mannequin/ghost standing perfectly upright, facing the viewer. Short tousled black hair above a completely smooth pale ivory face with NO eyes, NO nose, NO mouth, no holes and no mask straps. Subtle porcelain scuffs and fine hair fibers, tactile realistic materials matching vintage haunted dolls, no glow. Worn dark charcoal-gray Korean-style school uniform blazer, slightly faded cream shirt, loosely hanging thin dark tie, tailored long gray trousers, old black school shoes. Both arms hang loosely at the sides, all fingers anatomically clean, one shoulder slightly dropped; the quiet blank face is the frightening feature. Natural lifelike body proportions, full height from hair to soles completely visible, centered with modest transparent margins, roughly 1024x1536 portrait composition. Front view with both shoes resting on the same implied horizontal floor line; subject alone, no actual floor, no chair, no furniture, no background shadow. Low-key neutral studio illumination with restrained cool overhead light and enough clarity to composite into a dark green school classroom. True transparent alpha background. Original ghost, no copyrighted movie character, no logos or text, no blood/gore/injury, no huge head, no extra character, no extra props, no comparison sheet. Preserve a crisp complete silhouette and a smooth rounded three-dimensional head, not a flat painted cutout.

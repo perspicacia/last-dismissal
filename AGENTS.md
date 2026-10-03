@@ -8,8 +8,9 @@
 - 현재 탐색 플레이의 공격자는 토끼다. 학생 인형은 정적인 장식이며 창밖 귀신은 근접 미소를 보이는 분위기 요소다. 교실 연출·음향은 [specs/classroom-hauntings.md](specs/classroom-hauntings.md)를 따른다. 이전 학생 인형의 기립 조건은 [specs/classroom-doll.md](specs/classroom-doll.md)를 따른다. 음향은 음소거 상태에서도 판정할 수 있게 유지한다.
 - 완료 보고에는 변경 내용, 실행한 검증, 결과, 미확인 사항을 포함한다. 테스트 통과와 실제 플레이 확인을 구분한다.
 - 작업 후 [docs/progress.md](docs/progress.md)에 완료한 일, 검증 결과, 미확인 사항과 다음 작은 작업을 기록한다.
-- 음악실 소품·악보 방향·귀신 미소/웃음·임시 시작 화면은 [specs/music-ghost-polish.md](specs/music-ghost-polish.md)를 따른다. 기존 캐릭터 PNG는 보존하고 코드 기반 도형·음향을 사용한다.
+- 음악실 소품·악보 방향·귀신 미소/웃음은 [specs/music-ghost-polish.md](specs/music-ghost-polish.md), 첫 화면은 [specs/horror-title-screen.md](specs/horror-title-screen.md)를 따른다. 기존 캐릭터 PNG는 보존하고 코드 기반 도형·음향을 사용한다.
 - 음악실 의자는 [specs/piano-boy-ghost.md](specs/piano-boy-ghost.md)의 정적인 어린 남자아이 귀신이다. 신규 이미지 제작은 사용자 요청으로 승인되었으며 공격/게임 오버 판정을 추가하지 않는다.
+- 3-3 칠판 옆 얼굴 없는 학생은 [specs/faceless-student-upgrade.md](specs/faceless-student-upgrade.md)를 따른다. 사용자가 이번 신규 캐릭터의 디자인/제작/배치를 위임했으며 기존 캐릭터 이미지 제작 중단은 유지한다. 첫 화면에는 다섯 귀신을 포함한다.
 - 학생 인형 측면·이미지 로딩의 최신 규칙은 [specs/student-doll-sides.md](specs/student-doll-sides.md)를 따른다. 과거의 완전 평면 앞면 규칙은 최신 완만한 곡면 연결로 대체한다.
 - 학생 인형 외형의 최신 채택 기준은 [specs/student-doll-original-look.md](specs/student-doll-original-look.md)다. 일반 게임은 원본 PNG 기반 외형을 유지하고 단순 GLB 시안은 명시한 개발용 비교에서만 사용한다. 후속 3D 모델은 원본과 닮은 외형을 사용자에게 먼저 검토받는다.
 - 문·토끼 비명은 [specs/reference-horror-audio.md](specs/reference-horror-audio.md)의 로컬 녹음 편집본을 우선 사용한다. 기존 코드 기반 음향 규칙에서 이 두 효과음만 대체하며 나머지 합성음·실패 시 대체음은 유지한다. 출처는 [assets/audio/README.md](assets/audio/README.md)를 확인한다.
