@@ -1,14 +1,56 @@
 import * as THREE from './vendor/three.module.js';
 export const CLASSROOM_BOARD=Object.freeze({x:-.2,y:1.80,z:9.64,width:5.40,height:1.55,depth:.12});
 export function boardWriting(kind){return [kind==='classroom31'?'3학년 1반':kind==='classroom33'?'3학년 3반':'3학년 2반','오늘의 당번','민서 · 지우','칠판과 창문 정리'];}
+// Resolve the local Korean handwriting before any cached board is built.
+// A missing font falls back to the system without blocking game initialization.
+let chalkFont='cursive';
+if(typeof FontFace==='function'&&typeof document!=='undefined'&&document.fonts){
+ try{const font=new FontFace('SchoolChalk',`url("${new URL('./assets/fonts/NanumPenScript-Regular.ttf',import.meta.url).href}")`);await font.load();document.fonts.add(font);chalkFont='"SchoolChalk", cursive';}catch{/* Optional appearance asset; keep the system fallback. */}
+}
+function boardRandom(kind){
+ let seed=[...kind].reduce((n,char)=>Math.imul(n,31)+char.charCodeAt(0),137)>>>0;
+ // Do not consume gameplay's Math.random when making decorative textures.
+ return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+}
+function chalkText(c,text,x,y,size,random,angle=0){
+ const layer=document.createElement('canvas'),ink=layer.getContext('2d');ink.font=`${size}px ${chalkFont}`;
+ const width=ink.measureText(text)?.width??size*text.length;
+ layer.width=Math.ceil(width)+24;layer.height=Math.ceil(size*1.4);
+ ink.font=`${size}px ${chalkFont}`;ink.fillStyle='#e1e4d5';ink.fillText(text,12,size);
+ const pixels=ink.getImageData(0,0,layer.width,layer.height);
+ if(pixels?.data){
+  const data=pixels.data;
+  for(let py=0;py<layer.height;py++)for(let px=0;px<layer.width;px++){
+   const a=(py*layer.width+px)*4+3;if(!data[a])continue;
+   const pressure=.84+.16*Math.sin(px*.09+Math.sin(py*.15)*2),grain=.42+.58*random();
+   data[a]=Math.round(data[a]*pressure*grain*(random()<.075?.12:1));
+  }
+  ink.putImageData(pixels,0,0);
+ }
+ c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha=.13;c.shadowColor='#e1e4d5';c.shadowBlur=3;
+ c.drawImage(layer,-12,-size);c.shadowBlur=0;c.globalAlpha=1;c.drawImage(layer,-12,-size);c.restore();
+}
 export function boardCanvas(kind){
  const canvas=document.createElement('canvas');canvas.width=1536;canvas.height=420;const c=canvas.getContext('2d');
+ const random=boardRandom(kind);
  c.fillStyle='#17463e';c.fillRect(0,0,1536,420);
- for(let i=0;i<95;i++){c.fillStyle=i%3?'#b7cfb505':'#081c1907';c.fillRect((i*181)%1536,(i*47)%420,80+i%180,2+i%7);}
- c.strokeStyle='#c8dcc51b';c.lineWidth=9;for(let i=0;i<18;i++){c.beginPath();c.moveTo(210+i*43,110+(i%4)*26);c.lineTo(410+i*41,105+(i%4)*26);c.stroke();}
- const [room,duty,names,task]=boardWriting(kind);c.fillStyle='#d1d9c2';c.font='38px cursive';c.fillText(room,58,62);c.font='26px cursive';c.fillText('10월 4일',61,111);
- c.font='36px cursive';c.fillText(duty,1130,69);c.font='30px cursive';c.fillText(names,1140,119);c.font='23px cursive';c.fillText(task,1130,163);
- c.strokeStyle='#b7cbb6a0';c.lineWidth=2;c.beginPath();c.moveTo(1126,80);c.lineTo(1374,82);c.stroke();return canvas;
+ c.save();c.lineCap='round';
+ for(let i=0;i<34;i++){
+  const x=70+random()*1240,y=35+random()*340;
+  c.globalAlpha=.013+random()*.018;c.strokeStyle='#b3c9b8';c.lineWidth=15+random()*35;
+  c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+65,y-18+random()*36,x+110+random()*170,y-16+random()*32);c.stroke();
+ }
+ for(let i=0;i<14000;i++){
+  c.fillStyle=i%3?'#bdcbb9':'#041e1b';c.globalAlpha=.018+random()*.05;
+  c.fillRect(random()*1536,random()*420,.45+random()*1.4,.45+random()*1.4);
+ }
+ c.restore();
+ const [room,duty,names,task]=boardWriting(kind);
+ chalkText(c,room,60,83,64,random,-.009);chalkText(c,'10월 4일',66,142,48,random,.014);
+ chalkText(c,duty,1080,89,64,random,-.018);chalkText(c,names,1098,153,54,random,.008);chalkText(c,task,1086,209,42,random,-.007);
+ c.save();c.strokeStyle='#d1dac5';c.lineCap='round';
+ for(let i=0;i<84;i++){const x=1082+i*3.1;c.globalAlpha=.35+random()*.45;c.lineWidth=1.3+random()*1.1;c.beginPath();c.moveTo(x,102+Math.sin(i*.06)*1.6);c.lineTo(x+2.9,102+Math.sin((i+1)*.06)*1.6);c.stroke();}
+ c.restore();return canvas;
 }
 function box(g,name,p,size,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),mat);m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;g.add(m);return m;}
 export function buildClassroomBoard(kind){

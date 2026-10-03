@@ -1,6 +1,6 @@
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
 import {SchoolAudio} from './audio.js?v=character-depth-6';
-import {Corridor} from './corridor.js?v=character-depth-6';
+import {Corridor} from './corridor.js?v=chalk-writing-1';
 import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=character-depth-6';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
