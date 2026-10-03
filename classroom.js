@@ -1,13 +1,17 @@
-import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=windows-cat-3';
+import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=character-depth-6';
 import {ROOM_HAUNTINGS,windowGaze,bouncePose,ghostSmileAmount} from './room-hauntings.js';
 import {drawGhostSmile} from './ghost-smile-shape.js';
 import {DOLL, dollRise} from './doll-event.js';
 import { classroomWindowColumn } from './campus-view.js';
-import { drawSceneDepth } from './scene-depth.js?v=windows-cat-3';
+import { drawSceneDepth } from './scene-depth.js?v=character-depth-6';
 import {pianoBoyQuad,drawPianoBoy,pianoBoyLook} from './piano-boy.js';
 import {facelessStudentQuad,drawFacelessStudent} from './faceless-student.js';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,windowPanes} from './school-windows.js';
 import {drawBlackCat} from './black-cat.js';
+import {buildSeatedGirl,seatedGirlLook,drawFigureVolume} from './ghost-figures.js?v=character-depth-6';
+import {boardCanvas,drawClassroomBoard} from './classroom-board.js?v=character-depth-6';
+const boards=new Map(),figures=new Map();
+function seatedGirl(){if(!figures.has('girl'))figures.set('girl',buildSeatedGirl());return figures.get('girl');}
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
 export const CLASSROOM_TEACHER_DESK = { x: -.5, z: 8.7, width: 2, depth: .65, height: .72 };
 export const CLASSROOM_DESKS = [-2.5, 1.2, 2.8].flatMap(x => [3.2, 5, 6.8].map(z => ({x,z,width:1.1,depth:.65,height:.76})));
@@ -26,7 +30,7 @@ export function moveClassroomPlayer(player, keys, dt, blockers=null, extraBlocke
 
 // Geometry uses the same world units as movement; desks cannot be walked through.
 export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classroom') {
-  const lens=w*.68,horizon=h*.48+pianoBoyLook(p,doll?.boy,ROOM_AMBIENCE[kind]?.boy)*lens;
+  const lens=w*.68,horizon=h*.48+(kind==='classroom'?seatedGirlLook(p):pianoBoyLook(p,doll?.boy,ROOM_AMBIENCE[kind]?.boy))*lens;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
   c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
   // Perspective wooden boards, knots and faint cold window reflections.
@@ -40,7 +44,6 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
       if([bay.start,bay.end,(bay.start+bay.end)/2].some(z=>Math.abs(wz-z)<rail/2))drawBand(from,to,'#91663d');
       for(const y of [sill,transom,wt])drawBand((3-y-rail/2)/3,(3-y+rail/2)/3,'#a17748');drawBand(to,to+.032,'#b18752');
       if(Math.abs(wz-((bay.start+bay.end)/2+.115))<.018)drawBand((3-1.53)/3,(3-1.35)/3,'#777265');}
-    if(!side&&dz>0&&wx>-3.2&&wx<2.8){drawBand(.18,.53,'#bdb6a0');drawBand(.2,.505,'#123631');drawBand(.50,.53,'#817256');if(wx>-.8&&wx<1.2)drawBand(.32,.326,'#9dad99');}
     if(!side&&dz<0){if(wx<-2.7){drawBand(.23,.92,'#6e7561');if((wx+4.4)%.55<.035)drawBand(.23,.92,'#354637');drawBand(.49,.51,'#394b3c');drawBand(.72,.74,'#394b3c');}if(wx>-.75&&wx<.75){drawBand(.13,1,'#76654d');drawBand(.18,.44,'#112b39');drawBand(.6,.62,'#b7b29b');}}
     c.fillStyle=`rgba(0,8,18,${Math.min(.7,depth*.045)})`;c.fillRect(sx,top,3,height);
   }
@@ -53,7 +56,9 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
   if(ball){const watching=active&&!reduced&&windowGaze(p,ball);if(watching)haunting.ballTime+=dt;const pose=bouncePose(haunting.ballTime,{...ball,reduced}),pos=project(ball.x,pose.height,ball.z);if(pos){c.save();clipWindows();const r=ball.radius*lens/pos.d;c.fillStyle='#93613c';c.beginPath();c.arc(pos.x,pos.y,r,0,Math.PI*2);c.fill();c.strokeStyle='#261d17';c.lineWidth=Math.max(1,r*.04);c.stroke();c.beginPath();c.ellipse(pos.x,pos.y,r*.44,r,pose.rotation,0,Math.PI*2);c.stroke();c.restore();}haunting.ballActive=watching;haunting.ballHeight=pose.height;}
   const ghost=ROOM_AMBIENCE[kind]?.ghost;
   if(ghost&&doll?.ghost?.naturalWidth){const pos=project(ghost.x,ghost.y,ghost.z),target=ghostSmileAmount(p,ghost,{active});haunting.smile=active?(reduced?target:haunting.smile+(target-haunting.smile)*(1-Math.exp(-dt*5))):0;if(pos){const height=ghost.height*lens/pos.d,width=height*2/3;c.save();clipWindows();c.translate(pos.x,pos.y);c.rotate(-haunting.smile*.12);c.drawImage(doll.ghost,-width/2,-height/2,width,height);if(haunting.smile>.02){c.globalAlpha=haunting.smile;c.translate(width*.006,height*(.173-.5));c.scale(height*(.5+haunting.smile*.22),height*(.22+haunting.smile*.44));drawGhostSmile(c);}c.restore();}}
+  if(regularClassroom(kind)){if(!boards.has(kind))boards.set(kind,boardCanvas(kind));drawClassroomBoard(c,project,boards.get(kind));}
   const faces=[];
+  if(kind==='classroom'){const girl=seatedGirl(),center=project(girl.position.x,.8,girl.position.z);if(center)faces.push({d:center.d,draw:()=>drawFigureVolume(c,project,girl)});}
   if(doll?.cat){const pos=project(doll.cat.x,doll.cat.y+.25,doll.cat.z);if(pos)faces.push({d:pos.d,draw:()=>drawBlackCat(c,project,doll.cat)});}
   const polygon=(vertices,color)=>{const pts=vertices.map(v=>project(...v));if(pts.every(Boolean))faces.push({pts,color,d:pts.reduce((s,v)=>s+v.d,0)/pts.length});};
   const box=(x,y,z,width,height,depth,colors)=>{const l=x-width/2,r=x+width/2,n=z-depth/2,f=z+depth/2,t=y+height;polygon([[l,t,n],[r,t,n],[r,t,f],[l,t,f]],colors[0]);polygon([[l,y,n],[r,y,n],[r,t,n],[l,t,n]],colors[1]);polygon([[l,y,f],[r,y,f],[r,t,f],[l,t,f]],colors[1]);polygon([[l,y,n],[l,y,f],[l,t,f],[l,t,n]],colors[2]);polygon([[r,y,n],[r,y,f],[r,t,f],[r,t,n]],colors[2]);};
