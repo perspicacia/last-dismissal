@@ -73,3 +73,16 @@ body[data-screen="intro"] :is(button,input):focus-visible{outline:2px solid #ffe
   .poster-ghost{--height:110%;--top:15%}.poster-doll{--height:126%;--top:10%}
   .poster-boy{--height:104%;--top:21%}.poster-rabbit{--height:135%;--top:-7%}
 }
+
+/* A dedicated loss screen, separate from the opening poster and old ending. */
+body[data-screen="gameover"]{--accent:#efded2;--line:#88554f;background:#030406}
+body[data-screen="gameover"] main{max-width:none;padding:0}
+body[data-screen="gameover"] header{display:none}
+#gameover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;min-height:100svh;padding:32px 24px;text-align:center;background:radial-gradient(ellipse at 50% 43%,#47121966,transparent 60%),#030406}
+#game-over-title{font:400 clamp(64px,10.5vw,144px)/1.08 Lacquer,'Impact','Arial Black',sans-serif;letter-spacing:.02em;margin:0;color:#efe0d6;text-shadow:0 3px 0 #611b23,0 0 48px #8a22252b}
+#gameover .primary{min-width:240px;max-width:100%;min-height:54px;padding:13px 28px;border-color:#98665d;background:#261014;color:#f4e6db;letter-spacing:.04em;box-shadow:0 0 28px #761f2422}
+#gameover .primary:hover{background:#58212a;border-color:#c99d8d;color:#fff3e8}
+#gameover .primary:active{background:#73303b}
+#gameover .primary:focus-visible{outline:2px solid #ffe7c1;outline-offset:6px}
+@media(max-width:520px){#gameover{gap:28px;padding:24px 18px}#game-over-title{font-size:clamp(56px,19vw,92px)}#game-over-title span{display:block}}
+@media(max-height:420px){#gameover{gap:22px;padding-block:20px}#game-over-title{font-size:clamp(48px,18svh,76px)}}
