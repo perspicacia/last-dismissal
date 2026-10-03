@@ -1,4 +1,4 @@
-import {effectSamples} from './sound-effects.js?v=music-ghost-polish-1';
+import {effectSamples} from './sound-effects.js?v=windows-cat-3';
 import {loadRecordedEffects} from './recorded-effects.js?v=reference-audio-1';
 export class SchoolAudio {
   constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.recordedBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
@@ -97,6 +97,7 @@ export class SchoolAudio {
   doorSlide(){return this.playEffect('door-slide',.27);}
   babyCry(){return this.playEffect('baby-cry',.14);}
   ghostLaugh(){return this.playEffect('ghost-laugh',.24);}
+  catMeow(variant=0){return this.playEffect('cat-meow',.16,variant);}
   clearEffects(){
     for(const {source,gain} of this.effects){source.onended=null;source.stop();source.disconnect();gain.disconnect();}
     this.effects.clear();this.lastStep=-Infinity;this.foot=0;

@@ -7,6 +7,18 @@ import {ROOM_AMBIENCE} from '../exploration.js';
 import {pianoBoyLayout} from '../piano-boy.js';
 function mockCanvas(){const gradient={addColorStop(){}};const ctx=new Proxy({}, {get:(_,k)=>()=>String(k).startsWith('create')?gradient:undefined,set:()=>true});return {width:512,height:512,getContext:()=>ctx};}
 function buildView(){const old=globalThis.document;globalThis.document={createElement:mockCanvas};try{const v=Object.create(ThreeSchoolView.prototype);v.scenes={};v.refs={};v.textures=[];v.build('corridor');v.build('classroom');return v;}finally{globalThis.document=old;}}
+test('다섯 교실의 목재창과 장면별 한 마리 고양이는 재방문/종료 때 중복·잔상 없이 갱신한다',()=>{
+ const v=buildView(),oldDocument=globalThis.document,oldWindow=globalThis.window;
+ globalThis.document={createElement:mockCanvas};try{for(const id of ['classroom31','classroom33','music','dance'])v.build(id);}finally{globalThis.document=oldDocument;}
+ for(const id of ['classroom','classroom31','classroom33','music','dance']){let count=0;v.scenes[id].traverse(m=>{if(m.name==='wooden-classroom-window')count++;});assert.equal(count,5);}
+ assert.equal(v.scenes.corridor.getObjectByName('wooden-classroom-window'),undefined);
+ assert.equal(Object.keys(v.refs.cats).length,6);
+ globalThis.window={matchMedia:()=>({matches:false})};v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};v.syncTextures=()=>{};
+ const source={scene:'classroom31',anomaly:null,mouthOpen:false,player:{x:0,z:1.4,angle:0},keys:new Set(),exploration:{ended:false},catEvent:{cat:{path:{from:{x:-1.3,z:5.6},to:{x:0,z:5.6}},elapsed:.8}}};
+ try{v.draw(source,0);assert.equal(v.refs.cats.classroom31.visible,true);assert.ok(Object.entries(v.refs.cats).filter(([id])=>id!=='classroom31').every(([,cat])=>!cat.visible));const model=v.refs.cats.classroom31;
+  source.exploration.ended=true;v.draw(source,50);assert.ok(Object.values(v.refs.cats).every(cat=>!cat.visible));source.catEvent.cat=null;source.exploration.ended=false;v.draw(source,100);assert.equal(v.refs.cats.classroom31,model);assert.equal(model.visible,false);
+ }finally{globalThis.window=oldWindow;}
+});
 test('복도 소등은 해당 광원과 발광 표면만 바꾸고 교실·게임 상태를 보존한다',()=>{
  const v=buildView(),source={canvas:{dataset:{}},scene:'corridor',exploration:{ended:false}};v.source=source;
  assert.equal(new Set(v.refs.corridorLamps.map(l=>l.bulb.material)).size,5);

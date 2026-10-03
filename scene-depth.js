@@ -1,4 +1,5 @@
 import {CORRIDOR_LAMPS} from './school-lighting.js';
+import {SCHOOL_WINDOW,CLASSROOM_WINDOWS} from './school-windows.js';
 export function drawSceneDepth(c,project,player,{classroom=false,lampLevels=null}={}) {
   const faces=[];
   const polygon=(vertices,color)=>{const p=vertices.map(v=>project(...v));if(p.every(Boolean))faces.push({p,color,d:p.reduce((s,a)=>s+a.d,0)/p.length});};
@@ -16,7 +17,20 @@ export function drawSceneDepth(c,project,player,{classroom=false,lampLevels=null
     box(side*(classroom?4.395:2.995),y0-.16,(z0+z1)/2,.015,.04,length+.25,['#19372a88','#102a2388','#102a2388']);
   };
   if(classroom){
-    for(let z=1.8;z<8.9;z+=1.45)frame(-1,z+.04,z+1.40,.82,2.49,['#789184','#31564f','#52756b']);
+    const {wallX:x,sill,top,transom,rail}=SCHOOL_WINDOW,wood=['#b18752','#755032','#92663e'],edge=['#745030','#48311f','#5e4129'];
+    for(const {start,end} of CLASSROOM_WINDOWS){
+      const middle=(start+end)/2,height=top-sill;
+      for(const z of [start,end])box(x+.015,sill-.045,z,.24,height+.09,rail+.025,wood);
+      for(const y of [sill,top])box(x+.015,y-(rail+.025)/2,middle,.24,rail+.025,end-start+.10,wood);
+      box(x+.025,transom-rail/2,middle,.22,rail,end-start,wood);
+      box(x+.055,sill,middle,.18,height,rail,wood);
+      for(const side of [-1,1]){const a=side<0?start:middle,b=side<0?middle:end,sx=x+(side<0?.06:.02);
+        for(const y of [sill+.09,top-.08])box(sx+.06,y-.011,(a+b)/2,.025,.022,b-a-.10,edge);
+        box(sx+.08,1.35,middle+side*.115,.025,.18,.035,['#878274','#514e46','#6d695d']);
+      }
+      box(x+.12,sill-.0925,middle,.46,.075,end-start+.20,wood);
+      box(x+.348,sill-.113,middle,.016,.026,end-start+.18,edge);
+    }
   } else {
     for(const start of [4,6,12,14])if(Math.abs(player.z-(start+1))<9)frame(1,start+.16,start+1.84,.82,2.57,['#789184','#284e49','#547469']);
     for(const start of [4,14])if(Math.abs(player.z-(start+1))<9)frame(-1,start+.24,start+1.76,.02,2.61,['#a28b68','#4a4636','#796a50']);

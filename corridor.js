@@ -1,17 +1,19 @@
-import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=faceless-student-1';
+import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=windows-cat-3';
 import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=faceless-student-1';
+import { ThreeSchoolView } from './three-school.js?v=windows-cat-3';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js';
 import { drawClockFace, drawWallClock } from './clock.js';
-import { drawSceneDepth } from './scene-depth.js?v=horror-lighting-1';
+import { drawSceneDepth } from './scene-depth.js?v=windows-cat-3';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=faceless-student-1';
+import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=windows-cat-3';
 import {ROOM_BLOCKERS} from './room-props.js';
+import {newCatEvent,advanceCatEvent,catPose} from './cat-event.js';
+import {drawBlackCat} from './black-cat.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
@@ -61,11 +63,25 @@ export class Corridor {
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
-  enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
-  leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
+  enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN};this.keys.clear();this.resetCat();this.notify();}
+  leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.resetCat();this.notify();}
   move(keys,dt) {const blocker=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene],blocker?[blocker]:[]):movePlayer(this.player,keys,dt);}
-  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
-  setActive(value) {this.active=value;this.keys.clear();}
+  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.catCount=0;this.resetCat();this.buildTextures();this.notify();}
+  setActive(value) {this.active=value;this.keys.clear();if(!value)this.resetCat();}
+  resetCat(){this.catEvent=newCatEvent();if(this.canvas)Object.assign(this.canvas.dataset,{catVisible:'false',catCount:String(this.catCount||0),catHeight:'0'});for(const cat of Object.values(this.view3D?.refs.cats||{}))cat.visible=false;}
+  catBlockers(){
+    if(this.scene==='corridor')return [{x:2,z:3.2,width:1.1,depth:.7}];
+    const props=ROOM_BLOCKERS[this.scene]||[...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK,...CLASSROOM_DESKS.map(d=>({x:d.x,z:d.z-.72,width:.55,depth:.5}))];
+    const extra=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);
+    return [...props,...(extra?[extra]:[]),...(this.scene==='classroom'?[{x:DOLL.x,z:DOLL.z-.75,width:.85,depth:1.6},{x:3.72,z:1.05,width:.65,depth:.6}]:[])];
+  }
+  updateCat(dt){
+    const event=advanceCatEvent(this.catEvent??newCatEvent(),dt,{scene:this.scene,player:this.player,blockers:this.catBlockers(),ended:!this.exploration||this.exploration.ended});this.catEvent=event.state;
+    if(event.appeared)this.catCount=(this.catCount||0)+1;
+    if(event.meow)this.onCatCue?.(event.variant);
+    const pose=catPose(this.catEvent,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    Object.assign(this.canvas.dataset,{catVisible:String(Boolean(pose)),catCount:String(this.catCount||0),catHeight:(pose?.y||0).toFixed(3)});
+  }
   nudge(action) {
     if(!this.active||this.caughtAt!=null) return;
     const before=this.player;this.player=this.move(new Set([action]),.05);this.steps+=Math.hypot(this.player.x-before.x,this.player.z-before.z);if(this.steps>.95){this.steps=0;this.onStep();}this.notify();
@@ -172,7 +188,7 @@ export class Corridor {
       const before=this.player;if(this.caughtAt==null)this.player=this.move(this.keys,dt);
       const distance=Math.hypot(this.player.x-before.x,this.player.z-before.z);this.steps+=distance;
       if(this.steps>.95){this.steps=0;this.onStep();}
-      this.updateDoll(dt);this.onTick?.(dt);this.notify();this.draw(time);
+      this.updateDoll(dt);this.onTick?.(dt);this.updateCat(dt);this.notify();this.draw(time);
     }
     requestAnimationFrame(t=>this.frame(t));
   }
@@ -196,7 +212,8 @@ export class Corridor {
     this.lighting??=new SchoolLighting();
     const levels=this.lighting.update(time,{active:this.scene==='corridor'&&!this.exploration?.ended,reduced:reduce});recordLighting(this.canvas,levels);
     this.updateExterior(time);
-    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,faceless:this.facelessStudent,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
+    const cat=catPose(this.catEvent,reduce);
+    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,faceless:this.facelessStudent,cat,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
@@ -262,6 +279,7 @@ export class Corridor {
       }
       c.restore();
     }
+    if(cat)drawBlackCat(c,project,cat);
     const shade=c.createRadialGradient(w/2,h/2,w*.12,w/2,h/2,w*.7);shade.addColorStop(0,'transparent');shade.addColorStop(1,'#020a07bb');c.fillStyle=shade;c.fillRect(0,0,w,h);
     shadeCanvasSchool(c,w,h,levels,p);
   }
