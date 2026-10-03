@@ -1,15 +1,16 @@
-import {ROOMS} from './exploration.js?v=piano-boy-1';
+import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=faceless-student-1';
+import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=piano-boy-1';
+import { ThreeSchoolView } from './three-school.js?v=faceless-student-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=horror-lighting-1';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=piano-boy-1';
+import { CLASSROOM_SPAWN, moveClassroomPlayer, drawClassroom } from './classroom.js?v=faceless-student-1';
 import {ROOM_BLOCKERS} from './room-props.js';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
 
@@ -25,6 +26,10 @@ export class Corridor {
     this.pianoBoy.onload=()=>{this.canvas.dataset.pianoBoyStatus='ready';this.view3D?.syncTextures(this);};
     this.pianoBoy.onerror=()=>{this.canvas.dataset.pianoBoyStatus='unavailable';this.view3D?.syncTextures(this);};
     this.pianoBoy.src=new URL('./assets/piano-boy-ghost.png',import.meta.url).href;
+    this.facelessStudent=new Image();this.canvas.dataset.facelessStudentStatus='loading';
+    this.facelessStudent.onload=()=>{this.canvas.dataset.facelessStudentStatus='ready';this.view3D?.syncTextures(this);};
+    this.facelessStudent.onerror=()=>{this.canvas.dataset.facelessStudentStatus='unavailable';this.view3D?.syncTextures(this);};
+    this.facelessStudent.src=new URL('./assets/faceless-student.png',import.meta.url).href;
     this.mascot = new Image();
     this.mascot.src = new URL('./assets/mascot-rabbit.png', import.meta.url).href;
     this.mascotOpen = new Image();
@@ -45,7 +50,7 @@ export class Corridor {
         console.warn('3D 화면 초기화 실패, Canvas 호환 화면으로 전환합니다.',error);
         const fallback=canvas.cloneNode();canvas.replaceWith(fallback);canvas=fallback;this.canvas=fallback;
         this.use3D=false;this.view3D=null;this.ctx=fallback.getContext('2d');fallback.dataset.rendererReady='canvas';
-        const intro=document.getElementById('intro');if(intro){const notice=document.createElement('p');notice.textContent='이 환경에서는 3D 대신 호환 화면으로 실행합니다.';intro.append(notice);}
+        const intro=document.getElementById('intro');if(intro){const notice=document.createElement('p');notice.className='compat-notice';notice.textContent='호환 화면으로 실행합니다.';(intro.querySelector('.intro-content')||intro).append(notice);}
       }
     }
     this.resize();
@@ -58,7 +63,7 @@ export class Corridor {
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
   enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN};this.keys.clear();this.notify();}
   leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.notify();}
-  move(keys,dt) {return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene]):movePlayer(this.player,keys,dt);}
+  move(keys,dt) {const blocker=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene],blocker?[blocker]:[]):movePlayer(this.player,keys,dt);}
   reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.buildTextures();this.notify();}
   setActive(value) {this.active=value;this.keys.clear();}
   nudge(action) {
@@ -191,7 +196,7 @@ export class Corridor {
     this.lighting??=new SchoolLighting();
     const levels=this.lighting.update(time,{active:this.scene==='corridor'&&!this.exploration?.ended,reduced:reduce});recordLighting(this.canvas,levels);
     this.updateExterior(time);
-    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
+    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,faceless:this.facelessStudent,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
     const horizon=h*.48+bob, lens=w*.68;
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);

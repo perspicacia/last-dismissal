@@ -29,6 +29,8 @@ body[data-screen="intro"] .brand{display:none}
 .poster-figure{position:absolute;left:var(--left);top:var(--top);height:var(--height);aspect-ratio:2/3;margin:0;transform:translateX(-50%) rotate(var(--tilt,0deg));transform-origin:50% 60%}
 .poster-figure img{display:block;width:100%;height:100%;object-fit:contain;filter:grayscale(.28) contrast(1.18) brightness(.76) drop-shadow(5px 1px 14px #74131977);mask-image:linear-gradient(#000 55%,#000a 76%,transparent 96%)}
 .poster-ghost{--left:68%;--top:7%;--height:112%;--tilt:2deg;z-index:1}
+.poster-faceless{--left:58%;--top:1%;--height:107%;z-index:0}
+.poster-faceless img{filter:grayscale(.6) contrast(1.2) brightness(.60) drop-shadow(1px 1px 15px #74131977)}
 .poster-doll{--left:43%;--top:11%;--height:118%;--tilt:-5deg;z-index:2}
 .poster-boy{--left:81%;--top:29%;--height:88%;z-index:3}
 .poster-rabbit{--left:19%;--top:-3%;--height:124%;--tilt:-9deg;z-index:4}
@@ -41,6 +43,7 @@ body[data-screen="intro"] .brand{display:none}
 #intro .title-last{display:block;font-size:.53em;letter-spacing:.15em;color:#c9bdb6;text-shadow:2px 2px 0 #751e26;margin-bottom:2px}
 #intro .intro-title em{display:block;color:#e1d2c3;background:linear-gradient(173deg,#fff8e7 8%,#e1d2c3 48%,#b2615d 78%,#9c2935 96%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 #intro .start-actions{justify-content:center;margin:0}
+#intro .compat-notice{margin:10px 0 0;font-size:12px;line-height:1.5;color:#b7aca7}
 #intro .primary{min-width:256px;min-height:54px;padding:13px 25px;border-color:#a97b6b;background:#1f1013ed;color:#f4e8d8;letter-spacing:.04em;font-weight:500;box-shadow:0 0 32px #8b1d242d,inset 0 0 16px #b2211e12}
 #intro .primary:hover{background:#5c1d24;color:#fff4e8;border-color:#dfb097;box-shadow:0 0 35px #a922273d}
 #intro .primary:active{background:#7c2b30}
@@ -53,8 +56,9 @@ body[data-screen="intro"] :is(button,input):focus-visible{outline:2px solid #ffe
   body[data-screen="intro"] .audio-controls label{font-size:12px}
   body[data-screen="intro"] .audio-controls input{width:72px}
   #intro{min-height:max(620px,100svh);padding:0 16px 32px}
-  .poster-doll{--left:29%;--top:3%;--height:65%;--tilt:2deg;z-index:1}
-  .poster-ghost{--left:78%;--top:5%;--height:74%;--tilt:3deg;z-index:2}
+  .poster-doll{--left:22%;--top:3%;--height:65%;--tilt:2deg;z-index:1}
+  .poster-ghost{--left:83%;--top:5%;--height:74%;--tilt:3deg;z-index:2}
+  .poster-faceless{--left:53%;--top:10%;--height:64%;z-index:0}
   .poster-rabbit{--left:25%;--top:25%;--height:67%;--tilt:-5deg;z-index:4}
   .poster-boy{--left:73%;--top:34%;--height:57%;z-index:3}
   .poster-shade{background:linear-gradient(0deg,#030406 0%,#030406f2 9%,#030406cc 24%,#03040610 50%,transparent 80%),radial-gradient(ellipse at 50% 35%,transparent 10%,#03040699 91%)}

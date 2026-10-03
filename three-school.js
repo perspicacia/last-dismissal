@@ -1,6 +1,7 @@
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
-import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=piano-boy-1';
+import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=faceless-student-1';
+import {facelessStudentLayout} from './faceless-student.js';
 import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=doll-sides-stable-1';
@@ -9,7 +10,7 @@ import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
-import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=piano-boy-1';
+import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=faceless-student-1';
 
 import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 
@@ -139,6 +140,10 @@ export class ThreeSchoolView {
   }
   addAmbience(parent,kind){
     const config=ROOM_AMBIENCE[kind];if(!config)return;
+    if(config.faceless){const p=config.faceless,mesh=this.picture(parent,null,1,1,[p.x,0,p.z],p.angle);
+      mesh.name='faceless-student';mesh.visible=false;Object.assign(mesh.material,{transparent:true,alphaTest:.25,roughness:1});mesh.castShadow=true;mesh.receiveShadow=true;this.refs.facelessStudent=mesh;
+      this.contactShadow(parent,p.x,.009,p.z,.55,.4).name='faceless-student-feet-shadow';
+    }
     if(config.boy){const p=config.boy,mesh=this.picture(parent,null,1,1,[p.x,0,p.z],-Math.PI/2);
       mesh.name='piano-boy-ghost';mesh.visible=false;Object.assign(mesh.material,{transparent:true,alphaTest:.08,roughness:1});mesh.castShadow=true;mesh.receiveShadow=true;this.refs.pianoBoy=mesh;
       this.contactShadow(parent,p.x,.009,p.z,.32,.30).name='piano-boy-feet-shadow';
@@ -250,6 +255,9 @@ export class ThreeSchoolView {
     assign(this.refs.ghost,source.windowGhost);for(const ghost of this.refs.ambienceGhosts||[])assign(ghost,source.windowGhost);
     if(this.refs.pianoBoy){const pose=pianoBoyLayout(source.pianoBoy,ROOM_AMBIENCE.music.boy);this.refs.pianoBoy.visible=Boolean(pose);
       if(pose){assign(this.refs.pianoBoy,source.pianoBoy);this.refs.pianoBoy.scale.set(-pose.width,pose.height,1);this.refs.pianoBoy.position.y=pose.centerY;}
+    }
+    if(this.refs.facelessStudent){const pose=facelessStudentLayout(source.facelessStudent,ROOM_AMBIENCE.classroom33.faceless);this.refs.facelessStudent.visible=Boolean(pose);
+      if(pose){assign(this.refs.facelessStudent,source.facelessStudent);this.refs.facelessStudent.scale.set(pose.width,pose.height,1);this.refs.facelessStudent.position.y=pose.centerY;}
     }
     if(!this.dollVolumeReady&&source.dollImage?.naturalWidth){
       const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;}

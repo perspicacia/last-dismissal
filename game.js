@@ -1,7 +1,7 @@
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
-import {SchoolAudio} from './audio.js?v=reference-audio-1';
-import {Corridor} from './corridor.js?v=piano-boy-1';
-import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=piano-boy-1';
+import {SchoolAudio} from './audio.js?v=night-review-1';
+import {Corridor} from './corridor.js?v=faceless-student-1';
+import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=faceless-student-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
@@ -9,7 +9,7 @@ let state=null,endingTimer,audioError='',hauntingAudio=newHauntingAudio();
 function show(id){document.body.dataset.screen=id;document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
 function updateAudioStatus(){const status=$('audio-status'),message=audioError||(!audio.ctx?'BGM 대기':audio.muted||audio.volume===0?'BGM 음소거':audio.ctx.state==='running'?'BGM 재생 중':'BGM 일시 정지 · 소리 확인');if(status.textContent!==message)status.textContent=message;status.dataset.level=String(audio.level().toFixed(5));const needsHelp=Boolean(audioError)||Boolean(audio.ctx&&audio.ctx.state!=='running'&&!audio.muted&&state&&!state.ended);status.classList.toggle('sr-only',!needsHelp);$('sound-test').hidden=!needsHelp;}
 setInterval(updateAudioStatus,500);
-async function enableAudio(test=false){audioError='';try{await(test?audio.test():audio.start());}catch{audioError='재생 실패 · 소리 확인';}$('audio-status').dataset.recordedDoor=String(audio.recordedBuffers.has('door-slide'));$('audio-status').dataset.recordedRabbit=String(audio.recordedBuffers.has('jumpscare'));updateAudioStatus();}
+async function enableAudio(test=false){if(!test&&($('game').hidden||!state||state.ended))return;audioError='';try{await(test?audio.test():audio.start());}catch{audioError='재생 실패 · 소리 확인';}$('audio-status').dataset.recordedDoor=String(audio.recordedBuffers.has('door-slide'));$('audio-status').dataset.recordedRabbit=String(audio.recordedBuffers.has('jumpscare'));updateAudioStatus();}
 const corridor=new Corridor($('corridor'),({player,scene})=>{
  $('position').dataset.scene=scene;for(const key of ['x','z','angle'])$('position').dataset[key]=player[key].toFixed(2);
  updateUI();
