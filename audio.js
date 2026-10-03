@@ -1,4 +1,4 @@
-import {effectSamples} from './sound-effects.js?v=windows-cat-3';
+import {effectSamples} from './sound-effects.js?v=character-depth-6';
 import {loadRecordedEffects} from './recorded-effects.js?v=reference-audio-1';
 export class SchoolAudio {
   constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.recordedBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }

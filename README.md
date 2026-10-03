@@ -20,7 +20,7 @@
 
 ## 파일 구성
 
-`exploration.js`는 방 위치·발견·방문 상태, `game.js`는 화면·게임 오버·재시작, `corridor.js`는 이동과 렌더 연결, `room-props.js`는 음악실/무용실 3D 소품과 충돌 범위다. `three-school.js`와 `three-outdoors.js`는 실내·외부 3D 렌더, `classroom.js`는 교실 이동·Canvas 호환 렌더, `audio.js`는 공통 음량·음소거·효과음, `sound-effects.js`는 합성음, `recorded-effects.js`는 문·토끼 로컬 녹음의 로딩을 맡는다. `survival.js`와 `logic.js`는 이전 규칙 회귀용으로 보존한다.
+`exploration.js`는 방 위치·발견·방문 상태, `game.js`는 화면·게임 오버·재시작, `corridor.js`는 이동과 렌더 연결, `room-props.js`는 음악실/무용실 3D 소품과 충돌 범위다. `three-school.js`와 `three-outdoors.js`는 실내·외부 3D 렌더, `ghost-figures.js`는 정적인 입체 인물, `classroom-board.js`는 칠판/당번 글씨/받침 소품, `classroom.js`는 교실 이동·Canvas 호환 렌더, `audio.js`는 공통 음량·음소거·효과음, `sound-effects.js`는 합성음, `recorded-effects.js`는 문·토끼 로컬 녹음의 로딩을 맡는다. `survival.js`와 `logic.js`는 이전 규칙 회귀용으로 보존한다.
 
 ## 음향 기획
 
@@ -74,4 +74,6 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 녹음 효과음의 개발용 확인 화면은 `http://127.0.0.1:8080/tests/fixtures/reference-audio-review.html`이다. 검증 버튼은 장치 출력을 차단한 그래프에서 디코딩·호출·음소거·종료를 확인하며 실제 청감 확인은 파일 플레이어로 한다. 실제 게임 컨트롤러 검증은 `tests/fixtures/three-flow.html?safe&silent`에서 토끼를 무용실에 고정하고 소리 출력 없이 할 수 있다. 일반 플레이에는 이 검증 버튼/설정이 없다.
 
-음악실 의자의 새 귀신은 [명세](specs/piano-boy-ghost.md)에 따라 짧은 검은 머리·낡은 밝은 옷·맨발의 어린 남자아이로 교체했다. 내장 image_gen으로 만든 [투명 PNG와 프롬프트](assets/piano-boy-ghost.md)를 균일 크기로 좌석/발 높이에 정렬한다. 정적인 분위기 요소이며 별도 공격·소리·표정 변화는 없다. Three.js 고정 방향 이미지 평면과 Canvas 투영이므로 완전한 3D 모델은 아니며, 측면에서는 평면 한계가 남는다.
+음악실 의자의 새 귀신은 [명세](specs/piano-boy-ghost.md)에 따라 짧은 검은 머리·낡은 밝은 옷·맨발의 어린 남자아이로 교체했다. 내장 image_gen으로 만든 [투명 PNG와 프롬프트](assets/piano-boy-ghost.md)를 균일 크기로 좌석/발 높이에 정렬한다. 정적인 분위기 요소이며 별도 공격·소리·표정 변화는 없다. 현재 Three.js는 원본 정면 사진을 둥근 머리·몸통·팔·굽힌 다리의 닫힌 3D 메시로 연결한다. 얼굴 없는 학생도 같은 방식으로 보완했다. 사진 한 장을 기준으로 한 근사 외형이며 Canvas는 기존 사진 투영을 유지한다. [최신 명세](specs/classroom-character-depth.md).
+
+3-2 가운데 오른쪽 의자에는 칠판을 바라보는 긴 머리 여학생의 입체 뒷모습을 추가했다. 일반 교실 세 곳은 높이 1.55m의 칠판과 금속 프레임/받침, 분필·지우개, ‘오늘의 당번’ 글씨를 사용한다. 새 여학생도 공격하지 않는 정적인 분위기 요소다.

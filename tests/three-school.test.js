@@ -119,8 +119,8 @@ test('피아노 귀신은 로딩 후만 표시하고 갱신·재시작에서 중
  const v=buildView(),old=globalThis.document;globalThis.document={createElement:mockCanvas};try{v.build('music');}finally{globalThis.document=old;}
  const ghost=v.refs.pianoBoy,source={canvas:{dataset:{}},pianoBoy:{naturalWidth:1024,naturalHeight:1536,complete:false}};v.source=source;
  assert.equal(ghost.visible,false);v.syncTextures(source);assert.equal(ghost.visible,false);
- source.pianoBoy.complete=true;v.syncTextures(source);assert.equal(ghost.visible,true);assert.equal(ghost.material.map.image,source.pianoBoy);
- const pose=pianoBoyLayout(source.pianoBoy,ROOM_AMBIENCE.music.boy);assert.equal(ghost.scale.x,-pose.width);assert.equal(ghost.scale.y,pose.height);assert.equal(ghost.rotation.y,-Math.PI/2);assert.equal(ghost.position.y,pose.centerY);
+ source.pianoBoy.complete=true;v.syncTextures(source);assert.equal(ghost.visible,true);assert.equal(ghost.isGroup,true);assert.ok(ghost.userData.photoMeshes.every(part=>part.material.map.image===source.pianoBoy));
+ const pose=pianoBoyLayout(source.pianoBoy,ROOM_AMBIENCE.music.boy);assert.deepEqual(ghost.userData.pose,pose);assert.deepEqual(ghost.scale.toArray(),[1,1,1]);assert.equal(ghost.rotation.y,Math.PI/2);assert.equal(ghost.position.y,0);
  const bench=v.scenes.music.getObjectByName('music-stool');assert.ok(ghost.position.x<bench.position.x-.21);assert.equal(ghost.position.z,bench.position.z);
  v.syncTextures(source);v.resetHauntings();let count=0;v.scenes.music.traverse(o=>{if(o.name==='piano-boy-ghost')count++;});assert.equal(count,1);assert.equal(ghost.visible,true);
  source.pianoBoy={complete:true,naturalWidth:0,naturalHeight:0};v.syncTextures(source);assert.equal(ghost.visible,false);

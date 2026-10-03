@@ -36,8 +36,8 @@ test('Three.js는 한 학생만 유지하고 이미지 실패/재시작에서 �
  try{
   const view=Object.create(ThreeSchoolView.prototype);Object.assign(view,{scenes:{},refs:{},textures:[]});view.build('corridor');view.build('classroom');view.build('classroom33');
   const mesh=view.refs.facelessStudent,source={facelessStudent:image,canvas:{dataset:{}}};assert.equal(mesh.visible,false);
-  view.syncTextures(source);assert.equal(mesh.visible,true);assert.equal(mesh.material.map.image,image);assert.ok(mesh.scale.x>0);assert.equal(mesh.rotation.y,config.angle);
-  const children=mesh.parent.children.length;view.syncTextures(source);assert.equal(view.refs.facelessStudent,mesh);assert.equal(mesh.parent.children.length,children);
+  view.syncTextures(source);assert.equal(mesh.visible,true);assert.equal(mesh.isGroup,true);assert.ok(mesh.userData.photoMeshes.every(part=>part.material.map.image===image));assert.equal(mesh.rotation.y,config.angle);
+  const children=mesh.parent.children.length,parts=mesh.children.length,textures=view.textures.length;view.syncTextures(source);assert.equal(view.refs.facelessStudent,mesh);assert.equal(mesh.parent.children.length,children);assert.equal(mesh.children.length,parts);assert.equal(view.textures.length,textures);
   source.facelessStudent={...image,naturalWidth:0};view.syncTextures(source);assert.equal(mesh.visible,false);source.facelessStudent=image;view.syncTextures(source);assert.equal(mesh.visible,true);
  }finally{globalThis.document=old;}
 });
