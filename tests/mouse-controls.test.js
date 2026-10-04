@@ -86,3 +86,16 @@ test('release blocks late locks and stale drag, and does not pause on intentiona
  r.controls.release();r.lock();resolve();await pending;assert.equal(r.doc.pointerLockElement,null);assert.equal(r.state.unlocks,0);
  r.emit(r.canvas,'pointerdown',{button:0,pointerId:1,clientX:0,clientY:0});r.controls.release();r.emit(r.canvas,'pointermove',{pointerId:1,clientX:10,clientY:20});assert.deepEqual(r.state.looks,[]);
 });
+test('system shortcuts cannot start or keep a drag, rotate a locked camera or use a door',async()=>{
+ for(const modifier of ['metaKey','ctrlKey','altKey']){
+  const r=rig(()=>Promise.resolve());
+  r.emit(r.canvas,'pointerdown',{button:0,pointerId:9,clientX:10,clientY:20,[modifier]:true});assert.equal(r.controls.drag,null);
+  r.emit(r.canvas,'pointerdown',{button:0,pointerId:9,clientX:10,clientY:20});
+  r.emit(r.doc,'keydown',{key:'Shift',[modifier]:true});assert.equal(r.controls.drag,null);
+  r.emit(r.canvas,'pointermove',{pointerId:9,clientX:100,clientY:100});assert.deepEqual(r.state.looks,[]);
+  r.emit(r.canvas,'pointerdown',{button:0,pointerId:9,clientX:10,clientY:20});
+  r.emit(r.canvas,'pointermove',{pointerId:9,clientX:100,clientY:100,[modifier]:true});assert.equal(r.controls.drag,null);assert.deepEqual(r.state.looks,[]);
+  await r.controls.requestLock();r.lock();r.emit(r.doc,'mousemove',{movementX:100,movementY:100,[modifier]:true});r.emit(r.canvas,'click',{[modifier]:true});
+  assert.deepEqual(r.state.looks,[]);assert.equal(r.state.interactions,0);
+ }
+});
