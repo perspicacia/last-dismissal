@@ -7,7 +7,7 @@ import { drawSceneDepth } from './scene-depth.js?v=character-depth-6';
 import {pianoBoyQuad,drawPianoBoy,pianoBoyLook} from './piano-boy.js';
 import {facelessStudentQuad,drawFacelessStudent} from './faceless-student.js';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,windowPanes} from './school-windows.js';
-import {drawBlackCat} from './black-cat.js';
+import {drawBlackCat} from './black-cat.js?v=cat-polish-2';
 import {buildSeatedGirl,seatedGirlLook,drawFigureVolume} from './ghost-figures.js?v=character-depth-6';
 import {boardCanvas,drawClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {movementDelta} from './movement.js?v=mouse-comfort-1';

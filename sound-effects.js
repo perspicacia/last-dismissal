@@ -1,4 +1,5 @@
 import {STAIR_SOUND_DURATION,stairHauntSamples} from './stair-haunt-sound.js?v=stair-haunt-1';
+import {catVoiceSamples} from './cat-voice.js?v=cat-polish-2';
 // Original deterministic synthesis. Every effect shares the player's master gain.
 export const EFFECT_DURATIONS={footstep:.24,jumpscare:.85,'door-slide':1.05,'baby-cry':1.7,'ghost-laugh':1.85,'cat-meow':1.55,'stair-haunt':STAIR_SOUND_DURATION};
 const TAU=2*Math.PI;
@@ -8,6 +9,7 @@ export function effectSamples(kind,rate=44100,variant=0){
  if(!duration)throw new RangeError('Unknown sound effect');
  if(!Number.isFinite(rate)||rate<4000)throw new RangeError('Unsupported sample rate');
  if(kind==='stair-haunt')return stairHauntSamples(rate);
+ if(kind==='cat-meow')return catVoiceSamples(rate,variant);
  const data=new Float32Array(Math.ceil(rate*duration));
  let seed=12345+variant*7919,low=0,mid=0,phase=0,peak=0;
  // Time-based filter coefficients keep the colour stable across sample rates.
@@ -74,15 +76,6 @@ export function effectSamples(kind,rate=44100,variant=0){
    const folds=Math.tanh(voice*1.35)*(.78+.12*Math.sin(phase*.5));
    const breath=(mid-low)*.23+low*.04;
    data[i]=(voiced*folds*.72+exhale*breath)*clamp((duration-t)/.15,0,1);
-  }else if(kind==='cat-meow'){
-   // Slow, wavering "mee-ow": a rising nasal start, falling open vowel and a
-   // faint low throat under it. Distance comes from reflections, not loudness.
-   const u=clamp((t-.035)/1.27,0,1),pitch=(255+210*Math.sin(Math.PI*u)**1.6-105*u+variant*17)*(1+.024*Math.sin(TAU*6.3*t));
-   phase+=TAU*pitch/rate;let voice=0;
-   const first=460+290*Math.sin(Math.PI*u),second=1550-790*u;
-   for(let h=1;h<=14;h++){const f=pitch*h;if(f>=rate*.45)break;const formant=.12+1.8*Math.exp(-(((f-first)/150)**2))+.85*Math.exp(-(((f-second)/230)**2));voice+=Math.sin(phase*h)*formant/Math.pow(h,1.18);}
-   const envelope=clamp(t/.11,0,1)*Math.sin(Math.PI*u)**.75*clamp((duration-t)/.18,0,1);
-   data[i]=envelope*(Math.tanh(voice*1.5)*.67+Math.sin(phase*.5)*.10+(mid-low)*.055);
   }else{
    // Two breathy, wavering cries behind a wall. A slow attack and low playback
    // gain make it an atmosphere cue, not a second jumpscare.
@@ -101,7 +94,7 @@ export function effectSamples(kind,rate=44100,variant=0){
   }
   peak=Math.max(peak,Math.abs(data[i]));
  }
- if(kind==='baby-cry'||kind==='ghost-laugh'||kind==='cat-meow'){
+ if(kind==='baby-cry'||kind==='ghost-laugh'){
   // Short room reflections and softened upper frequencies suggest distance.
   const ghost=kind==='ghost-laugh',dry=data.slice(),early=Math.round(rate*(ghost?.095:.071)),late=Math.round(rate*(ghost?.187:.137));
   const soften=1-Math.exp(-TAU*(ghost?2900:1900)/rate);let softened=0;peak=0;

@@ -1,5 +1,6 @@
 // A short atmosphere encounter. It never participates in rabbit/visited outcomes.
-export const CAT_DURATION=1.6;
+import {CAT_STRIDE,catBodyMotion} from './cat-gait.js?v=cat-polish-2';
+export const CAT_DURATION=3;
 const unit=random=>{const n=random();return Number.isFinite(n)?Math.max(0,Math.min(1,n)):0;};
 const interval=(random,base)=>base+12*unit(random);
 const scenes=new Set(['corridor','classroom31','classroom','classroom33','music','dance']);
@@ -34,7 +35,7 @@ export function advanceCatEvent(state,dt,{scene,player,blockers=[],ended=false,a
  if(cat?.elapsed>=CAT_DURATION)cat=null;
  if(!cat&&elapsed+1e-9>=nextCat){
   const path=findCatPath(player,scene,blockers,random);
-  if(path){cat={path,elapsed:0};appeared=true;nextCat=elapsed+interval(random,10);}
+  if(path){const yaw=Math.atan2(path.to.x-path.from.x,path.to.z-path.from.z),toward=Math.atan2(player.x-path.from.x,player.z-path.from.z)-yaw;cat={path,elapsed:0,lookYaw:Math.max(-.8,Math.min(.8,Math.atan2(Math.sin(toward),Math.cos(toward))))};appeared=true;nextCat=elapsed+interval(random,10);}
   else nextCat=elapsed+.75;
  }
  const meow=appeared||elapsed+1e-9>=nextMeow;
@@ -43,8 +44,11 @@ export function advanceCatEvent(state,dt,{scene,player,blockers=[],ended=false,a
 }
 export function catPose(state,reduced=false){
  if(!state?.cat||state.cat.elapsed>=CAT_DURATION)return null;
- const {path,elapsed}=state.cat,t=Math.max(0,elapsed),u=Math.min(1,t/CAT_DURATION),progress=reduced?.5:u;
+ const {path,elapsed}=state.cat,t=Math.max(0,elapsed),u=Math.max(0,Math.min(1,(t-.35)/2.35));
+ const progress=reduced?.5:u*u*(3-2*u),distance=Math.hypot(path.to.x-path.from.x,path.to.z-path.from.z);
+ const motion=reduced?0:Math.min(1,6*u*(1-u)),cycle=progress*distance/CAT_STRIDE,body=catBodyMotion(cycle,motion);
  return {x:path.from.x+(path.to.x-path.from.x)*progress,z:path.from.z+(path.to.z-path.from.z)*progress,
-  y:reduced?0:.24*Math.sin(Math.PI*u)**2,yaw:Math.atan2(path.to.x-path.from.x,path.to.z-path.from.z),
-  gait:reduced?0:Math.sin(t*23),crouch:reduced?1:0,opacity:Math.min(1,t/.055,(CAT_DURATION-t)/.18),reduced};
+  y:body.height,yaw:Math.atan2(path.to.x-path.from.x,path.to.z-path.from.z),cycle,motion,bodyPitch:body.pitch,headBob:body.head,
+  gait:reduced?0:Math.sin(cycle*Math.PI*2)*motion,headYaw:reduced?0:(state.cat.lookYaw||0)*(1-motion),crouch:0,
+  opacity:Math.max(0,Math.min(1,t/.10,(CAT_DURATION-t)/.25)),reduced};
 }
