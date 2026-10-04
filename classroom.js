@@ -1,4 +1,4 @@
-import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=character-depth-6';
+import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {ROOM_HAUNTINGS,windowGaze,bouncePose,ghostSmileAmount} from './room-hauntings.js';
 import {drawGhostSmile} from './ghost-smile-shape.js';
 import {DOLL, dollRise} from './doll-event.js';
@@ -10,31 +10,30 @@ import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,windowPanes} from './school-windows.js';
 import {drawBlackCat} from './black-cat.js';
 import {buildSeatedGirl,seatedGirlLook,drawFigureVolume} from './ghost-figures.js?v=character-depth-6';
 import {boardCanvas,drawClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
+import {movementDelta} from './movement.js?v=mouse-comfort-1';
 const boards=new Map(),figures=new Map();
 function seatedGirl(){if(!figures.has('girl'))figures.set('girl',buildSeatedGirl());return figures.get('girl');}
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
 export const CLASSROOM_TEACHER_DESK = { x: -.5, z: 8.7, width: 2, depth: .65, height: .72 };
 export const CLASSROOM_DESKS = [-2.5, 1.2, 2.8].flatMap(x => [3.2, 5, 6.8].map(z => ({x,z,width:1.1,depth:.65,height:.76})));
 export function moveClassroomPlayer(player, keys, dt, blockers=null, extraBlockers=[]) {
-  const step=Math.max(0,Math.min(.05,dt));
-  const angle=player.angle+(Number(keys.has('right'))-Number(keys.has('left')))*1.65*step;
-  const walk=(Number(keys.has('forward'))-Number(keys.has('back')))*3.8*step;
+  const {angle,dx,dz}=movementDelta(player,keys,dt);
   const result={...player,angle};
   const blocked=(x,z)=>[...(blockers||[...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK]),...extraBlockers].some(d=>Math.abs(x-d.x)<d.width/2+.22 && Math.abs(z-d.z)<d.depth/2+.22)||(!blockers&&CLASSROOM_DESKS.some(d=>Math.abs(x-d.x)<.45 && Math.abs(z-(d.z-.72))<.42));
-  const x=Math.max(-4,Math.min(4,player.x+Math.sin(angle)*walk));
+  const x=Math.max(-4,Math.min(4,player.x+dx));
   if(!blocked(x,result.z))result.x=x;
-  const z=Math.max(.8,Math.min(9.2,player.z+Math.cos(angle)*walk));
+  const z=Math.max(.8,Math.min(9.2,player.z+dz));
   if(!blocked(result.x,z))result.z=z;
   return result;
 }
 
 // Geometry uses the same world units as movement; desks cannot be walked through.
 export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classroom') {
-  const lens=w*.68,horizon=h*.48+(kind==='classroom'?seatedGirlLook(p):pianoBoyLook(p,doll?.boy,ROOM_AMBIENCE[kind]?.boy))*lens;
+  const lens=w*.68,horizon=h*.48+(p.manualLook?Math.tan(p.pitch||0):kind==='classroom'?seatedGirlLook(p):pianoBoyLook(p,doll?.boy,ROOM_AMBIENCE[kind]?.boy))*lens;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
   c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
   // Perspective wooden boards, knots and faint cold window reflections.
-  for(let y=Math.ceil(horizon)+1;y<h;y+=4){const d=1.5*lens/(y-horizon);if(d>30)continue;for(let x=0;x<w;x+=4){const a=(x-w/2)*d/lens,wx=p.x+Math.sin(p.angle)*d+Math.cos(p.angle)*a,wz=p.z+Math.cos(p.angle)*d-Math.sin(p.angle)*a;const row=Math.floor(wx/.24),seam=((wz+((row%3)*.63))%1.9+1.9)%1.9;const grain=Math.sin(wz*10+row*8)*3;const v=45+(Math.sin(row*19)*9)+grain;c.fillStyle=`rgb(${v+18},${v+8},${v+4})`;if(d<8&&((((wx%.24)+.24)%.24)<.012||seam<.022))c.fillStyle=`rgb(${v+10},${v},${v-4})`;c.fillRect(x,y,4,4);}}
+  for(let y=Math.max(0,Math.ceil(horizon)+1);y<h;y+=4){const d=1.5*lens/(y-horizon);if(d>30)continue;for(let x=0;x<w;x+=4){const a=(x-w/2)*d/lens,wx=p.x+Math.sin(p.angle)*d+Math.cos(p.angle)*a,wz=p.z+Math.cos(p.angle)*d-Math.sin(p.angle)*a;const row=Math.floor(wx/.24),seam=((wz+((row%3)*.63))%1.9+1.9)%1.9;const grain=Math.sin(wz*10+row*8)*3;const v=45+(Math.sin(row*19)*9)+grain;c.fillStyle=`rgb(${v+18},${v+8},${v+4})`;if(d<8&&((((wx%.24)+.24)%.24)<.012||seam<.022))c.fillStyle=`rgb(${v+10},${v},${v-4})`;c.fillRect(x,y,4,4);}}
 
   for(let sx=0;sx<w;sx+=3){const offset=Math.atan((sx-w/2)/lens),a=p.angle+offset,dx=Math.sin(a),dz=Math.cos(a),tx=Math.abs(dx)<1e-9?Infinity:((dx>0?4.4:-4.4)-p.x)/dx,tz=Math.abs(dz)<1e-9?Infinity:((dz>0?9.8:0)-p.z)/dz,side=tx<tz,dist=side?tx:tz,depth=dist*Math.cos(offset),wx=p.x+dx*dist,wz=p.z+dz*dist;const height=3*lens/depth,top=horizon-height*.5;
     const drawBand=(from,to,color)=>{c.fillStyle=color;c.fillRect(sx,top+from*height,3,(to-from)*height+1);};

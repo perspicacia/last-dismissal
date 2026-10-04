@@ -1,20 +1,20 @@
-import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=character-depth-6';
+import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=chalk-writing-1';
+import { ThreeSchoolView } from './three-school.js?v=mouse-comfort-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=character-depth-6';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=chalk-writing-1';
+import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=mouse-comfort-1';
 import {ROOM_BLOCKERS} from './room-props.js';
 import {newCatEvent,advanceCatEvent,catPose} from './cat-event.js';
 import {drawBlackCat} from './black-cat.js';
-import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js';
+import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js?v=mouse-comfort-1';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
 export class Corridor {
@@ -63,10 +63,10 @@ export class Corridor {
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
-  enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN};this.keys.clear();this.resetCat();this.notify();}
+  enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN,...(this.manualLook?{manualLook:true,pitch:0}:{})};this.keys.clear();this.resetCat();this.notify();}
   leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.resetCat();this.notify();}
   move(keys,dt) {const blocker=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene],blocker?[blocker]:[]):movePlayer(this.player,keys,dt);}
-  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN};this.keys.clear();this.steps=0;this.catCount=0;this.resetCat();this.buildTextures();this.notify();}
+  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN,...(this.manualLook?{manualLook:true,pitch:0}:{})};this.keys.clear();this.steps=0;this.catCount=0;this.resetCat();this.buildTextures();this.notify();}
   setActive(value) {this.active=value;this.keys.clear();if(!value)this.resetCat();}
   resetCat(){this.catEvent=newCatEvent();if(this.canvas)Object.assign(this.canvas.dataset,{catVisible:'false',catCount:String(this.catCount||0),catHeight:'0'});for(const cat of Object.values(this.view3D?.refs.cats||{}))cat.visible=false;}
   catBlockers(){
@@ -84,7 +84,7 @@ export class Corridor {
   }
   nudge(action) {
     if(!this.active||this.caughtAt!=null) return;
-    const before=this.player;this.player=this.move(new Set([action]),.05);this.steps+=Math.hypot(this.player.x-before.x,this.player.z-before.z);if(this.steps>.95){this.steps=0;this.onStep();}this.notify();
+    const before=this.player;this.player=this.move(new Set([action]),this.manualLook ? .025 : .05);this.steps+=Math.hypot(this.player.x-before.x,this.player.z-before.z);if(this.steps>.95){this.steps=0;this.onStep();}this.notify();
   }
   texture(draw) {
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
@@ -201,7 +201,8 @@ export class Corridor {
     const distance=Math.max(.08,dx*Math.sin(p.angle)+dz*Math.cos(p.angle)),lens=w*.68;
     const size=rabbitSize(img,arrival.growth),width=size.width*lens/distance,height=size.height*lens/distance;
     const x=w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/distance;
-    const y=h*.48+(1.5-arrival.centerY)*lens/distance;
+    const pitch=p.manualLook?Math.tan(p.pitch||0):0;
+    const y=h*.48+pitch*lens+(1.5-arrival.centerY-pitch*.80*arrival.rush)*lens/distance;
     this.rabbitPartCache??=new WeakMap();if(!this.rabbitPartCache.has(img))this.rabbitPartCache.set(img,rabbitParts(img));
     drawRabbitPose(c,this.rabbitPartCache.get(img),x,y,width,height,raisedArms((time-this.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches));
   }
@@ -214,11 +215,11 @@ export class Corridor {
     this.updateExterior(time);
     const cat=catPose(this.catEvent,reduce);
     if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,faceless:this.facelessStudent,cat,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
-    const bob=this.keys.has('forward')||this.keys.has('back') ? reduce?0:Math.sin(time/130)*2 : 0;
-    const horizon=h*.48+bob, lens=w*.68;
+    const bob=!p.manualLook&&(this.keys.has('forward')||this.keys.has('back'))&&!reduce?Math.sin(time/130)*2:0;
+    const lens=w*.68,horizon=h*.48+bob+(p.manualLook?Math.tan(p.pitch||0)*lens:0);
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
     const floor=c.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#252d2b');floor.addColorStop(1,'#584b3e');c.fillStyle=floor;c.fillRect(0,horizon,w,h);
-    for(let y=Math.ceil(horizon)+1;y<h;y+=4){
+    for(let y=Math.max(0,Math.ceil(horizon)+1);y<h;y+=4){
       const d=1.5*lens/(y-horizon);if(d>40)continue;
       for(let x=0;x<w;x+=4){
         const across=(x-w/2)*d/lens;

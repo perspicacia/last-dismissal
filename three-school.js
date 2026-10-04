@@ -1,6 +1,7 @@
+import {manualCameraPose} from './mouse-controls.js?v=mouse-comfort-1';
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
-import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=character-depth-6';
+import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=character-depth-6';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,buildSchoolWindow,windowWood} from './school-windows.js';
@@ -14,7 +15,7 @@ import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
-import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=chalk-writing-1';
+import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=mouse-comfort-1';
 
 import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 
@@ -278,7 +279,7 @@ export class ThreeSchoolView {
       if(rabbit.visible){
         const arrival=rabbitArrival((time-source.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
         const p=source.player,goal={x:p.x+Math.sin(p.angle)*.80,z:p.z+Math.cos(p.angle)*.80};
-        rabbit.position.set(THREE.MathUtils.lerp(RABBIT_SPOT.x,goal.x,arrival.rush),arrival.centerY,THREE.MathUtils.lerp(RABBIT_SPOT.z,goal.z,arrival.rush));
+        rabbit.position.set(THREE.MathUtils.lerp(RABBIT_SPOT.x,goal.x,arrival.rush),arrival.centerY+(p.manualLook?Math.tan(p.pitch||0)*.80*arrival.rush:0),THREE.MathUtils.lerp(RABBIT_SPOT.z,goal.z,arrival.rush));
         const size=rabbitSize(source.mouthOpen?source.mascotOpen:source.mascot,arrival.growth);
         rabbit.rotation.y=p.angle;
         rabbit.userData.body.scale.set(size.width,size.height,1);
@@ -311,8 +312,10 @@ export class ThreeSchoolView {
     this.dollLook=(this.dollLook??targetDollLook)+(targetDollLook-(this.dollLook??targetDollLook))*(1-Math.exp(-viewDt*12));
     const dollLook=source.scene==='classroom'||ambience||nearGhost||boyPose?this.dollLook:0;
     const descent=source.scene==='corridor'&&p.x>.65?-.65*THREE.MathUtils.clamp((p.z-21.5)/2,0,1)*Math.max(0,Math.cos(p.angle)):0;
-    this.camera.position.set(p.x,1.5+(!reduced&&walking?Math.sin(time/130)*.012:0),-p.z);this.camera.lookAt(p.x+Math.sin(p.angle),this.camera.position.y+descent+dollLook,-p.z-Math.cos(p.angle));
-    this.camera.updateMatrixWorld();this.scenes[source.scene].updateMatrixWorld(true);
+    if(p.manualLook){const pose=manualCameraPose(p);this.camera.position.set(pose.x,pose.y,pose.z);this.camera.lookAt(pose.targetX,pose.targetY,pose.targetZ);}
+    else {this.camera.position.set(p.x,1.5+(!reduced&&walking?Math.sin(time/130)*.012:0),-p.z);this.camera.lookAt(p.x+Math.sin(p.angle),this.camera.position.y+descent+dollLook,-p.z-Math.cos(p.angle));}
+    if(source.canvas)Object.assign(source.canvas.dataset,{cameraHeight:this.camera.position.y.toFixed(3),cameraPitch:String(p.pitch||0)});
+    this.camera.updateMatrixWorld();if(p.manualLook)for(const rabbit of Object.values(this.refs.roomRabbits||{}))if(rabbit.visible)rabbit.quaternion.copy(this.camera.quaternion);this.scenes[source.scene].updateMatrixWorld(true);
     for(const ghost of this.refs.ambienceGhosts||[]){const amount=updateGhostSmile(ghost.userData.smile,ghost,p,ghost.userData.config,{camera:this.camera,dt:viewDt,reduced,active:source.scene===ghost.userData.room&&!source.exploration?.ended});if(source.scene===ghost.userData.room)ghostSmile=amount;}
     if(source.canvas)source.canvas.dataset.ghostSmile=ghostSmile.toFixed(2);
     this.renderer.render(this.scenes[source.scene],this.camera);

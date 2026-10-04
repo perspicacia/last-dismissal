@@ -19,6 +19,8 @@
 - 문·토끼 비명은 [specs/reference-horror-audio.md](specs/reference-horror-audio.md)의 로컬 녹음 편집본을 우선 사용한다. 기존 코드 기반 음향 규칙에서 이 두 효과음만 대체하며 나머지 합성음·실패 시 대체음은 유지한다. 출처는 [assets/audio/README.md](assets/audio/README.md)를 확인한다.
 - 교실 목재 창문·검은 고양이의 무작위 등장/울음은 [specs/windows-black-cat.md](specs/windows-black-cat.md)를 따른다. 고양이는 코드 기반 입체 분위기 요소로 공격/방문 판정을 바꾸지 않으며 방 이동/종료/재시작에서 정리한다.
 
+- 현재 일반 게임의 조작/카메라/Esc 규칙은 [specs/mouse-look-comfort.md](specs/mouse-look-comfort.md)를 따른다. WASD 옆걸음·수동 마우스 시점·고정 카메라·일시정지가 이전 A/D 회전·자동 시점·Esc 초기화 규칙을 대체한다.
+
 ## 역할 분담
 
 | 담당 | 범위와 결과물 |
