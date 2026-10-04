@@ -1,13 +1,14 @@
+import {newStairHaunt,advanceStairHaunt,stairSoundPan} from './stair-haunt.js?v=stair-haunt-1';
 import {MouseLookController,lookPlayer,inputAction,DEFAULT_SENSITIVITY} from './mouse-controls.js?v=mouse-comfort-1';
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
-import {SchoolAudio} from './audio.js?v=character-depth-6';
+import {SchoolAudio} from './audio.js?v=stair-haunt-1';
 import {Corridor} from './corridor.js?v=mouse-comfort-1';
 import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=mouse-comfort-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
 let paused=false,sensitivity=DEFAULT_SENSITIVITY;const heldKeys=new Map();
-let state=null,endingTimer,audioError='',hauntingAudio=newHauntingAudio();
+let state=null,endingTimer,audioError='',hauntingAudio=newHauntingAudio(),stairHaunt=newStairHaunt();
 function show(id){if(id!=='game'){closePause();mouse.release();}document.body.dataset.screen=id;document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
 function updateAudioStatus(){const status=$('audio-status'),message=audioError||(!audio.ctx?'BGM 대기':audio.muted||audio.volume===0?'BGM 음소거':audio.ctx.state==='running'?'BGM 재생 중':'BGM 일시 정지 · 소리 확인');if(status.textContent!==message)status.textContent=message;status.dataset.level=String(audio.level().toFixed(5));const needsHelp=Boolean(audioError)||Boolean(audio.ctx&&audio.ctx.state!=='running'&&!audio.muted&&state&&!state.ended&&!paused);status.classList.toggle('sr-only',!needsHelp);$('sound-test').hidden=!needsHelp;}
 setInterval(updateAudioStatus,500);
@@ -48,14 +49,19 @@ audio.onEffect=(kind,details)=>{
  const canvas=$('corridor'),source=details?.source||'synthesis';
  canvas.dataset.soundEffect=kind;canvas.dataset.soundSource=source;
  canvas.dataset.soundCount=String(Number(canvas.dataset.soundCount||0)+1);
- const key=kind==='baby-cry'?'babyCryCount':kind==='door-slide'?'doorSlideCount':kind==='ghost-laugh'?'ghostLaughCount':kind==='jumpscare'?'roarCount':kind==='cat-meow'?'catMeowCount':null;
+ const key=kind==='stair-haunt'?'stairSoundCount':kind==='baby-cry'?'babyCryCount':kind==='door-slide'?'doorSlideCount':kind==='ghost-laugh'?'ghostLaughCount':kind==='jumpscare'?'roarCount':kind==='cat-meow'?'catMeowCount':null;
+ if(kind==='stair-haunt')canvas.dataset.stairSoundPan=String(details?.pan||0);
  if(key){canvas.dataset[key]=String(Number(canvas.dataset[key]||0)+1);canvas.dataset[key.replace('Count','Source')]=source;}
 };
 corridor.onTick=dt=>{
  if(!state)return;
  if(state.ended){updateArrival();return;}
  state=advanceExploration(state,dt,corridor.scene,corridor.player);
- corridor.exploration=state;updateUI();if(state.ended)finish();else{const ghost=ROOM_AMBIENCE[corridor.scene]?.ghost,smiling=Boolean(ghost&&ghostSmileAmount(corridor.player,ghost));const ambient=advanceHauntingAudio(hauntingAudio,dt,corridor.scene,false,Math.random,smiling);hauntingAudio=ambient.state;if(ambient.cry)audio.babyCry();if(ambient.laugh)audio.ghostLaugh();}
+ corridor.exploration=state;updateUI();if(state.ended)finish();else{
+  const stair=advanceStairHaunt(stairHaunt,dt,corridor.scene,corridor.player);stairHaunt=stair.state;
+  $('corridor').dataset.stairHaunt=stairHaunt.triggered?'spent':stairHaunt.elapsed?'waiting':'idle';
+  if(stair.cue){$('corridor').dataset.stairEventCount=String(Number($('corridor').dataset.stairEventCount||0)+1);audio.stairHaunt(stairSoundPan(corridor.player));}
+  const ghost=ROOM_AMBIENCE[corridor.scene]?.ghost,smiling=Boolean(ghost&&ghostSmileAmount(corridor.player,ghost));const ambient=advanceHauntingAudio(hauntingAudio,dt,corridor.scene,false,Math.random,smiling);hauntingAudio=ambient.state;if(ambient.cry)audio.babyCry();if(ambient.laugh)audio.ghostLaugh();}
 };
 function updateUI(){
  if(!state)return;
@@ -75,8 +81,8 @@ function updateUI(){
  corridor.exploration=state;
 }
 async function start(){
- clearTimeout(endingTimer);closePause();mouse.release();audio.clearEffects();hauntingAudio=newHauntingAudio();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);corridor.screamTriggered=false;
- $('jumpscare').hidden=true;for(const key of ['soundCount','babyCryCount','doorSlideCount','ghostLaughCount','roarCount','catMeowCount'])$('corridor').dataset[key]='0';for(const key of ['soundEffect','soundSource','babyCrySource','doorSlideSource','ghostLaughSource','roarSource','catMeowSource'])$('corridor').dataset[key]='';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();mouse.requestLock();await enableAudio();
+ clearTimeout(endingTimer);closePause();mouse.release();audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);corridor.screamTriggered=false;
+ $('jumpscare').hidden=true;for(const key of ['stairEventCount','stairSoundCount','soundCount','babyCryCount','doorSlideCount','ghostLaughCount','roarCount','catMeowCount'])$('corridor').dataset[key]='0';for(const key of ['stairSoundSource','stairSoundPan','soundEffect','soundSource','babyCrySource','doorSlideSource','ghostLaughSource','roarSource','catMeowSource'])$('corridor').dataset[key]='';$('corridor').dataset.stairHaunt='idle';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();mouse.requestLock();await enableAudio();
 }
 function updateArrival(){
  const arrival=rabbitArrival((performance.now()-corridor.caughtAt)/1000);
@@ -93,11 +99,11 @@ function finish(){
 function interact(){
  if(!state||state.ended||paused)return;
  if(corridor.scene!=='corridor'){leaveRoom();return;}
- const room=nearbyRoom(corridor.player,corridor.scene);if(room){audio.clearEffects();hauntingAudio=newHauntingAudio();corridor.enterClassroom(room.id);updateUI();audio.doorSlide();$('corridor').focus();}
+ const room=nearbyRoom(corridor.player,corridor.scene);if(room){audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt={...stairHaunt,elapsed:0};corridor.enterClassroom(room.id);updateUI();audio.doorSlide();$('corridor').focus();}
 }
-function leaveRoom(){if(!state||state.ended||paused)return;audio.clearEffects();hauntingAudio=newHauntingAudio();corridor.leaveClassroom();updateUI();$('corridor').focus();}
+function leaveRoom(){if(!state||state.ended||paused)return;audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt={...stairHaunt,elapsed:0};corridor.leaveClassroom();updateUI();$('corridor').focus();}
 $('room-action').onclick=interact;$('room-return').onclick=leaveRoom;
-function restart(){closePause();mouse.release();clearTimeout(endingTimer);hauntingAudio=newHauntingAudio();state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
+function restart(){closePause();mouse.release();clearTimeout(endingTimer);hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
 function refreshKeys(){corridor.keys.clear();for(const action of heldKeys.values())corridor.keys.add(action);}
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'){if(canPlay()){e.preventDefault();pause();}else if(!$('gameover').hidden){e.preventDefault();restart();}return;}

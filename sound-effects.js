@@ -1,11 +1,13 @@
+import {STAIR_SOUND_DURATION,stairHauntSamples} from './stair-haunt-sound.js?v=stair-haunt-1';
 // Original deterministic synthesis. Every effect shares the player's master gain.
-export const EFFECT_DURATIONS={footstep:.24,jumpscare:.85,'door-slide':1.05,'baby-cry':1.7,'ghost-laugh':1.85,'cat-meow':1.55};
+export const EFFECT_DURATIONS={footstep:.24,jumpscare:.85,'door-slide':1.05,'baby-cry':1.7,'ghost-laugh':1.85,'cat-meow':1.55,'stair-haunt':STAIR_SOUND_DURATION};
 const TAU=2*Math.PI;
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 export function effectSamples(kind,rate=44100,variant=0){
  const duration=EFFECT_DURATIONS[kind];
  if(!duration)throw new RangeError('Unknown sound effect');
  if(!Number.isFinite(rate)||rate<4000)throw new RangeError('Unsupported sample rate');
+ if(kind==='stair-haunt')return stairHauntSamples(rate);
  const data=new Float32Array(Math.ceil(rate*duration));
  let seed=12345+variant*7919,low=0,mid=0,phase=0,peak=0;
  // Time-based filter coefficients keep the colour stable across sample rates.

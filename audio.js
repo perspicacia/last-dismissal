@@ -1,4 +1,4 @@
-import {effectSamples} from './sound-effects.js?v=character-depth-6';
+import {effectSamples} from './sound-effects.js?v=stair-haunt-1';
 import {loadRecordedEffects} from './recorded-effects.js?v=reference-audio-1';
 export class SchoolAudio {
   constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.recordedBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
@@ -74,7 +74,7 @@ export class SchoolAudio {
     osc.connect(gain).connect(this.master); osc.start(t); osc.stop(t + duration + .05);
     osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
-  playEffect(kind,level,variant=0) {
+  playEffect(kind,level,variant=0,pan=null) {
     if(!this.ctx||this.ctx.state!=='running'||this.muted||this.volume===0)return false;
     const key=`${kind}:${variant}`;
     const recorded=this.recordedBuffers.get(kind);
@@ -83,10 +83,12 @@ export class SchoolAudio {
       buffer.getChannelData(0).set(samples);this.effectBuffers.set(key,buffer);
     }
     const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();
-    source.buffer=recorded||this.effectBuffers.get(key);gain.gain.value=level;source.connect(gain);gain.connect(this.master);
-    const effect={source,gain};this.effects.add(effect);
-    source.onended=()=>{source.disconnect();gain.disconnect();this.effects.delete(effect);};
-    source.start();this.onEffect?.(kind,{source:recorded?'recording':'synthesis'});return true;
+    source.buffer=recorded||this.effectBuffers.get(key);gain.gain.value=level;source.connect(gain);
+    const panner=Number.isFinite(pan)&&this.ctx.createStereoPanner?this.ctx.createStereoPanner():null;
+    if(panner){panner.pan.value=Math.max(-.7,Math.min(.7,pan));gain.connect(panner);panner.connect(this.master);}else gain.connect(this.master);
+    const effect={source,gain,panner};this.effects.add(effect);
+    source.onended=()=>{source.disconnect();gain.disconnect();panner?.disconnect();this.effects.delete(effect);};
+    source.start();this.onEffect?.(kind,{source:recorded?'recording':'synthesis',pan:panner?.pan.value??0});return true;
   }
   footstep(scene='corridor') {
     if(!this.ctx||this.ctx.currentTime-this.lastStep<.18)return false;
@@ -98,8 +100,9 @@ export class SchoolAudio {
   babyCry(){return this.playEffect('baby-cry',.14);}
   ghostLaugh(){return this.playEffect('ghost-laugh',.24);}
   catMeow(variant=0){return this.playEffect('cat-meow',.16,variant);}
+  stairHaunt(pan=0){return this.playEffect('stair-haunt',.36,0,pan);}
   clearEffects(){
-    for(const {source,gain} of this.effects){source.onended=null;source.stop();source.disconnect();gain.disconnect();}
+    for(const {source,gain,panner} of this.effects){source.onended=null;source.stop();source.disconnect();gain.disconnect();panner?.disconnect();}
     this.effects.clear();this.lastStep=-Infinity;this.foot=0;
   }
   // Short, soft toy/broadcast cues. All tones route through master gain,
