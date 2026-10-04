@@ -1,0 +1,33 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>검은 고양이 외형·보행 확인</title>
+<style>body{margin:0;background:#10191c;color:#d9ded7;font-family:sans-serif;height:100vh;display:flex;flex-direction:column}nav{padding:10px}button{padding:10px;margin:3px}canvas{width:100%;flex:1;min-height:0;display:block}</style>
+<nav><button id="front">고양이 정면</button><button id="side">고양이 옆모습</button><button id="close">얼굴 가까이</button><button id="walk">보행 재생</button><button id="contact">발 접지 자세</button><button id="swing">발 들기 자세</button><button id="room">교실 보행</button><button id="reduced">동작 줄이기</button><span id="status">정지 시안</span></nav>
+<canvas id="view" data-renderer="three" tabindex="0" aria-label="고양이 외형과 보행"></canvas>
+<script type="module">
+import {Corridor} from '../../corridor.js?v=cat-polish-2';
+import {CAT_DURATION,newCatEvent} from '../../cat-event.js?v=cat-polish-2';
+if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
+let reduced=false;const match=window.matchMedia.bind(window);window.matchMedia=query=>query==='(prefers-reduced-motion: reduce)'?{matches:reduced}:match(query);
+const c=new Corridor(document.querySelector('canvas'),()=>{},()=>{});c.manualLook=true;c.tutorial=false;c.exploration={ended:false};
+let playing=false,last=0,lastDraw=0;
+function pose(view='side',elapsed=.2){
+ playing=false;c.reset(null);c.exploration={ended:false};
+ if(view==='room')c.enterClassroom('classroom31');
+ c.player={x:0,z:1.4,angle:0,pitch:view==='close'?-.74:view==='front'?-.52:-.32,manualLook:true};
+ const path=view==='front'?{from:{x:0,z:3.3},to:{x:0,z:2.4}}:view==='close'?{from:{x:0,z:2.65},to:{x:0,z:2.05}}:{from:{x:-.9,z:4.0},to:{x:.9,z:4.0}};
+ c.catEvent={...newCatEvent(),scene:c.scene,cat:{path,elapsed,lookYaw:view==='front'||view==='close'?0:.8}};
+ document.querySelector('#status').textContent='정지 시안';c.draw(performance.now());
+}
+document.querySelector('#front').onclick=()=>pose('front');
+document.querySelector('#side').onclick=()=>pose();
+document.querySelector('#close').onclick=()=>pose('close');
+document.querySelector('#walk').onclick=()=>{reduced=false;pose('side',.01);playing=true;};
+document.querySelector('#room').onclick=()=>{reduced=false;pose('room',.01);playing=true;};
+document.querySelector('#contact').onclick=()=>pose('side',1.31);
+document.querySelector('#swing').onclick=()=>pose('side',1.41);
+document.querySelector('#reduced').onclick=()=>{reduced=true;pose('side',.7);};
+function frame(time){
+ if(playing){c.catEvent.cat.elapsed+=(time-last)/1000;if(c.catEvent.cat.elapsed>=CAT_DURATION)c.catEvent.cat.elapsed=.01;document.querySelector('#status').textContent='연속 보행 '+c.catEvent.cat.elapsed.toFixed(2)+'s';}
+ last=time;if(time-lastDraw>(playing?33:400)){c.draw(time);lastDraw=time;}requestAnimationFrame(frame);
+}
+pose('front');requestAnimationFrame(frame);
+</script></html>

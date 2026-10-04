@@ -5,8 +5,8 @@ import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js
 import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=character-depth-6';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,buildSchoolWindow,windowWood} from './school-windows.js';
-import {buildBlackCat,updateBlackCat} from './black-cat.js';
-import {catPose} from './cat-event.js';
+import {buildBlackCat,updateBlackCat} from './black-cat.js?v=cat-polish-2';
+import {catPose} from './cat-event.js?v=cat-polish-2';
 import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=doll-sides-stable-1';
@@ -15,7 +15,7 @@ import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
-import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=mouse-comfort-1';
+import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=cat-polish-2';
 
 import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 

@@ -43,11 +43,18 @@ test('보행 카메라를 내리지 않아도 등장 모델의 머리·몸이 �
  const path=findCatPath(player,'corridor',[],()=>0),state={cat:{path,elapsed:.8}},pose=catPose(state);
  const lens=1280*.68,horizon=720*.48,d=pose.z-player.z;
  for(const y of [pose.y+.235,pose.y+.505]){const screen=horizon+(1.5-y)*lens/d;assert.ok(screen>0&&screen<720);}
- assert.ok(pose.y>.23);assert.ok(pose.opacity===1);
+ assert.ok(pose.y>=0&&pose.y<.012);assert.ok(pose.opacity===1);
  const reducedA=catPose({cat:{path,elapsed:.3}},true),reducedB=catPose({cat:{path,elapsed:1.2}},true);
  for(const key of ['x','z','y','gait','yaw'])assert.equal(reducedA[key],reducedB[key]);
  assert.equal(reducedA.y,0);assert.equal(reducedA.gait,0);assert.equal(catPose({cat:{path,elapsed:CAT_DURATION}}),null);
  assert.equal(advanceCatEvent({...newCatEvent(()=>0),scene:'corridor'},Infinity,options).state.elapsed,0);
+});
+test('고양이는 짧게 경계한 뒤 연속 가속·감속하고 큰 도약 없이 달린다',()=>{
+ const path={from:{x:-.9,z:5.6},to:{x:.9,z:5.6}},at=t=>catPose({cat:{path,elapsed:t,lookYaw:.8}});
+ assert.equal(at(.12).x,path.from.x);assert.equal(at(.32).x,path.from.x);assert.equal(at(.32).headYaw,.8);
+ let prior=at(.01),maxSpeed=0;
+ for(let t=.02;t<3;t+=.01){const pose=at(t),speed=(pose.x-prior.x)/.01;assert.ok(speed>=-1e-9);assert.ok(speed<1.2);maxSpeed=Math.max(maxSpeed,speed);assert.ok(pose.y<.012);prior=pose;}
+ assert.ok(maxSpeed>.9);assert.equal(at(2.8).x,path.to.x);assert.ok(at(1.5).headYaw===0);
 });
 test('실제 이동 컨트롤러는 입장·복귀·정지에서 고양이를 숨기고 방문 판정을 보존한다',()=>{
  const c=Object.create(Corridor.prototype),models={corridor:{visible:true},classroom31:{visible:true}},exploration={ended:false,visited:['classroom31']};
