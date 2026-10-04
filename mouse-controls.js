@@ -1,7 +1,8 @@
+import {hasSystemModifier} from './capture-controls.js';
 export const DEFAULT_SENSITIVITY=.65;
 export const MAX_PITCH=Math.PI/3;
 const actions={ArrowUp:'forward',ArrowDown:'back',ArrowLeft:'left',ArrowRight:'right',w:'forward',s:'back',a:'strafeLeft',d:'strafeRight'};
-export function inputAction(key,code){return actions[code?.replace(/^Key/,'').toLowerCase()]||actions[key]||actions[String(key).toLowerCase()]||null;}
+export function inputAction(key,code,event={}){if(hasSystemModifier(event))return null;return actions[code?.replace(/^Key/,'').toLowerCase()]||actions[key]||actions[String(key).toLowerCase()]||null;}
 export function lookPlayer(player,dx,dy,sensitivity=DEFAULT_SENSITIVITY){
   if(!Number.isFinite(dx)||!Number.isFinite(dy))return player;
   const gain=.002*Math.max(.2,Math.min(1.8,Number.isFinite(sensitivity)?sensitivity:DEFAULT_SENSITIVITY));
@@ -26,13 +27,15 @@ export class MouseLookController{
       if(was&&!locked&&this.canPlay())this.onUnlock();
     });
     this.doc.addEventListener('pointerlockerror',()=>{if(!this.locked)this.setMode('drag');});
-    this.doc.addEventListener('mousemove',e=>{if(this.locked&&this.canPlay())this.onLook(e.movementX,e.movementY);});
-    canvas.addEventListener('click',()=>{if(this.locked&&this.canPlay())this.onInteract();});
+    this.doc.addEventListener('keydown',e=>{if(hasSystemModifier(e))this.clearDrag();});
+    this.doc.addEventListener('mousemove',e=>{if(this.locked&&this.canPlay()&&!hasSystemModifier(e))this.onLook(e.movementX,e.movementY);});
+    canvas.addEventListener('click',e=>{if(this.locked&&this.canPlay()&&!hasSystemModifier(e))this.onInteract();});
     canvas.addEventListener('pointerdown',e=>{
-      if(e.button!==0||this.locked||!this.canPlay())return;
+      if(e.button!==0||this.locked||!this.canPlay()||hasSystemModifier(e))return;
       e.preventDefault();canvas.focus();this.drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture?.(e.pointerId);
     });
     canvas.addEventListener('pointermove',e=>{
+      if(hasSystemModifier(e)){this.clearDrag();return;}
       const drag=this.drag;if(!drag||e.pointerId!==drag.id||!this.canPlay())return;
       this.onLook(e.clientX-drag.x,e.clientY-drag.y);drag.x=e.clientX;drag.y=e.clientY;
     });

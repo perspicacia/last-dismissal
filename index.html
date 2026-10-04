@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LAST DISMISSAL</title>
   <link rel="preload" href="assets/fonts/Lacquer-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="style.css?v=mouse-comfort-2">
+  <link rel="stylesheet" href="style.css?v=capture-cursor-1">
 </head>
 <body data-screen="intro">
 <main>
@@ -47,13 +47,19 @@
   <div id="pause-menu" class="pause-menu" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
     <div class="pause-panel">
       <h2 id="pause-title">잠시 멈춤</h2>
-      <p class="pause-controls">WASD 이동 · 마우스 둘러보기<br>E / 클릭 문 열기 · Esc 일시정지</p>
+      <p class="pause-controls">WASD 이동 · 마우스 둘러보기<br>E / 클릭 문 열기 · Esc 일시정지 · P 화면 캡처</p>
       <label class="sensitivity-label" for="sensitivity">마우스 감도 <output id="sensitivity-value" for="sensitivity">65%</output></label>
       <input id="sensitivity" type="range" min="20" max="180" step="5" value="65">
       <p id="look-status" class="look-status">마우스 잠금이 어려우면 화면을 드래그하거나 화살표를 사용하세요.</p>
       <button id="resume-game" class="primary">계속하기</button>
+      <button id="capture-game" aria-describedby="capture-help">화면 캡처</button>
+      <p id="capture-help" class="look-status">장면을 고정하고 커서를 풀어 줍니다.<br>Mac: ⌘⇧4 · Windows: Win+Shift+S</p>
       <button id="pause-exit" class="pause-exit">처음 화면으로</button>
     </div>
+  </div>
+  <div id="capture-controls" class="capture-controls" hidden>
+    <p class="sr-only" role="status">화면이 고정되었습니다. 트랙패드로 영역을 선택해 캡처하세요. P 또는 계속하기로 재개하고 Esc로 설정을 엽니다.</p>
+    <button id="capture-resume">계속하기 · P</button>
   </div>
   <section id="ending" class="intro" hidden><p class="eyebrow">05:42 · 학교 정문</p><h1>이제,<br><em>집에 가자.</em></h1><p class="story">아침 바람이 불어왔다.<br>출석부의 마지막 이름 옆에 ‘하교’가 찍혔다.</p><p id="result"></p><button id="again" class="primary">다시 학교에 들어가기 →</button></section>
   <section id="gameover" class="game-over-screen" aria-labelledby="game-over-title" hidden>
@@ -61,6 +67,6 @@
     <button id="retry" class="primary">다시 하기</button>
   </section>
 </main>
-<script type="module" src="game.js?v=cat-polish-2"></script>
+<script type="module" src="game.js?v=capture-cursor-2"></script>
 </body>
 </html>

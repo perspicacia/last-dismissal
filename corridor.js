@@ -67,7 +67,7 @@ export class Corridor {
   leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.resetCat();this.notify();}
   move(keys,dt) {const blocker=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene],blocker?[blocker]:[]):movePlayer(this.player,keys,dt);}
   reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN,...(this.manualLook?{manualLook:true,pitch:0}:{})};this.keys.clear();this.steps=0;this.catCount=0;this.resetCat();this.buildTextures();this.notify();}
-  setActive(value) {this.active=value;this.keys.clear();if(!value)this.resetCat();}
+  setActive(value,{preserveCat=false}={}) {this.active=value;this.keys.clear();if(!value&&!preserveCat)this.resetCat();}
   resetCat(){this.catEvent=newCatEvent();if(this.canvas)Object.assign(this.canvas.dataset,{catVisible:'false',catCount:String(this.catCount||0),catHeight:'0'});for(const cat of Object.values(this.view3D?.refs.cats||{}))cat.visible=false;}
   catBlockers(){
     if(this.scene==='corridor')return [{x:2,z:3.2,width:1.1,depth:.7}];

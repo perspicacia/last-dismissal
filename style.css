@@ -100,4 +100,9 @@ body[data-screen="gameover"] header{display:none}
 .pause-panel .primary{background:#d2d6c7;color:#14201e;border:1px solid #e5e6d9}
 .pause-exit{background:transparent;color:#b8c0b7;border:1px solid #63726a}
 .pause-panel :is(button,input):focus-visible,.pause-game:focus-visible{outline:2px solid #ffe7c1;outline-offset:4px}
+.capture-controls{position:fixed;right:20px;bottom:18px;z-index:100}
+.capture-controls button{min-height:44px;min-width:0;padding:8px 15px;background:#101b20cc;color:#ded9cd;border:1px solid #858d8266;font-size:13px}
+.capture-controls button:focus-visible{outline:2px solid #ffe7c1;outline-offset:4px}
+body[data-capturing="true"] .scene{cursor:default}
+body[data-capturing="true"] :is(.pause-game,.key-action,.classroom-tools,.inspect-action,.scene-caption,.crosshair,.survival-hud,#feedback){visibility:hidden}
 @media(max-height:540px){.pause-menu{place-items:start center;padding:12px}.pause-panel{padding:18px}.pause-panel h2{font-size:24px;margin-bottom:12px}.pause-controls{margin-bottom:12px}.look-status{margin-bottom:12px}}
