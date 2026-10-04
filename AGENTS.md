@@ -21,6 +21,8 @@
 
 - 현재 일반 게임의 조작/카메라/Esc 규칙은 [specs/mouse-look-comfort.md](specs/mouse-look-comfort.md)를 따른다. WASD 옆걸음·수동 마우스 시점·고정 카메라·일시정지가 이전 A/D 회전·자동 시점·Esc 초기화 규칙을 대체한다.
 
+- 계단 접근 공포음은 [specs/stair-haunt.md](specs/stair-haunt.md)를 따른다. 새 게임당 한 번이며 음소거 중 소비하고 방 이동/일시정지/종료에서 정리한다. 공격자·카메라 조작은 변경하지 않는다.
+
 ## 역할 분담
 
 | 담당 | 범위와 결과물 |
