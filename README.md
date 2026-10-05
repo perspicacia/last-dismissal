@@ -21,9 +21,58 @@
 - 종료 화면에는 `GAME OVER`와 `다시 하기` 버튼을 표시한다. 클릭 또는 Enter/Space로 새 게임을 시작하고 방문 기록·배치·공격 연출을 초기화한다. 종료 화면에서 Escape는 처음 화면, 플레이 중 Escape는 일시정지다. M은 음소거다. [종료 화면 명세](specs/game-over-screen.md).
 - `npm test`: 발견 거리/응시·무작위 배치·방 이동/충돌·렌더·음향과 이전 규칙 회귀 검증. 현재 명세는 [specs/hidden-rabbit-rooms.md](specs/hidden-rabbit-rooms.md).
 
-## 파일 구성
+## 저장소 구성
 
-`exploration.js`는 방 위치·발견·방문 상태, `game.js`는 화면·게임 오버·재시작, `corridor.js`는 이동과 렌더 연결, `mouse-controls.js`는 마우스 잠금/드래그와 수동 시점, `room-props.js`는 음악실/무용실 3D 소품과 충돌 범위다. `three-school.js`와 `three-outdoors.js`는 실내·외부 3D 렌더, `ghost-figures.js`는 정적인 입체 인물, `classroom-board.js`는 칠판/당번 글씨/받침 소품, `classroom.js`는 교실 이동·Canvas 호환 렌더, `audio.js`는 공통 음량·음소거·효과음, `sound-effects.js`는 합성음, `stair-haunt.js`는 계단 접근 단발 이벤트, `stair-haunt-sound.js`는 계단 마찰/발소리/메아리 파형, `recorded-effects.js`는 문·토끼 로컬 녹음의 로딩을 맡는다. `survival.js`와 `logic.js`는 이전 규칙 회귀용으로 보존한다.
+게임 소스는 프로젝트 루트에 있으며, 자산·문서·검증·모델 제작 도구는 폴더별로 나눈다. 아래 트리는 주요 파일만 표시한다.
+
+```text
+last-dismissal/
+├── index.html                 # 게임 페이지와 화면 요소
+├── style.css                  # 시작·플레이·종료 화면 스타일
+├── game.js                    # 게임 시작, 화면 전환, 종료와 재시작
+├── exploration.js             # 교실 탐색, 방문 기록, 숨은 토끼 발견
+├── corridor.js                # 복도 이동과 렌더 연결
+├── classroom.js               # 교실 이동과 Canvas 호환 화면
+├── three-school.js            # 학교 실내 3D 화면
+├── three-outdoors.js          # 창밖 풍경 3D 화면
+├── audio.js                   # 음량·음소거와 효과음 재생
+├── …                          # 입력·캐릭터·소품·공포 연출의 JS 모듈
+├── assets/                    # 게임 자산과 출처 문서
+│   ├── *.png                  # 캐릭터와 사진 이미지
+│   ├── audio/                 # 문·토끼 비명의 WAV와 출처
+│   ├── fonts/                 # 제목·칠판 서체와 라이선스
+│   └── models/                # 개발용 학생 인형 GLB 시안
+├── vendor/                    # 로컬 Three.js 모듈·로더와 라이선스
+├── tests/
+│   ├── *.test.js              # 판정·이동·연출·음향 등의 자동 테스트
+│   └── fixtures/              # 브라우저에서 비교·플레이하는 개발용 화면
+├── docs/
+│   ├── PRD.md                 # 게임 목적과 현재 개발 범위
+│   ├── progress.md            # 완료 작업, 검증 결과와 남은 과제
+│   └── worklogs/              # 역할별 작업·검토 기록
+├── specs/                     # 기능별 요구사항과 완료 조건
+├── modeling/                  # 학생 인형 3D 시안 제작·GLB 내보내기
+├── scripts/                   # 레퍼런스 효과음 편집 도구
+├── package.json               # 실행·테스트·모델 생성 명령과 의존성
+├── package-lock.json          # npm 의존성 버전 고정
+├── AGENTS.md                  # 작업 규칙과 역할 분담
+├── CHARACTERS.md              # 캐릭터 설정
+└── README.md                  # 프로젝트 소개, 실행 방법과 구조
+```
+
+| 역할 | 주요 파일 | 담당 내용 |
+| --- | --- | --- |
+| 게임 진행 | [game.js](game.js), [exploration.js](exploration.js) | 시작·일시정지·게임 오버·재시작, 방별 토끼 배치와 발견 판정 |
+| 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 마우스 시점과 잠금, 영역 캡처 조작 |
+| 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸, 창문과 계단 |
+| 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
+| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [rabbit-pose.js](rabbit-pose.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 정적인 인물, 토끼 팔 자세와 고양이 보행 |
+| 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 토끼 돌진, 무작위 고양이와 계단 접근 이벤트 |
+| 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
+| 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
+| 이전 규칙 | [survival.js](survival.js), [logic.js](logic.js) | 이전 생존·관찰 버전의 회귀 검증용 보존 모듈 |
+
+처음 살펴볼 때는 [기획과 범위](docs/PRD.md) → [현재 게임 규칙](specs/hidden-rabbit-rooms.md) → [게임 진입 코드](game.js) → [작업·검증 기록](docs/progress.md) 순서로 읽으면 된다. 자동 테스트는 `npm test`로 실행하며, `tests/fixtures/`는 일반 게임과 구분된 개발용 확인 화면이다.
 
 ## 음향 기획
 
