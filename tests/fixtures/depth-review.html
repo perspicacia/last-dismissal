@@ -1,0 +1,5 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>학교 입체감 검증</title><style>body{margin:0;background:#0b1518;color:#dce3d2;font:14px sans-serif}main{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px}canvas{width:100%;height:670px}h2{font-size:16px}</style><main>
+<section><h2>시계 · 정상 23:17</h2><canvas id="clock" aria-label="갈색 테두리 꽃무늬 정상 시계"></canvas></section><section><h2>시계 · 이상</h2><canvas id="abnormal" aria-label="아래를 향하는 이상 시곗바늘"></canvas></section><section><h2>창틀 · 비스듬한 시점</h2><canvas id="window" aria-label="창틀 두께와 숲 원근"></canvas></section></main><script type="module">
+import {Corridor} from '../../corridor.js';
+for(const id of ['clock','abnormal','window']){const c=new Corridor(document.getElementById(id),()=>{},()=>{});c.anomaly=id==='abnormal'?'clock':null;c.player=id==='window'?{x:1.3,z:6.4,angle:1.05}:{x:1.7,z:19,angle:Math.PI/2};c.buildTextures();c.draw(0);for(const image of [c.windowGhost,c.boardPhoto,c.boardPhotoErased])image.onload=()=>{c.buildTextures();c.draw(0);};new ResizeObserver(()=>c.draw(0)).observe(c.canvas);}
+</script></html>

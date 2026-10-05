@@ -1,0 +1,22 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>밤 학교 조명 비교</title>
+<style>body{margin:0;background:#10191e;color:#ddd;font:14px sans-serif}nav{padding:10px;display:flex;gap:6px;flex-wrap:wrap}button{padding:8px}canvas{display:block;width:100vw;height:calc(100vh - 100px)}output{display:block;padding:0 12px}</style>
+<nav><button data-view="corridor">복도</button><button id="on">전등 켜짐</button><button id="off">앞쪽 전등 소등</button><button id="live">반복 연출</button><button id="reduced" aria-pressed="false">동작 줄이기</button><button data-view="window">복도 창밖</button><button data-view="classroom31">3-1</button><button data-view="classroom">3-2</button><button data-view="classroom33">3-3</button><button data-view="music">음악실</button><button data-view="dance">무용실</button></nav>
+<output id="status" aria-live="polite"></output><canvas data-renderer="three" aria-label="밤 학교 조명 검증" tabindex="0"></canvas>
+<script type="module">
+const params=new URLSearchParams(location.search);
+if(params.has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
+let reduced=false;const match=window.matchMedia.bind(window);window.matchMedia=query=>query==='(prefers-reduced-motion: reduce)'?{matches:reduced}:match(query);
+const {Corridor}=await import('../../corridor.js?v=student-original-1');
+const {SchoolLighting}=await import('../../school-lighting.js');
+const c=new Corridor(document.querySelector('canvas'),()=>{},()=>{}),canvas=c.canvas;c.exploration={ended:false};c.tutorial=false;
+let live=false;
+function lighting(){return c.view3D?(c.view3D.lighting??=new SchoolLighting()):(c.lighting??=new SchoolLighting());}
+function view(id){c.reset(null);c.exploration={ended:false};if(id==='window')c.player={x:.6,z:6.2,angle:Math.PI/2};else if(id!=='corridor'){c.enterClassroom(id);c.player={x:0,z:3.2,angle:0};}live=false;}
+for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>view(button.dataset.view);
+document.querySelector('#on').onclick=()=>{lighting().reset();live=false;};
+document.querySelector('#off').onclick=()=>{lighting().elapsed=9.5;lighting().last=0;live=false;};
+document.querySelector('#live').onclick=()=>{lighting().reset();live=true;};
+document.querySelector('#reduced').onclick=event=>{reduced=!reduced;event.currentTarget.setAttribute('aria-pressed',String(reduced));};
+function frame(time){c.draw(live?time:0);document.querySelector('#status').textContent=`${c.scene} · ${canvas.dataset.rendererReady} · 전등 ${canvas.dataset.corridorLights} · ${lighting().elapsed.toFixed(1)}초`;requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script></html>

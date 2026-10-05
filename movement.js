@@ -7,15 +7,21 @@ export function revealsTeeth(player, anomaly, alreadyOpen = false) {
   return distance<4.2 && facing>.75;
 }
 export function movePlayer(player, keys, dt) {
-  const step = Math.min(Math.max(dt, 0), .05);
+  const {angle,dx,dz}=movementDelta(player,keys,dt);
+  return {
+    ...player,angle,
+    x: Math.max(-2.55, Math.min(2.55, player.x + dx)),
+    z: Math.max(.8, Math.min(24.6, player.z + dz))
+  };
+}
+export function movementDelta(player,keys,dt){
+  const step = Number.isFinite(dt)?Math.min(Math.max(dt, 0), .05):0;
   const turn = Number(keys.has('right')) - Number(keys.has('left'));
   const walk = Number(keys.has('forward')) - Number(keys.has('back'));
-  const angle = player.angle + turn * 1.65 * step;
-  return {
-    angle,
-    x: Math.max(-2.55, Math.min(2.55, player.x + Math.sin(angle) * walk * 3.8 * step)),
-    z: Math.max(.8, Math.min(24.6, player.z + Math.cos(angle) * walk * 3.8 * step))
-  };
+  const strafe=Number(keys.has('strafeRight'))-Number(keys.has('strafeLeft'));
+  const angle = player.angle + turn * (player.manualLook?1.05:1.65) * step;
+  const distance=(player.manualLook?3:3.8)*step/Math.max(1,Math.hypot(walk,strafe));
+  return {angle,dx:(Math.sin(angle)*walk+Math.cos(angle)*strafe)*distance,dz:(Math.cos(angle)*walk-Math.sin(angle)*strafe)*distance};
 }
 export function nearbyItem(player, anomaly) {
   const items = [

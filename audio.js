@@ -1,6 +1,9 @@
+import {effectSamples} from './sound-effects.js?v=cat-polish-2';
+import {loadRecordedEffects} from './recorded-effects.js?v=reference-audio-1';
 export class SchoolAudio {
-  constructor() { this.volume = .5; this.muted = false; }
+  constructor() { this.volume = .5; this.muted = false; this.effects=new Set(); this.effectBuffers=new Map(); this.recordedBuffers=new Map(); this.foot=0; this.lastStep=-Infinity; }
   async start() {
+    const request=this.request=(this.request||0)+1;this.requested=true;
     const Audio = window.AudioContext || window.webkitAudioContext;
     if (!Audio) throw new Error('이 브라우저는 오디오 재생을 지원하지 않습니다.');
     if (!this.ctx) {
@@ -38,8 +41,20 @@ export class SchoolAudio {
       this.music = this.ctx.createBufferSource(); this.music.buffer = buffer; this.music.loop = true;
       this.music.connect(this.ambient); this.music.start();
     }
+    this.ambient.gain.cancelScheduledValues(this.ctx.currentTime);
     this.ambient.gain.setTargetAtTime(.7, this.ctx.currentTime, .2);
-    await this.ctx.resume(); this.update();
+    await this.ctx.resume();
+    if(request!==this.request){if(!this.requested)await this.ctx.suspend();return;}
+    this.update();
+    await this.loadEffectFiles();
+  }
+  loadEffectFiles(fetcher = globalThis.fetch) {
+    if (!this.ctx) return Promise.resolve([]);
+    if (!this.effectLoad) {
+      this.effectLoad = loadRecordedEffects(this.ctx, this.recordedBuffers, fetcher)
+        .finally(() => { this.effectLoad = null; });
+    }
+    return this.effectLoad;
   }
   update() { if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, .15); }
   level() {
@@ -59,8 +74,52 @@ export class SchoolAudio {
     osc.connect(gain).connect(this.master); osc.start(t); osc.stop(t + duration + .05);
     osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
+  playEffect(kind,level,variant=0,pan=null) {
+    if(!this.ctx||this.ctx.state!=='running'||this.muted||this.volume===0)return false;
+    const key=`${kind}:${variant}`;
+    const recorded=this.recordedBuffers.get(kind);
+    if(!recorded&&!this.effectBuffers.has(key)){
+      const samples=effectSamples(kind,this.ctx.sampleRate,variant),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
+      buffer.getChannelData(0).set(samples);this.effectBuffers.set(key,buffer);
+    }
+    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();
+    source.buffer=recorded||this.effectBuffers.get(key);gain.gain.value=level;source.connect(gain);
+    const panner=Number.isFinite(pan)&&this.ctx.createStereoPanner?this.ctx.createStereoPanner():null;
+    if(panner){panner.pan.value=Math.max(-.7,Math.min(.7,pan));gain.connect(panner);panner.connect(this.master);}else gain.connect(this.master);
+    const effect={source,gain,panner};this.effects.add(effect);
+    source.onended=()=>{source.disconnect();gain.disconnect();panner?.disconnect();this.effects.delete(effect);};
+    source.start();this.onEffect?.(kind,{source:recorded?'recording':'synthesis',pan:panner?.pan.value??0});return true;
+  }
+  footstep(scene='corridor') {
+    if(!this.ctx||this.ctx.currentTime-this.lastStep<.18)return false;
+    if(!this.playEffect('footstep',scene==='classroom'?.24:.32,this.foot%2))return false;
+    this.lastStep=this.ctx.currentTime;this.foot++;return true;
+  }
+  jumpscare(){return this.playEffect('jumpscare',.58);}
+  doorSlide(){return this.playEffect('door-slide',.27);}
+  babyCry(){return this.playEffect('baby-cry',.14);}
+  ghostLaugh(){return this.playEffect('ghost-laugh',.24);}
+  catMeow(variant=0){return this.playEffect('cat-meow',.16,variant);}
+  stairHaunt(pan=0){return this.playEffect('stair-haunt',.36,0,pan);}
+  clearEffects(){
+    for(const {source,gain,panner} of this.effects){source.onended=null;source.stop();source.disconnect();gain.disconnect();panner?.disconnect();}
+    this.effects.clear();this.lastStep=-Infinity;this.foot=0;
+  }
+  // Short, soft toy/broadcast cues. All tones route through master gain,
+  // so mute and the player's volume also apply to these effects.
+  cue(name) {
+    const phrases = {
+      'key-pickup': [[659.25, .22, .035, 0], [523.25, .3, .025, .12]],
+      'door-unlock': [[220, .65, .04, 0], [233.08, .6, .025, .08], [440, .3, .018, .3]],
+      'doll-rise': [[174.61,.12,.025,0],[185,.45,.025,.08],[349.23,.28,.013,.18]],
+      'mascot-reveal': [[130.81, .7, .04, 0], [138.59, .65, .03, .04], [277.18, .35, .012, .18]],
+    };
+    if (!Object.hasOwn(phrases, name)) return false;
+    phrases[name].forEach(args => this.tone(...args));
+    return true;
+  }
   inspect() { this.tone(220,.15,.045); }
   result(correct) { if (correct) this.tone(440,.65,.09); else {this.tone(65,.8,.13); this.tone(69,.8,.1);} }
   end() { if (this.ctx) this.ambient.gain.setTargetAtTime(.12,this.ctx.currentTime,1); [261.6,329.6,392].forEach((f,i)=>this.tone(f,2,.08,i*.3)); }
-  async stop() { if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; await this.ctx.suspend(); this.ambient.gain.value = .7; } }
+  async stop() { this.request=(this.request||0)+1;this.requested=false;this.clearEffects(); if (this.ctx) { this.master.gain.cancelScheduledValues(this.ctx.currentTime); this.master.gain.value = 0; this.ambient.gain.cancelScheduledValues(this.ctx.currentTime); this.ambient.gain.value = .7; await this.ctx.suspend(); } }
 }

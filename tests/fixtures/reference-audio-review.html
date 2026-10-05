@@ -1,0 +1,18 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>녹음 효과음 검증</title>
+<style>body{font:16px/1.7 sans-serif;background:#132127;color:#e5eadf;padding:30px}button{padding:12px;margin:6px}pre{white-space:pre-wrap}audio{display:block;margin:12px 0}</style>
+<h1>문·토끼 녹음 효과음 검증</h1>
+<p>아래 검증 버튼은 출력 장치에 소리를 내지 않는다. 직접 청감 확인은 파일 플레이어를 사용한다.</p>
+<button id="prepare">무음 검증 준비</button><button id="door">문 호출</button><button id="rabbit">토끼 비명 호출</button><button id="mute-probe">음소거 차단 확인</button><button id="stop">종료 정리</button>
+<pre id="result">대기</pre><p>문 소리</p><audio controls preload="metadata" src="../../assets/audio/door-creak.wav"></audio><p>토끼 비명</p><audio controls preload="metadata" src="../../assets/audio/rabbit-scream.wav"></audio>
+<script type="module">
+import {SchoolAudio} from '../../audio.js?v=reference-audio-1';
+const audio=new SchoolAudio(),out=document.querySelector('#result');let silent,events=[],blocked=null,maxLevel=0;
+audio.onEffect=(kind,details)=>events.push(`${kind}: ${details.source}`);
+function report(){out.textContent=JSON.stringify({context:audio.ctx?.state,decoded:[...audio.recordedBuffers].map(([kind,b])=>({kind,duration:b.duration,channels:b.numberOfChannels})),events,blocked,active:audio.effects.size,level:audio.level().toFixed(5),maxLevel:maxLevel.toFixed(5)},null,2);}
+document.querySelector('#prepare').onclick=async()=>{audio.muted=true;await audio.start();if(!silent){audio.analyser.disconnect();silent=audio.ctx.createGain();silent.gain.value=0;audio.analyser.connect(silent).connect(audio.ctx.destination);}audio.muted=false;audio.update();report();};
+document.querySelector('#door').onclick=()=>{audio.doorSlide();report();};
+document.querySelector('#rabbit').onclick=()=>{audio.jumpscare();report();};
+document.querySelector('#mute-probe').onclick=()=>{audio.clearEffects();audio.muted=true;audio.update();blocked={door:audio.doorSlide(),rabbit:audio.jumpscare()};report();};
+document.querySelector('#stop').onclick=async()=>{await audio.stop();report();};
+setInterval(()=>{maxLevel=Math.max(maxLevel,audio.level());report();},100);
+</script></html>

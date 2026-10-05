@@ -2,42 +2,71 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>마지막 하교 · 관찰 공포게임</title>
-  <link rel="stylesheet" href="style.css">
+  <title>LAST DISMISSAL</title>
+  <link rel="preload" href="assets/fonts/Lacquer-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="style.css?v=capture-cursor-1">
 </head>
-<body>
+<body data-screen="intro">
 <main>
-  <header><a href="./" class="brand">最後下校 <span>마지막 하교</span></a><div class="audio-controls"><span id="audio-status" role="status">BGM 대기</span><button id="sound-test">소리 확인</button><button id="mute" aria-pressed="false">소리 켜짐</button><label>음량 <input id="volume" type="range" min="0" max="100" value="50"></label></div></header>
+  <header><a href="./" class="brand">LAST DISMISSAL</a><div class="audio-controls"><span id="audio-status" class="sr-only" role="status">BGM 대기</span><button id="sound-test" hidden>소리 확인</button><button id="mute" aria-pressed="false">소리 켜짐</button><label>음량 <input id="volume" type="range" min="0" max="100" value="50"></label></div></header>
   <section id="intro" class="intro">
-    <p class="eyebrow">OBSERVATION HORROR · FIRST PROTOTYPE</p>
-    <h1>마지막<br><em>하교.</em></h1>
-    <p class="story">과제 제출은 끝났다.<br>그런데 학교는 아직 나를 보내주지 않는다.</p>
-    <div class="rules"><p>이상이 있다면 <strong>위층으로.</strong><br>이상이 없다면 <strong>아래층으로.</strong></p><p>다섯 번 연속 올바르게 선택하면 하교할 수 있습니다.<br>첫 복도를 조사해 정상 상태를 기억하세요.</p></div>
-    <div class="start-actions"><button id="start" class="primary">학교에 들어가기 <span>→</span></button></div>
-    <p class="fine">↑↓ 앞뒤 이동 / ←→ 방향 회전 / E 조사 / M 음소거<br>소리 없이도 플레이 가능 · 갑작스러운 큰 소리와 점멸 없음</p>
+    <div class="intro-poster" aria-hidden="true">
+      <div class="poster-hall"></div>
+      <div class="poster-cast">
+        <figure class="poster-figure poster-faceless"><img src="assets/faceless-student.png" width="1024" height="1536" alt="" decoding="async"></figure>
+        <figure class="poster-figure poster-ghost"><img src="assets/window-ghost.png" width="1024" height="1536" alt="" decoding="async"></figure>
+        <figure class="poster-figure poster-doll"><img src="assets/doll-student-open-slit-eyes.png" width="1024" height="1536" alt="" decoding="async"></figure>
+        <figure class="poster-figure poster-boy"><img src="assets/piano-boy-ghost.png" width="1024" height="1536" alt="" decoding="async"></figure>
+        <figure class="poster-figure poster-rabbit"><img src="assets/mascot-rabbit-open.png" width="1024" height="1536" alt="" decoding="async" fetchpriority="high"></figure>
+      </div>
+      <div class="poster-shade"></div><div class="poster-scratches"></div>
+    </div>
+    <div class="intro-content">
+      <h1 class="intro-title"><span class="title-last">LAST</span> <em>DISMISSAL</em></h1>
+      <div class="start-actions"><button id="start" class="primary">학교에 들어가기 <span aria-hidden="true">→</span></button></div>
+    </div>
   </section>
   <section id="game" hidden>
     <div class="game-heading"><div><p class="eyebrow" id="mode">야간 자율학습 종료</p><h2 id="floor">3층 동쪽 복도</h2></div><div class="progress"><span id="progress-label">하교 기록 0 / 5</span><div id="marks" aria-hidden="true"></div></div></div>
     <div class="scene">
-      <canvas id="corridor" tabindex="0" role="application" aria-label="학교 복도 탐색. 위아래 화살표로 이동하고 좌우 화살표로 회전합니다. 가까운 사물은 E 키로 조사합니다."></canvas>
-      <div class="scene-caption">23:17 <span>한빛고등학교 · EAST WING</span></div>
+      <canvas data-renderer="three" id="corridor" tabindex="0" role="application" aria-label="학교 탐색. WASD로 이동하고 마우스 또는 드래그로 둘러봅니다. 화살표도 사용할 수 있습니다. E 키로 문을 이용하고 Esc로 일시정지합니다."></canvas>
+      <button id="pause-game" class="pause-game" aria-label="게임 일시정지">일시정지</button>
+      <div class="scene-caption">23:17</div>
       <span class="crosshair" aria-hidden="true">+</span>
-      <p id="walk-prompt" class="walk-prompt">↑ 앞으로 걷기 · ← → 둘러보기</p>
-      <div class="vignette"></div>
+
+      <button id="room-action" class="key-action" hidden>교실 들어가기</button>
+      <div class="vignette"></div><div id="survival-hud" class="survival-hud"><span id="survival-time"></span><p id="threat-status" role="status" aria-live="polite"></p></div><div id="jumpscare" class="jumpscare" hidden><img src="assets/mascot-rabbit-open.png" alt="날카로운 이빨을 드러낸 토끼가 눈앞에 나타났다"></div>
     </div>
-    <div class="movement-controls" aria-label="이동 조작">
-      <div class="direction-pad"><button data-move="left" aria-label="왼쪽으로 회전">←</button><button data-move="forward" aria-label="앞으로 걷기">↑</button><button data-move="back" aria-label="뒤로 걷기">↓</button><button data-move="right" aria-label="오른쪽으로 회전">→</button></div>
-      <button id="inspect" disabled>E · 가까운 사물 조사</button>
-      <span id="position">복도 입구</span>
-    </div>
+
+    <div id="classroom-tools" class="classroom-tools" hidden><span>3-2 교실</span><button id="door-toggle" aria-pressed="false">문 닫기</button><button id="room-return">복도로 돌아가기 →</button></div>
+    <button id="inspect" class="inspect-action" hidden>살펴보기</button><span id="position" hidden></span>
     <div class="inspection" role="status" aria-live="polite"><span id="inspect-title">먼저 복도를 살펴보세요.</span><p id="inspect-text">화살표로 걸어가 사물 가까이에서 E 키를 누르세요.</p></div>
-    <div class="choices"><button id="up">위층 계단 선택 <small>이상이 있다</small></button><button id="down">아래층 계단 선택 <small>이상이 없다</small></button></div>
     <p id="feedback" role="status" aria-live="polite">첫 복도에는 이상이 없습니다. 정상 상태를 기억하세요.</p>
     <div class="game-footer"><span id="record">출석부 · 아직 하교한 학생 없음</span><button id="restart">처음 화면</button></div>
   </section>
+  <div id="pause-menu" class="pause-menu" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
+    <div class="pause-panel">
+      <h2 id="pause-title">잠시 멈춤</h2>
+      <p class="pause-controls">WASD 이동 · 마우스 둘러보기<br>E / 클릭 문 열기 · Esc 일시정지 · P 화면 캡처</p>
+      <label class="sensitivity-label" for="sensitivity">마우스 감도 <output id="sensitivity-value" for="sensitivity">65%</output></label>
+      <input id="sensitivity" type="range" min="20" max="180" step="5" value="65">
+      <p id="look-status" class="look-status">마우스 잠금이 어려우면 화면을 드래그하거나 화살표를 사용하세요.</p>
+      <button id="resume-game" class="primary">계속하기</button>
+      <button id="capture-game" aria-describedby="capture-help">화면 캡처</button>
+      <p id="capture-help" class="look-status">장면을 고정하고 커서를 풀어 줍니다.<br>Mac: ⌘⇧4 · Windows: Win+Shift+S</p>
+      <button id="pause-exit" class="pause-exit">처음 화면으로</button>
+    </div>
+  </div>
+  <div id="capture-controls" class="capture-controls" hidden>
+    <p class="sr-only" role="status">화면이 고정되었습니다. 트랙패드로 영역을 선택해 캡처하세요. P 또는 계속하기로 재개하고 Esc로 설정을 엽니다.</p>
+    <button id="capture-resume">계속하기 · P</button>
+  </div>
   <section id="ending" class="intro" hidden><p class="eyebrow">05:42 · 학교 정문</p><h1>이제,<br><em>집에 가자.</em></h1><p class="story">아침 바람이 불어왔다.<br>출석부의 마지막 이름 옆에 ‘하교’가 찍혔다.</p><p id="result"></p><button id="again" class="primary">다시 학교에 들어가기 →</button></section>
-  <footer class="site-footer"><span>LAST DISMISSAL</span><span>부트캠프 과제 · Prototype 01</span></footer>
+  <section id="gameover" class="game-over-screen" aria-labelledby="game-over-title" hidden>
+    <h1 id="game-over-title"><span>GAME</span> <span>OVER</span></h1>
+    <button id="retry" class="primary">다시 하기</button>
+  </section>
 </main>
-<script type="module" src="game.js"></script>
+<script type="module" src="game.js?v=capture-cursor-2"></script>
 </body>
 </html>
