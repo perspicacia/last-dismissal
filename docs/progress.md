@@ -524,3 +524,12 @@
 - 최신 일반 `capture-cursor-2` 화면은 음소거·캡처 모드로 준비했다. 캡처는 `/Users/perspicacia/.codex/visualizations/2026/10/01/01a0f669-ef7c-7ec3-86a8-aa865954cf4c/capture-mode-game.png`다.
 - 미확인: 자동화에서 macOS 영역 선택/파일 저장 완료, Windows/Linux의 실제 캡처 도구·모바일/다른 트랙패드·실제 청감은 확인하지 않았다. Chrome의 재확인에는 사용자 조작으로 중단된 단계가 있으며 최종 작은 일시정지 중복 방지 수정은 내장 브라우저에서 검증했다. 이번 Canvas 전체 게임 오버/재시작은 재검증하지 않았다. 리뷰·main 병합·배포는 미진행이다.
 - 다음 작은 작업: 사용자 기기에서 P → ⌘⇧4로 원하는 부분의 영역 선택을 확인한다. OS가 단축키를 먼저 가로채는 환경에서는 자동 고정 대신 P를 먼저 누른다.
+
+## 2026-10-05 — 과제 제출용 GitHub 저장소 공개
+
+- 사용자가 강사에게 과제 링크를 제출할 수 있도록 공개 전환을 요청했다. `perspicacia/last-dismissal`의 visibility를 private에서 public으로 변경했다. 게임 코드·기본 브랜치·배포 설정은 변경하지 않았다.
+- 공개 전 로컬 Git 전체 참조의 텍스트 blob 673개에서 주요 비밀키·토큰·자격증명 패턴과 이메일·전화번호 패턴을 확인했고 일치 항목은 없었다. 민감한 이름의 환경변수/키 파일도 발견하지 않았다. 패턴 점검은 이미지·모든 개인정보·GitHub의 외부 기록에 대한 전수 검증을 뜻하지 않는다.
+- 설정 검증: GitHub CLI와 인증 없는 REST API에서 `private: false`, `visibility: public`, 기본 브랜치 `main`을 확인했다. 인증 없는 HTTP 요청으로 저장소 루트와 `codex/capture-cursor-release` 페이지 모두 HTTP 200을 확인했다.
+- 제출 링크: https://github.com/perspicacia/last-dismissal . 최신 게임 코드가 있는 브랜치 링크: https://github.com/perspicacia/last-dismissal/tree/codex/capture-cursor-release . 확인 시 최신 브랜치는 `504e45c`, main은 `e9e33ee`였다. 기능 PR의 리뷰·main 병합은 미진행이다.
+- 검증 범위: 저장소 접근 권한 변경과 링크 접근만 확인했다. 게임 코드 변경이 없어 자동 테스트·브라우저 플레이는 이번 작업에서 재실행하지 않았다. 게임의 공개 웹 배포와 강사 기기에서의 실제 실행은 미확인이다.
+- 다음 작은 작업: 과제에 저장소 링크와 최신 브랜치 링크를 함께 제출하고, 기능 PR을 리뷰한 뒤 main에 통합한다.
