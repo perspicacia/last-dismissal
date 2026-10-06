@@ -2,14 +2,14 @@ import {manualCameraPose} from './mouse-controls.js?v=mouse-comfort-1';
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
-import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=character-depth-6';
+import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=character-original-1';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,buildSchoolWindow,windowWood} from './school-windows.js';
-import {buildBlackCat,updateBlackCat} from './black-cat.js?v=cat-polish-2';
+import {buildBlackCat,updateBlackCat} from './black-cat.js?v=character-original-1';
 import {catPose} from './cat-event.js?v=cat-polish-2';
 import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
-import {volumeFromImage} from './doll-volume.js?v=doll-sides-stable-1';
+import {volumeFromImage} from './doll-volume.js?v=character-original-1';
 import {loadStudentModel,prepareStudentModel} from './student-model.js?v=student-glb-1';
 import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js';
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
@@ -54,7 +54,7 @@ export class ThreeSchoolView {
     if(solid)solid.visible=useSolid;
     const face=this.refs.dollFace||this.refs.doll.material;
     this.refs.doll.visible=!useSolid&&Boolean(face.map)&&Boolean(this.dollVolumeReady);
-    this.refs.dollRoot.position.y=useSolid?solid.userData.floorHeight:.035;
+    this.refs.dollRoot.position.y=useSolid?solid.userData.floorHeight:.005;
     if(source.canvas)Object.assign(source.canvas.dataset,{studentModel:useSolid?'glb':'image-volume',dollReady:String(useSolid||Boolean(this.dollVolumeReady))});
     return useSolid;
   }
@@ -114,7 +114,7 @@ export class ThreeSchoolView {
     }
     if(classroom){
       this.slidingDoor(g,0,.02,-Math.PI/2);
-      if(kind==='classroom'){const root=new THREE.Group(),tilt=new THREE.Group();root.position.set(DOLL.x,.035,DOLL.z);root.rotation.y=Math.PI;root.add(tilt);g.add(root);
+      if(kind==='classroom'){const root=new THREE.Group(),tilt=new THREE.Group();root.position.set(DOLL.x,.005,DOLL.z);root.rotation.y=Math.PI;root.add(tilt);g.add(root);
       this.refs.dollRoot=root;this.refs.dollTilt=tilt;this.refs.doll=this.picture(tilt,null,DOLL.height*2/3,DOLL.height,[0,DOLL.height/2,0]);
       Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;this.refs.doll.receiveShadow=true;
       tilt.rotation.x=Math.PI/2;this.contactShadow(g,DOLL.x,.008,DOLL.z-DOLL.height*.5,.70,1.55);}

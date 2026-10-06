@@ -1,23 +1,17 @@
 import * as THREE from './vendor/three.module.js';
 // Preserve photo X/Y and UV proportions. A gently rounded front and separate
 // underside meet at a thin seam; neither surface forms an extruded side wall.
-// Nominal half-thickness in metres for the 1.55 m doll; shared by both surfaces.
+// Sculpt only depth: X/Y and projected photo UV remain exactly as photographed.
 export function dollDepth(u,v){
-  const ellipsoid=(x,y,rx,ry,r)=>r*Math.sqrt(Math.max(0,1-((u-x)/rx)**2-((v-y)/ry)**2));
-  const cheek=Math.max(0,.34-u,u-.69)/.22;
-  const head=.025+.095*Math.sqrt(Math.max(0,1-cheek*cheek));
-  const body=.014+Math.max(
-    ellipsoid(.52,.41,.23,.16,.088),
-    ellipsoid(.52,.61,.27,.18,.078),
-    ellipsoid(.31,.57,.085,.16,.059),
-    ellipsoid(.72,.57,.085,.16,.059),
-    ellipsoid(.46,.82,.08,.19,.066),
-    ellipsoid(.60,.82,.08,.19,.066)
+  const bump=(x,y,rx,ry,r)=>r*Math.exp(-2*(((u-x)/rx)**2+((v-y)/ry)**2));
+  const skull=Math.sqrt(Math.max(0,1-((u-.49)/.26)**2-((v-.17)/.17)**2));
+  // Cranium, cheeks and a shallow nose sit above an independently rounded dress.
+  return .020+Math.max(
+    .205*skull+bump(.505,.204,.047,.047,.025),
+    bump(.51,.425,.24,.15,.160),bump(.53,.61,.28,.15,.176),
+    bump(.31,.55,.075,.14,.112),bump(.73,.55,.075,.14,.112),
+    bump(.45,.83,.072,.19,.103),bump(.61,.83,.072,.19,.103)
   );
-  if(v<=.32)return head;
-  if(v>=.40)return body;
-  const t=(v-.32)/.08,blend=t*t*(3-2*t);
-  return head*(1-blend)+body*blend;
 }
 // Row-averaged opaque colours provide a smooth, separate underside material.
 // Sampling each X coordinate repeats hair strands and cloth folds vertically
@@ -65,14 +59,20 @@ export function buildDollVolume(pixels,width,height,worldHeight=1.55,columns=192
   const stepX=worldWidth/columns,stepY=worldHeight/rows;
   for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++){const i=y*stride+x;if(x)distances[i]=Math.min(distances[i],distances[i-1]+stepX);if(y)distances[i]=Math.min(distances[i],distances[i-stride]+stepY);}
   for(let y=rows;y>=0;y--)for(let x=columns;x>=0;x--){const i=y*stride+x;if(x<columns)distances[i]=Math.min(distances[i],distances[i+1]+stepX);if(y<rows)distances[i]=Math.min(distances[i],distances[i+stride]+stepY);}
-  const scale=worldHeight/1.55,frontZ=-.14*scale,seam=.002*scale,blurred=undersideColours(pixels,width,height);
+  const scale=worldHeight/1.55,seam=.002*scale,blurred=undersideColours(pixels,width,height);
+  const centers=Float32Array.from({length:rows+1},(_,y)=>{
+    const v=y/rows,smooth=(a,b)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};
+    return (.13-(.13-.105)*smooth(.29,.40)-(.105-.064)*smooth(.67,.76))*scale;
+  });
   const underside=new Float32Array(count),surface=new Float32Array(count),vertexColours=[];
   for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++){
     const u=x/columns,v=y/rows,i=y*stride+x;
-    const rounding=Math.sin(Math.min(1,distances[i]/(.14*scale))*Math.PI/2);
-    const depth=Math.min(.14,2*dollDepth(u,v))*scale;
-    const thickness=seam+(depth-seam)*rounding,mid=frontZ/2;
-    surface[i]=mid-thickness/2;underside[i]=mid+thickness/2;
+    const rounding=Math.sin(Math.min(1,distances[i]/(.11*scale))*Math.PI/2);
+    const depth=dollDepth(u,v)*scale,thickness=seam+(depth-seam)*rounding;
+    // Both halves curve towards a shared seam at the side of the skull/cloth.
+    // Putting every silhouette edge on the floor makes a triangular mound.
+    const mid=-centers[y],radius=Math.min(thickness/2,centers[y]-.002*scale);
+    underside[i]=mid+radius;surface[i]=mid-radius;
     const color=blurred(Math.round(u*(width-1)),Math.round(v*(height-1)));
     vertexColours.push(color.r,color.g,color.b);
   }

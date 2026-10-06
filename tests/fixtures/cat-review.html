@@ -3,7 +3,7 @@
 <nav><button id="front">고양이 정면</button><button id="side">고양이 옆모습</button><button id="close">얼굴 가까이</button><button id="walk">보행 재생</button><button id="contact">발 접지 자세</button><button id="swing">발 들기 자세</button><button id="room">교실 보행</button><button id="reduced">동작 줄이기</button><span id="status">정지 시안</span></nav>
 <canvas id="view" data-renderer="three" tabindex="0" aria-label="고양이 외형과 보행"></canvas>
 <script type="module">
-import {Corridor} from '../../corridor.js?v=cat-polish-2';
+import {Corridor} from '../../corridor.js?v=character-original-1';
 import {CAT_DURATION,newCatEvent} from '../../cat-event.js?v=cat-polish-2';
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 let reduced=false;const match=window.matchMedia.bind(window);window.matchMedia=query=>query==='(prefers-reduced-motion: reduce)'?{matches:reduced}:match(query);

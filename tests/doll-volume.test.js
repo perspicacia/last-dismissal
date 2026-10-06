@@ -33,11 +33,14 @@ test('완만한 앞면에서도 원본 사진의 XY·UV 비율과 중앙 얼굴 
  for(const i of photoVertices){
   assert.ok(Math.abs(a.getX(i)-(uv.getX(i)-.5)*1.55*w/h)<1e-6);
   assert.ok(Math.abs(a.getY(i)-(uv.getY(i)-.5)*1.55)<1e-6);
-  assert.ok(a.getZ(i)>=-.14001&&a.getZ(i)<=-.07099);
+  assert.ok(a.getZ(i)>=-.27001&&a.getZ(i)<0);
+  assert.ok(Number.isFinite(normal.getX(i))&&Number.isFinite(normal.getY(i))&&Number.isFinite(normal.getZ(i)));
+  assert.ok(normal.getZ(i)<=0,'photo normals face outwards');
   const u=uv.getX(i),v=1-uv.getY(i);
-  if(u>.35&&u<.65&&v>.14&&v<.25){faceDepth.push(a.getZ(i));assert.ok(normal.getZ(i)<-.99);}
+  if(u>.35&&u<.65&&v>.14&&v<.25){faceDepth.push(a.getZ(i));}
  }
- assert.ok(faceDepth.length>0);assert.ok(Math.max(...faceDepth)-Math.min(...faceDepth)<1e-6,'eyes and mouth keep the same frontal depth');
+ assert.ok(faceDepth.length>0);assert.ok(Math.min(...faceDepth)<-.20,'the skull has depth beyond the former 14 cm plate');
+ assert.ok(Math.max(...faceDepth)-Math.min(...faceDepth)>.01,'cheeks are curved instead of a flat face');
  assert.ok(Math.abs((g.boundingBox.max.x-g.boundingBox.min.x)/1.55-w/h)<1e-6);
 });
 
@@ -86,7 +89,7 @@ test('사진 뒤의 두께는 실루엣부터 내부까지 둥글게 변하며 �
  const {pixels,w,h}=rectangle(48,72),g=buildDollVolume(pixels,w,h,1.55,w,h),a=g.getAttribute('position'),n=(w+1)*(h+1);
  const thickness=(x,y)=>a.getZ(n+y*(w+1)+x)-a.getZ(y*(w+1)+x);
  assert.ok(thickness(8,28)>thickness(7,28));assert.ok(thickness(10,28)>thickness(8,28));
- assert.ok(thickness(24,28)>.11);assert.ok(thickness(24,61)>.10);
+ assert.ok(thickness(24,28)>.11);assert.ok(thickness(22,61)>.10);
  const front=g.groups[0];for(let i=front.start;i<front.start+front.count;i++)assert.ok(g.index.array[i]<n);
  assert.equal(g.groups[1].materialIndex,1);
 });

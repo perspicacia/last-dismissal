@@ -3,7 +3,7 @@ import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=cat-polish-2';
+import { ThreeSchoolView } from './three-school.js?v=character-original-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=character-depth-6';
@@ -13,7 +13,7 @@ import { drawWindowView } from './window-view.js';
 import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=cat-polish-2';
 import {ROOM_BLOCKERS} from './room-props.js';
 import {newCatEvent,advanceCatEvent,catPose} from './cat-event.js?v=cat-polish-2';
-import {drawBlackCat} from './black-cat.js?v=cat-polish-2';
+import {drawBlackCat} from './black-cat.js?v=character-original-1';
 import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js?v=mouse-comfort-1';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
