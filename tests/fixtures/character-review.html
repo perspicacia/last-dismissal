@@ -5,13 +5,13 @@
 <main><aside><div id="reference-wrap"><img id="reference" alt="원본 외형 기준"></div><p id="note"></p></aside><canvas id="view" aria-label="캐릭터 입체 외형"></canvas></main>
 <script type="module">
 import * as THREE from '../../vendor/three.module.js';
-import {buildPortraitGhost,buildSeatedGirl,setPortraitTexture} from '../../ghost-figures.js?v=free-body-5';
+import {buildPortraitGhost,buildSeatedGirl,setPortraitTexture} from '../../ghost-figures.js?v=free-body-7';
 import {buildBlackCat,updateBlackCat} from '../../black-cat.js?v=cat-boy-likeness-1';
 import {volumeFromImage} from '../../doll-volume.js?v=character-original-1';
 import {ROOM_AMBIENCE} from '../../exploration.js';
 import {catPose} from '../../cat-event.js';
-import {loadPianoBoyBody} from '../../piano-boy-body.js?v=free-body-5';
-import {attachPianoBoyBody} from '../../piano-boy-volume.js?v=free-body-5';
+import {loadPianoBoyBody} from '../../piano-boy-body.js?v=free-body-7';
+import {attachPianoBoyBody} from '../../piano-boy-volume.js?v=free-body-7';
 const canvas=document.querySelector('canvas'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1a2228');const camera=new THREE.PerspectiveCamera(36,1,.01,30);
 scene.add(new THREE.HemisphereLight('#ccd8df','#363027',1.35));

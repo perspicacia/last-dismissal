@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 
-export const PIANO_BOY_BODY_URL=new URL('./assets/models/piano-boy-body.glb?v=free-body-5',import.meta.url).href;
+export const PIANO_BOY_BODY_URL=new URL('./assets/models/piano-boy-body.glb?v=free-body-7',import.meta.url).href;
 export function createPianoBoyBodyLoader(loader=new GLTFLoader()){
  let cached;
  return ()=>{

@@ -67,6 +67,23 @@ test('원본 얼굴의 눈·코·입·턱 비율은 보존하고 머리 둘레�
  assert.ok(head.boundingBox.max.z-head.boundingBox.min.z>.17);
 });
 
+test('실제 목은 턱 아래까지 이어져 사진 머리 하단의 긴 판을 줄인다',()=>{
+ const head=buildPianoBoyHead(art.pixels,art.width,art.height,pose),p=body.attributes.position;
+ const bottom=head.boundingBox.min.y,underChin=[];
+ for(let i=0;i<p.count;i++)if(Math.abs(p.getX(i))<.03&&Math.abs(p.getY(i)-bottom)<.014)underChin.push(p.getZ(i));
+ assert.ok(underChin.length>5,'neck surface reaches the retained head');
+ const neckFront=Math.min(...underChin),neckBack=Math.max(...underChin);
+ assert.ok(neckFront-head.boundingBox.min.z<.012,'no long unsupported photographic chin shelf');
+ assert.ok(neckBack>-.02&&neckFront<-.06,'the neck supports both sides of the head bottom');
+ assert.ok(body.boundingBox.max.y>bottom+.010,'head and neck overlap vertically');
+ const cap=head.attributes.color.count-1;
+ assert.equal(head.attributes.photoBlend.getX(cap),0,'bottom cap has no stretched face photo');
+ const clothed=preparePianoBoyBody(body,pose,art.pixels,art.width,art.height);
+ let neckVertex=-1;for(let i=0;i<p.count;i++)if(Math.abs(p.getX(i))<.03&&p.getY(i)>1.05){neckVertex=i;break;}
+ for(let c=0;c<3;c++)assert.ok(Math.abs(head.attributes.color.getComponent(cap,c)-clothed.attributes.color.getComponent(neckVertex,c))<.008,'head closure and actual neck share skin colour');
+ clothed.dispose();head.dispose();
+});
+
 test('인체의 앞면만 원본 의상을 연결하고 옆·등은 원본 색으로 채운다',()=>{
  const g=preparePianoBoyBody(body,pose,art.pixels,art.width,art.height),p=g.attributes.position,n=g.attributes.normal;
  assert.notEqual(g,body);assert.equal(g.index.count,body.index.count);

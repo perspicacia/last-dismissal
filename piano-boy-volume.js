@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {pianoBoyLayout} from './piano-boy.js';
-import {preparePianoBoyBody} from './piano-boy-body.js?v=free-body-5';
+import {preparePianoBoyBody} from './piano-boy-body.js?v=free-body-7';
 
 // Preserve photographed X/Y and UV positions while sculpting BOTH surfaces.
 // Facial landmarks need gentler depth than the surrounding skull silhouette:
@@ -181,7 +181,7 @@ export function buildPianoBoyHead(pixels,width,height,pose){
  const headPixel=id=>{const u=uv.getX(id),v=1-uv.getY(id);return v<=.245&&(v<.235||Math.abs(u-.5)<.085-.025*smooth((v-.235)/.045));};
  for(const [group,target] of [[original.groups[0],front],[original.groups[1],back]])for(let i=group.start;i<group.start+group.count;i+=3){const ids=[0,1,2].map(j=>original.index.getX(i+j));if(ids.every(headPixel))target.push(...ids.map(vertex));}
  const edges=new Map();for(const ids of [front,back])for(let i=0;i<ids.length;i+=3)for(let j=0;j<3;j++){const a=ids[i+j],b=ids[i+(j+1)%3],key=[a,b].sort((a,b)=>a-b).join(',');const edge=edges.get(key);if(edge)edge.count++;else edges.set(key,{a,b,count:1});}
- const open=[...edges.values()].filter(e=>e.count===1);if(open.length){const centre=new THREE.Vector3();const ring=new Set(open.flatMap(e=>[e.a,e.b]));for(const id of ring)centre.add(new THREE.Vector3(...points.slice(id*3,id*3+3)));centre.divideScalar(ring.size);const c=points.length/3;points.push(...centre.toArray());coords.push(.5,.6875);colours.push(.35,.33,.30);blend.push(0);for(const e of open)back.push(e.b,e.a,c);}
+ const open=[...edges.values()].filter(e=>e.count===1);if(open.length){const centre=new THREE.Vector3();const ring=new Set(open.flatMap(e=>[e.a,e.b]));for(const id of ring)centre.add(new THREE.Vector3(...points.slice(id*3,id*3+3)));centre.divideScalar(ring.size);const c=points.length/3;points.push(...centre.toArray());coords.push(.5,.6875);colours.push(skin.r,skin.g,skin.b);blend.push(0);for(const e of open)back.push(e.b,e.a,c);}
  const retainedFront=new Set(front);for(let i=0;i<blend.length;i++)if(!retainedFront.has(i))blend[i]=0;
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(coords,2));g.setAttribute('color',new THREE.Float32BufferAttribute(colours,3));g.setAttribute('photoBlend',new THREE.Float32BufferAttribute(blend,1));g.setIndex([...front,...back]);g.addGroup(0,front.length,0);g.addGroup(front.length,back.length,1);g.computeVertexNormals();g.computeBoundingBox();original.dispose();return g;
 }

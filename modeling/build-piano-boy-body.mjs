@@ -77,7 +77,13 @@ while(remaining.size){
  for(const [a,b] of component)indices.push(c,b,a);
 }
 // Flatten only the bench contact and sole contact, retaining a seated L profile.
-for(let i=0;i<welded.length;i+=3){let [x,y,z]=welded.slice(i,i+3);if(z>=.04&&y<.545)y=.525;if(y<.026)y=.026;welded[i+1]=y;}
+for(let i=0;i<welded.length;i+=3){
+ let [x,y,z]=welded.slice(i,i+3);if(z>=.04&&y<.545)y=.525;if(y<.026)y=.026;
+ // The retained photographic chin sits forward of the source neck. Move the
+ // upper neck underneath it without shifting shoulders or facial landmarks.
+ const neck=Math.max(0,Math.min(1,(y-.965)/.080));z-=.090*neck*neck*(3-2*neck);
+ welded[i+1]=y;welded[i+2]=z;
+}
 const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(welded,3));geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingBox();
 const body=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#c5beb2',roughness:.95}));body.name='piano-boy-free-body';
 body.userData={source:'Quaternius Universal Base Characters Standard / Superhero_Male',license:'CC0-1.0',adaptation:'head removed, child proportions, static seated pose'};
