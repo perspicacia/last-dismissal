@@ -592,3 +592,4 @@
 - 복도/교실·첫 화면/종료·실제 게임 캡처는 `/Users/perspicacia/.codex/visualizations/2026/10/01/01a0f669-ef7c-7ec3-86a8-aa865954cf4c/shadow-tone-*.jpg`에 저장했다. 이 경로는 로컬 확인 자료이며 저장소에 포함하지 않는다.
 - 미확인: 사용자 모니터의 검은색 표현/감마와 실제 Chrome·모바일 성능/스피커 청감은 별도 확인이 필요하다. Canvas 전체 종료 흐름은 이번 변경에서 재검증하지 않았다. 기존 사진 기반 캐릭터의 측면 근사 한계는 남는다. 리뷰·main 병합·배포는 미진행이다.
 - 다음 작은 작업: 일반 미리보기에서 어둡게 느껴지는 특정 문/소품 위치를 골라 광원만 미세 조정한다.
+- 커밋/Push 후 검토용 draft [PR #96](https://github.com/perspicacia/last-dismissal/pull/96)를 생성·이 채팅에 연결했다. PR #94 위에 쌓았으며 대상은 `codex/darker-school-blood-rabbit`다. 최신 일반 미리보기를 음소거한 첫 화면으로 열어 두었다. main 병합은 미진행이다.
