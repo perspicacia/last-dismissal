@@ -1,3 +1,4 @@
+import {rabbitImageSize} from './rabbit-appearance.js?v=dark-blood-1';
 // Existing image rig: normalized coordinates in the original rabbit PNG.
 export const LEFT_ARM={pivot:{x:.35,y:.56},polygon:[[.352,.556],[.377,.568],[.351,.625],[.322,.669],[.327,.696],[.325,.726],[.307,.751],[.225,.759],[.180,.740],[.175,.702],[.195,.659],[.246,.602],[.305,.573]]};
 export const RIGHT_ARM={pivot:{x:1-LEFT_ARM.pivot.x,y:LEFT_ARM.pivot.y},polygon:LEFT_ARM.polygon.map(([x,y])=>[1-x,y])};
@@ -13,8 +14,8 @@ function path(ctx,arm,w,h){
  for(let i=0;i<points.length;i++){const p=points[i],next=points[(i+1)%points.length];ctx.quadraticCurveTo(p[0]*w,p[1]*h,(p[0]+next[0])*w/2,(p[1]+next[1])*h/2);}ctx.closePath();
 }
 export function rabbitParts(image){
- if(!image?.naturalWidth||!image?.naturalHeight)return null;
- const w=image.naturalWidth,h=image.naturalHeight;
+ const size=rabbitImageSize(image);if(!size)return null;
+ const w=size.width,h=size.height;
  const canvas=()=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;};
  const body=canvas(),ctx=body.getContext('2d');ctx.drawImage(image,0,0);ctx.globalCompositeOperation='destination-out';
  for(const arm of [LEFT_ARM,RIGHT_ARM]){path(ctx,arm,w,h);ctx.fill();}ctx.globalCompositeOperation='source-over';

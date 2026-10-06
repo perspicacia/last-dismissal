@@ -82,3 +82,5 @@ Use case: stylized-concept. Asset type: original character concept and transpare
 ## 교실 기립 이벤트
 
 [specs/classroom-doll.md](specs/classroom-doll.md)에 따라 정상에서는 누워 있고, doll 이상에서 1.9m 이내 접근·0.3초 응시 후 0.55초 동안 일어난다. 교실 문 손자국이 복도 단서다. 재입장은 기립을 유지하고 새 복도·재시작은 초기화한다. 기존 투명 이미지 실루엣을 곡면·두께가 있는 입체 볼륨으로 만들어 기울여 세우며 추가 이미지 제작은 하지 않았다.
+
+- 토끼 얼굴 최신 외형: 원본 무표정/이빨 이미지 위에 피 번짐·흐르는 자국·작은 튄 얼룩을 같은 좌표로 적용한다. 원본 비율과 털/눈/이빨을 보존한다. [최신 외형 명세](specs/darker-school-blood-rabbit.md).

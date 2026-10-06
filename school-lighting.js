@@ -1,5 +1,7 @@
 // Seconds of corridor play, independent of audio and exploration judgments.
 export const CORRIDOR_LAMPS = Object.freeze([3,8,13,18,23]);
+// Keep light beneath each fixture, with deeper shadows between them.
+export const SCHOOL_DARKNESS = Object.freeze({exposure:.70,ambient:.22,deepAmbient:.17,moon:.35,lampPower:5.2,lampGlow:.64,canvasBase:.38,canvasOutage:.12});
 const OUTAGES = [[2.6,1.5],[9.1,1.8],[5.8,1.4],[14.8,2.0],[11.9,1.3]];
 const PERIOD = 18.5;
 const smooth = x => x*x*(3-2*x);
@@ -35,5 +37,5 @@ export function recordLighting(canvas,levels){
 export function shadeCanvasSchool(c,w,h,levels=null,player=null){
   // Compatibility renderer has no physical lights: approximate the nearby pool.
   const outage=levels&&player?Math.max(...levels.map((level,i)=>(1-level)*Math.max(0,1-Math.abs(player.z-CORRIDOR_LAMPS[i])/6))):0;
-  c.save();c.fillStyle=`rgba(2,8,13,${.22+.13*outage})`;c.fillRect(0,0,w,h);c.restore();
+  c.save();c.fillStyle=`rgba(2,8,13,${SCHOOL_DARKNESS.canvasBase+SCHOOL_DARKNESS.canvasOutage*outage})`;c.fillRect(0,0,w,h);c.restore();
 }

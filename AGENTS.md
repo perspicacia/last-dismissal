@@ -26,6 +26,8 @@
 
 - 계단 접근 공포음은 [specs/stair-haunt.md](specs/stair-haunt.md)를 따른다. 새 게임당 한 번이며 음소거 중 소비하고 방 이동/일시정지/종료에서 정리한다. 공격자·카메라 조작은 변경하지 않는다.
 
+- 학교 조도와 토끼 얼굴 피 얼룩은 [specs/darker-school-blood-rabbit.md](specs/darker-school-blood-rabbit.md)를 따른다. 원본 두 표정의 털/투명도를 유지하는 코드 기반 번짐을 사용하고 돌진/비명/만세/재시작 시간은 유지한다. 캐릭터 외형 비교 화면의 조명을 낮춰 외형 문제를 숨기지 않는다.
+
 ## 역할 분담
 
 | 담당 | 범위와 결과물 |

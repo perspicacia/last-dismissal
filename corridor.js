@@ -1,10 +1,11 @@
+import {bloodiedRabbit,rabbitImageSize} from './rabbit-appearance.js?v=dark-blood-1';
 import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {facelessStudentBlocker} from './faceless-student.js';
-import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js';
-import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
+import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js?v=dark-blood-1';
+import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=character-original-1';
-import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js';
+import { ThreeSchoolView } from './three-school.js?v=dark-blood-1';
+import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=dark-blood-1';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=character-depth-6';
 import { drawStairs } from './stairs.js';
@@ -195,7 +196,8 @@ export class Corridor {
   drawCatch(time){
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
     const arrival=rabbitArrival((time-this.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    const img=arrival.teeth?this.mascotOpen:this.mascot;if(!img.naturalWidth)return;
+    const original=arrival.teeth?this.mascotOpen:this.mascot;if(!rabbitImageSize(original))return;
+    const img=bloodiedRabbit(original);this.canvas.dataset.rabbitAppearance='bloodied';
     const dx=(0-p.x)*(1-arrival.rush)+Math.sin(p.angle)*.80*arrival.rush;
     const dz=(6.8-p.z)*(1-arrival.rush)+Math.cos(p.angle)*.80*arrival.rush;
     const distance=Math.max(.08,dx*Math.sin(p.angle)+dz*Math.cos(p.angle)),lens=w*.68;
@@ -264,19 +266,20 @@ export class Corridor {
       }
     }
     const figure=project(1.6,0,this.rabbitZ??(this.anomaly==='figure'?16:22));
-    const sprite=this.mouthOpen && this.mascotOpen.complete && this.mascotOpen.naturalWidth ? this.mascotOpen : this.mascot;
-    if(!this.exploration && figure && sprite.complete && sprite.naturalWidth){
-      const height=2.1*lens/figure.d, width=height*sprite.naturalWidth/sprite.naturalHeight;
+    const original=this.mouthOpen && this.mascotOpen.complete && this.mascotOpen.naturalWidth ? this.mascotOpen : this.mascot;
+    const sprite=bloodiedRabbit(original),size=rabbitImageSize(sprite);
+    if(!this.exploration && figure && size){
+      const height=2.1*lens/figure.d, width=height*size.width/size.height;
       const left=figure.x-width/2,top=figure.y-height;
       c.save();
       c.filter=`brightness(${Math.max(.48,.88-figure.d*.013)}) saturate(.75)`;
       // Clip each sprite column against wall depth, including partial occlusion.
       for(let x=Math.max(0,Math.floor(left/2)*2);x<Math.min(w,left+width);x+=2){
         if(figure.d>=depth[Math.floor(x/2)])continue;
-        const sourceX=(x-left)/width*sprite.naturalWidth;
-        if(sourceX<0||sourceX>=sprite.naturalWidth)continue;
-        const sourceWidth=Math.min(sprite.naturalWidth-sourceX,2/width*sprite.naturalWidth);
-        c.drawImage(sprite,sourceX,0,sourceWidth,sprite.naturalHeight,x,top,2,height);
+        const sourceX=(x-left)/width*size.width;
+        if(sourceX<0||sourceX>=size.width)continue;
+        const sourceWidth=Math.min(size.width-sourceX,2/width*size.width);
+        c.drawImage(sprite,sourceX,0,sourceWidth,size.height,x,top,2,height);
       }
       c.restore();
     }
