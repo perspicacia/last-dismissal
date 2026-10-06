@@ -1,3 +1,4 @@
+import {CORRIDOR_BLOCKERS,blockedByFurniture} from './school-colliders.js?v=quality-2';
 export const SPAWN = { x: 0, z: 1.8, angle: 0 };
 export function revealsTeeth(player, anomaly, alreadyOpen = false) {
   if (anomaly !== 'figure') return false;
@@ -8,11 +9,11 @@ export function revealsTeeth(player, anomaly, alreadyOpen = false) {
 }
 export function movePlayer(player, keys, dt) {
   const {angle,dx,dz}=movementDelta(player,keys,dt);
-  return {
-    ...player,angle,
-    x: Math.max(-2.55, Math.min(2.55, player.x + dx)),
-    z: Math.max(.8, Math.min(24.6, player.z + dz))
-  };
+  const result={...player,angle},x=Math.max(-2.55,Math.min(2.55,player.x+dx));
+  if(!blockedByFurniture(x,result.z,CORRIDOR_BLOCKERS))result.x=x;
+  const z=Math.max(.8,Math.min(24.6,player.z+dz));
+  if(!blockedByFurniture(result.x,z,CORRIDOR_BLOCKERS))result.z=z;
+  return result;
 }
 export function movementDelta(player,keys,dt){
   const step = Number.isFinite(dt)?Math.min(Math.max(dt, 0), .05):0;
