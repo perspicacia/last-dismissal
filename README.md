@@ -2,7 +2,7 @@
 
 학교를 배경으로 한 생존 공포게임. 목표는 짧은 플레이로 규칙과 분위기를 전달하는 것이다.
 
-시작 화면은 토끼·금발 인형·긴 머리 귀신·음악실 남자아이·얼굴 없는 학생을 모은 어두운 학교 포스터다. 기존 캐릭터 이미지를 유지하고, 영문 게임명 `LAST DISMISSAL`을 거친 페인트 펜 느낌의 Lacquer 서체로 표시한다. 제목과 시작·음향 조작만 남기며 화면 크기에 맞춰 캐릭터 배치를 바꾼다. [첫 화면 명세](specs/horror-title-screen.md), [서체 출처·OFL 라이선스](assets/fonts/README.md).
+시작 화면은 교복 여고생 귀신·금발 인형·긴 머리 귀신·음악실 남자아이·얼굴 없는 학생을 모은 어두운 학교 포스터다. 토끼 자리는 새 여고생 귀신으로 교체하고, 영문 게임명 `LAST DISMISSAL`을 거친 페인트 펜 느낌의 Lacquer 서체로 표시한다. 제목과 시작·음향 조작만 남기며 화면 크기에 맞춰 캐릭터 배치를 바꾼다. [첫 화면 명세](specs/horror-title-screen.md), [서체 출처·OFL 라이선스](assets/fonts/README.md).
 
 ## 실행
 
@@ -10,12 +10,12 @@
 
 이 주소는 로컬 서버가 실행 중일 때만 열린다. `ERR_CONNECTION_REFUSED`(연결 거부)가 표시되면 프로젝트 폴더에서 `npm start`를 다시 실행하고 웹 화면을 새로고침한다. 플레이하는 동안 서버를 실행한 터미널/프로세스를 유지한다.
 
-- 일반 플레이: 3-1·3-2·3-3 교실·음악실·무용실을 둘러본다. 토끼는 매번 무작위 방에 숨어 있고 시작 시 보이지 않는다.
+- 일반 플레이: 3-1·3-2·3-3 교실·음악실·무용실을 둘러본다. 교복 여고생 귀신은 매번 무작위 방에 숨어 있고 시작 시 보이지 않는다. [공격자 교체 명세](specs/schoolgirl-attacker.md).
 - WASD 이동(W/S 전후, A/D 옆걸음), 마우스 상하/좌우 시점. 시작/계속 클릭으로 마우스 잠금을 요청하고, 제한된 브라우저에서는 화면 드래그를 사용한다. ↑↓ 이동·←→ 느린 회전, Page Up/Down 위아래 보기·Home 정면 복귀도 지원한다. 가까운 문에서 E/클릭/입장 버튼, 안에서는 E/복귀 버튼으로 돌아간다.
-- 걷는 중 카메라 높이를 고정하고 소품/계단 자동 시점과 흔들림을 없앴다. Esc 또는 일시정지 버튼으로 탐색/음향을 멈추고 커서를 해제한다. 일시정지 창에서 좌우/상하 감도(기본 65%/32.5%)를 따로 조절하거나 ‘상하 시점 고정’으로 정면 높이에서 좌우만 둘러볼 수 있다. 설정은 재시작과 새로고침에서도 유지하며 저장이 차단되면 기본값으로 진행한다. 포커스 이탈/잠금 해제도 일시정지하며 기존 위치/방문/토끼 배치를 유지한다. [최신 접근성 명세](specs/accessible-camera-controls.md), [기존 조작 명세](specs/mouse-look-comfort.md).
+- 걷는 중 카메라 높이를 고정하고 소품/계단 자동 시점과 흔들림을 없앴다. Esc 또는 일시정지 버튼으로 탐색/음향을 멈추고 커서를 해제한다. 일시정지 창에서 좌우/상하 감도(기본 65%/32.5%)를 따로 조절하거나 ‘상하 시점 고정’으로 정면 높이에서 좌우만 둘러볼 수 있다. 설정은 재시작과 새로고침에서도 유지하며 저장이 차단되면 기본값으로 진행한다. 포커스 이탈/잠금 해제도 일시정지하며 기존 위치/방문/귀신 배치를 유지한다. [최신 접근성 명세](specs/accessible-camera-controls.md), [기존 조작 명세](specs/mouse-look-comfort.md).
 - 영역 캡처가 필요하면 **P → Mac ⌘⇧4 / Windows Win+Shift+S → 영역 선택** 순서로 사용한다. P 또는 Esc 메뉴의 ‘화면 캡처’는 장면·이벤트·소리를 고정하고 커서 잠금/드래그를 해제한다. 캡처 도구로 포커스가 바뀌어도 유지하며 P/계속하기로 재개한다. OS 단축키가 브라우저에 전달되면 자동 고정하지만 환경에 따라 P를 먼저 누르는 편이 확실하다. [캡처 명세](specs/capture-cursor-release.md).
-- 방 안쪽에 3m 이내로 접근해 수평/수직으로 바라보면 패배가 확정되고 토끼가 기본 표정으로 나타난 뒤 다가오면서 이빨을 드러낸다. 1.5초 연출 후 게임 오버가 된다. 토끼를 만나기 전 시간만으로 패배하지 않는다.
-- 모든 방이 탐색 대상이다. 먼저 토끼를 만나면 탐색이 끝나며 현재 버전에는 탈출 승리가 없다.
+- 방 안쪽에 3m 이내로 접근해 수평/수직으로 바라보면 패배가 확정되고 교복 여고생 귀신이 기본 표정으로 나타난 뒤 다가오면서 비명 표정으로 바뀐다. 두 표정 이미지가 준비되기 전에는 공격하지 않는다. 1.5초 연출 후 게임 오버가 된다. 귀신을 만나기 전 시간만으로 패배하지 않는다.
+- 모든 방이 탐색 대상이다. 먼저 여고생 귀신을 만나면 탐색이 끝나며 현재 버전에는 탈출 승리가 없다.
 - 금빛 눈의 검은 고양이가 복도·교실 앞쪽 안전한 통로에서 잠깐 경계한 뒤 바닥을 딛고 약 3초간 가속·감속하며 지나간다. 간헐적으로 하악질과 앙칼스러운 울음이 들리고 고양이를 만나도 게임은 계속된다. [외형·보행·울음 명세](specs/black-cat-polish.md).
 - 복도 끝 계단 앞에 0.3초 머물면 아래층의 쇠 긁는 소리 뒤에 발소리가 점점 빠르게 다가오고 무겁게 울린다. 새 게임당 한 번이며 음소거 중에도 소비한다. 일시정지/교실 진입/종료에는 중지하고 새 공격·카메라 흔들림은 추가하지 않는다. [계단 연출 명세](specs/stair-haunt.md).
 - 종료 화면에는 `GAME OVER`와 `다시 하기` 버튼을 표시한다. 클릭 또는 Enter/Space로 새 게임을 시작하고 방문 기록·배치·공격 연출을 초기화한다. 종료 화면에서 Escape는 처음 화면, 플레이 중 Escape는 일시정지다. M은 음소거다. [종료 화면 명세](specs/game-over-screen.md).
@@ -30,7 +30,8 @@ last-dismissal/
 ├── index.html                 # 게임 페이지와 화면 요소
 ├── style.css                  # 시작·플레이·종료 화면 스타일
 ├── game.js                    # 게임 시작, 화면 전환, 종료와 재시작
-├── exploration.js             # 교실 탐색, 방문 기록, 숨은 토끼 발견
+├── schoolgirl-attacker.js       # 여고생 표정·돌진 위치·원본 비율 공유
+├── exploration.js             # 교실 탐색, 방문 기록, 숨은 여고생 귀신 발견
 ├── corridor.js                # 복도 이동과 렌더 연결
 ├── classroom.js               # 교실 이동과 Canvas 호환 화면
 ├── three-school.js            # 학교 실내 3D 화면
@@ -42,7 +43,7 @@ last-dismissal/
 ├── …                          # 입력·캐릭터·소품·공포 연출의 JS 모듈
 ├── assets/                    # 게임 자산과 출처 문서
 │   ├── *.png                  # 캐릭터와 사진 이미지
-│   ├── audio/                 # 문·토끼 비명의 WAV와 출처
+│   ├── audio/                 # 문·공격자 비명의 WAV와 출처
 │   ├── fonts/                 # 제목·칠판 서체와 라이선스
 │   └── models/                # 음악실 남자아이 몸통 GLB·개발용 인형 시안
 ├── vendor/                    # 로컬 Three.js 모듈·로더와 라이선스
@@ -65,12 +66,12 @@ last-dismissal/
 
 | 역할 | 주요 파일 | 담당 내용 |
 | --- | --- | --- |
-| 게임 진행 | [game.js](game.js), [exploration.js](exploration.js) | 시작·일시정지·게임 오버·재시작, 방별 토끼 배치와 발견 판정 |
+| 게임 진행 | [game.js](game.js), [exploration.js](exploration.js) | 시작·일시정지·게임 오버·재시작, 방별 귀신 배치와 발견 판정 |
 | 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [camera-preferences.js](camera-preferences.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 축별 마우스 감도·상하 고정·키보드 시점/저장, 영역 캡처 조작 |
 | 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-tone.js](school-tone.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸·색감, 창문과 계단 |
 | 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
-| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [piano-boy-body.js](piano-boy-body.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 무료 인체 기반 남자아이 몸통, 곡면 인물·고양이, 토끼 피 얼룩·팔 자세와 접지 보행 |
-| 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 토끼 돌진, 무작위 고양이와 계단 접근 이벤트 |
+| 캐릭터 외형 | [schoolgirl-attacker.js](schoolgirl-attacker.js), [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [piano-boy-body.js](piano-boy-body.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 무료 인체 기반 남자아이 몸통, 곡면 인물·고양이, 여고생 공격 표정·원본 비율과 고양이 접지 보행 (토끼 비교 보존) |
+| 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [schoolgirl-attacker.js](schoolgirl-attacker.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 여고생 돌진 (이전 토끼 모듈 보존), 무작위 고양이와 계단 접근 이벤트 |
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
 | 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
 | 이전 규칙 | [survival.js](survival.js), [logic.js](logic.js) | 이전 생존·관찰 버전의 회귀 검증용 보존 모듈 |
@@ -97,28 +98,28 @@ last-dismissal/
 8. 계단: 복도 끝 `z >= 22.1` 접근 후 약 3.6초의 쇠 마찰·가속하는 발소리·발 구름/계단 메아리를 한 번 재생한다. 발생 시 아래층 계단의 좌우 방향을 반영하고 전체 음량/음소거를 따른다. 소리 없이도 이벤트는 소비되며 방 이동/일시정지/종료에서 한 버퍼 전체를 취소한다.
 9. 고양이: 9~21초 간격과 등장 시 한 번씩 짧은 하악질 뒤 올라갔다 갈라지는 날카로운 울음 합성음을 재생한다. 세 음색과 짧은 반사음을 사용하며 같은 시점의 중복 울음은 합치고 음소거 중에는 신호를 소비해 해제 후 밀린 소리가 나지 않는다. 방 이동/종료 시 정리한다.
 
-배경음·발소리·아기 울음·귀신 웃음은 Web Audio 합성음이다. 문·토끼 비명은 사용자 레퍼런스를 편집한 `assets/audio/`의 로컬 WAV를 우선 사용한다. 시작 후 미리 디코딩하고 캐시하며, 로딩 실패/미완료 시 기존 합성음으로 대체한다. 실행 중 외부 사이트 연결은 필요 없다. [출처와 편집·이용 조건](assets/audio/README.md), [최신 명세](specs/reference-horror-audio.md). 음소거와 음량 조절을 제공하고, 소리가 없어도 판정 가능하도록 설계한다.
+배경음·발소리·아기 울음·귀신 웃음은 Web Audio 합성음이다. 문·공격자 비명은 사용자 레퍼런스를 편집한 `assets/audio/`의 로컬 WAV를 우선 사용한다. 시작 후 미리 디코딩하고 캐시하며, 로딩 실패/미완료 시 기존 합성음으로 대체한다. 실행 중 외부 사이트 연결은 필요 없다. [출처와 편집·이용 조건](assets/audio/README.md), [최신 명세](specs/reference-horror-audio.md). 음소거와 음량 조절을 제공하고, 소리가 없어도 판정 가능하도록 설계한다.
 
 노트북 스피커에서도 들리도록 196~349Hz의 드론과 24초 반복 선율을 함께 사용한다. 기본 음량은 50%다. 시작 전에는 음악이 재생되지 않는다. 오디오 오류나 플레이 중 중단이 발생하면 ‘소리 확인’ 버튼을 표시해 오디오를 다시 시작하고 확인용 종소리를 재생한다. 상태는 브라우저의 오디오 실행 여부이며 기기나 브라우저 자체의 음소거 여부까지 확인하지는 않는다.
 
 ## 범위와 이후 개선
 
-Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 기존 투명 이미지의 빌보드를 공간 안에서 이동시키며, 관절형 3D 모델은 아니다. 기본/이빨 이미지 각각의 원본 비율을 유지한다. 기존 이미지에서 팔을 런타임으로 분리해 어깨를 중심으로 회전하고, 이빨/비명 시점에 양팔을 올린다. [만세 연출 명세](specs/rabbit-raised-arms.md). 등장 시점은 [토끼 등장 명세](specs/rabbit-arrival.md)를 따른다. 음악실에는 피아노·악보·보면대, 무용실에는 벽 거울·연습 바·스피커를 배치한다. 거울의 실시간 플레이어 반사는 후속 범위다.
+Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 일반 게임의 공격자는 교복 여고생 귀신이다. 기본/공격 표정의 새 투명 PNG를 공간 안의 빌보드로 이동시키며 원본 비율을 보존한다. 관절형 3D 모델은 아니다. 발견 .55초에 비명 표정/기존 녹음 효과음으로 전환하고 1.5초 뒤 게임 오버가 된다. 토끼용 팔 분할·피 얼룩은 새 인물에 적용하지 않으며 과거 토끼 자산/비교 모듈은 보존한다. [최신 공격자 명세](specs/schoolgirl-attacker.md), [자산·최종 프롬프트](assets/schoolgirl-ghost.md). 음악실에는 피아노·악보·보면대, 무용실에는 벽 거울·연습 바·스피커를 배치한다. 거울의 실시간 플레이어 반사는 후속 범위다.
 
 학생 인형은 3-2 바닥과 3-1 책상의 장식이다. 음악실 피아노 의자에는 창백한 어린 남자아이 귀신이 앉아 있다. 새 GLB 시안이 원본과 너무 다르다는 피드백으로 일반 게임은 모든 방에서 기존 PNG 기반 2.5D 외형을 유지한다. 원본 얼굴·유리 눈·금발 컬·세일러복이 외형 기준이다. [최신 외형 명세](specs/student-doll-original-look.md). 3-3과 무용실에는 공격하지 않는 창밖 귀신을 배치한다. 방 확장은 [specs/classrooms-doll-depth.md](specs/classrooms-doll-depth.md), 보존된 모델 시안은 [specs/student-doll-glb.md](specs/student-doll-glb.md)다. 원본과 닮은 실제 3D 모델·표정/기립 애니메이션과 창밖 귀신 공격·탈출 조건은 후속 범위다.
 
 ## 3D 화면과 검증
 
 - 최신 색감은 그림자복도 공식 화면의 따뜻한 국소 조명과 어두운 공간 대비를 학교에 적용했다. 누런 전등, 청회색 창가/암부, 낮은 채도와 고정된 벽 얼룩을 사용한다. 노출 0.76, 주변광 0.28(3-3은 0.22), 달빛 0.35, 천장등 6.0·범위 9m로 바닥과 문/가구 경계를 살린다. `school-tone.js`의 팔레트·Canvas 채도는 두 렌더가 공유하고 UI 글자는 별도로 유지한다. 첫 화면/종료 배경도 같은 색감으로 연결한다. [학교 톤 명세](specs/shadow-corridor-tone.md).
-- 토끼 얼굴에는 원본 털 무늬/투명도를 보존하는 결정적인 피 번짐을 겹치며 두 표정, Three.js/Canvas 돌진과 첫 화면에 공유한다. 원본 PNG 파일은 수정하지 않는다. [피 얼룩 토끼 명세](specs/darker-school-blood-rabbit.md).
+- 과거 토끼 비교 외형에는 원본 털 무늬/투명도를 보존하는 결정적인 피 번짐을 겹친다. 일반 탐색과 첫 화면은 새 여고생 귀신을 사용한다. 원본 PNG 파일은 수정하지 않는다. [피 얼룩 토끼 명세](specs/darker-school-blood-rabbit.md).
 - 밤 학교의 기본 노출·주변광·천장등을 낮췄다. 복도 다섯 전등은 위치마다 다른 시점에 약 1~2초간 꺼졌다 켜지고, 교실은 고정 조명이다. 새 게임은 점멸 시계를 초기화하며 동작 줄이기 환경에서는 고정 조명으로 표시한다. [조명 명세](specs/horror-lighting.md), 개발용 비교 `http://127.0.0.1:8080/tests/fixtures/lighting-review.html` (`?compat`는 Canvas 호환).
 - Three.js 0.186.1 (MIT). `package-lock.json` 버전을 고정하고 배포 모듈·라이선스를 `vendor/`에 보관한다. 라이브러리 갱신 시 `npm ci` 후 `node_modules/three/build/three.module.js`, `three.core.js` 및 LICENSE를 vendor에 동기화한다.
 - WebGL2 지원 브라우저가 필요하다. 3D 초기화 실패 시 기존 Canvas 화면으로 전환하며 시작 화면에 호환 화면 안내를 표시한다. 모바일 성능은 별도 확인이 필요하다.
-- 토끼와 창밖 귀신은 기존 투명 이미지의 빌보드다. 공간·가구·나무·계단의 3D 전환과 캐릭터 모델링 완료를 구분한다.
+- 공격자 여고생과 창밖 귀신은 투명 이미지의 빌보드다. 공간·가구·나무·계단의 3D 전환과 캐릭터 모델링 완료를 구분한다.
 - 3D 정상/이상 비교: `http://127.0.0.1:8080/tests/fixtures/three-review.html`. 이 개발용 화면의 버튼은 일반 게임에 표시되지 않는다.
 - 실제 탐색 UI/컨트롤러 검증: `http://127.0.0.1:8080/tests/fixtures/three-flow.html`. `?compat`를 붙이면 WebGL 실패를 강제해 Canvas 호환을 확인한다.
 
-3-3 칠판 옆 오른쪽 구석에는 얼굴 없는 교복 학생이 정적으로 서 있다. 기존 인형과 같은 실사풍 재질의 새 투명 PNG를 사용하고 원본 비율/발 접촉을 유지한다. 해당 위치만 관통을 막으며 중앙 통로·책상/의자 충돌과 토끼 발견 규칙은 유지한다. 첫 화면에도 함께 등장한다. [추가·점검 명세](specs/faceless-student-upgrade.md), [자산/생성 프롬프트](assets/faceless-student.md). 현재 Three.js에서는 정면 사진을 닫힌 3D 인체 메시와 연결하며 Canvas는 기존 사진 투영을 유지한다. 한 장의 사진 기반 근사 모델이므로 측면 디테일의 한계는 남는다. [최신 입체 외형 명세](specs/classroom-character-depth.md).
+3-3 칠판 옆 오른쪽 구석에는 얼굴 없는 교복 학생이 정적으로 서 있다. 기존 인형과 같은 실사풍 재질의 새 투명 PNG를 사용하고 원본 비율/발 접촉을 유지한다. 해당 위치만 관통을 막으며 중앙 통로·책상/의자 충돌과 여고생 귀신 발견 규칙은 유지한다. 첫 화면에도 함께 등장한다. [추가·점검 명세](specs/faceless-student-upgrade.md), [자산/생성 프롬프트](assets/faceless-student.md). 현재 Three.js에서는 정면 사진을 닫힌 3D 인체 메시와 연결하며 Canvas는 기존 사진 투영을 유지한다. 한 장의 사진 기반 근사 모델이므로 측면 디테일의 한계는 남는다. [최신 입체 외형 명세](specs/classroom-character-depth.md).
 
 교실 금발 인형: 현재 탐색 플레이에서는 바닥에 누워 있는 장식이다. 이전 이상현상 기립 연출은 개발용 비교 화면에서 보존한다. [상세 조건](specs/classroom-doll.md).
 
@@ -132,14 +133,16 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 모델 재생성은 `npm ci` 후 `npm run model:student`다. `modeling/student-doll.js`가 조형/재질 소스이고 `modeling/build-student-doll.mjs`가 Three.js GLTFExporter로 내보낸다. 일반 플레이에는 Node 또는 모델링 도구가 필요 없다. [자산 정보](assets/models/README.md). 개발용 정면/양옆/후면/누운 자세 확인: `http://127.0.0.1:8080/tests/fixtures/student-model-review.html`.
 
-교실 공포 연출: [명세](specs/classroom-hauntings.md). 3-1 창밖 공은 창을 바라볼 때만 튀며, 3-2 뒤 오른쪽 구석에 웅크린 그림자가 있다. 3-3·무용실 귀신은 창가 2.2m 이내에서 응시하면 미소와 고개 기울임을 보인다. 공격자는 계속 토끼만이며 귀신 연출은 패배를 일으키지 않는다. 동작 줄이기에서는 공은 정지하고 미소만 표시한다.
+교실 공포 연출: [명세](specs/classroom-hauntings.md). 3-1 창밖 공은 창을 바라볼 때만 튀며, 3-2 뒤 오른쪽 구석에 웅크린 그림자가 있다. 3-3·무용실 귀신은 창가 2.2m 이내에서 응시하면 미소와 고개 기울임을 보인다. 공격자는 새 교복 여고생 귀신 하나이며 귀신 연출은 패배를 일으키지 않는다. 동작 줄이기에서는 공은 정지하고 미소만 표시한다.
 
 음악실 소품은 `music-instruments.js`의 곡선 통기타·88건반 목재 업라이트 피아노와 `music-sheet.js`의 창작 악보로 보완했다. 열린 악보에는 오선·음자리표·마디·빔·슬러·제본을 그리며, 보면대의 악보 면은 연주자 의자 방향이다. `ghost-smile-shape.js`는 3D/Canvas가 공유하는 곡선 입과 위아래 날카로운 치아를 정의한다. 소품은 완전한 사진 재현이 아니며, 악보는 외부 악곡을 복제한 것이 아닌 분위기용 창작 기보다.
 
 누운 인형의 찌그러짐 피드백으로 [실제 3D 전환 진단](docs/student-doll-3d-plan.md)과 정적 GLB 시안을 만들었다. 사용자는 시안의 외형 차이를 지적해 원본 모습 복구를 요청했다. 후속 모델은 원본과 닮은 정면/양옆/누운 외형을 검토한 뒤 게임에 적용한다.
 
-녹음 효과음의 개발용 확인 화면은 `http://127.0.0.1:8080/tests/fixtures/reference-audio-review.html`이다. 검증 버튼은 장치 출력을 차단한 그래프에서 디코딩·호출·음소거·종료를 확인하며 실제 청감 확인은 파일 플레이어로 한다. 실제 게임 컨트롤러 검증은 `tests/fixtures/three-flow.html?safe&silent`에서 토끼를 무용실에 고정하고 소리 출력 없이 할 수 있다. 일반 플레이에는 이 검증 버튼/설정이 없다.
+녹음 효과음의 개발용 확인 화면은 `http://127.0.0.1:8080/tests/fixtures/reference-audio-review.html`이다. 검증 버튼은 장치 출력을 차단한 그래프에서 디코딩·호출·음소거·종료를 확인하며 실제 청감 확인은 파일 플레이어로 한다. 실제 게임 컨트롤러 검증은 `tests/fixtures/three-flow.html?safe&silent`에서 공격자를 무용실에 고정하고 소리 출력 없이 할 수 있다. 일반 플레이에는 이 검증 버튼/설정이 없다.
 
 음악실 의자의 새 귀신은 [명세](specs/piano-boy-ghost.md)에 따라 짧은 검은 머리·낡은 밝은 옷·맨발의 어린 남자아이로 교체했다. [원본 투명 PNG와 프롬프트](assets/piano-boy-ghost.md)는 보존한다. 정적인 분위기 요소이며 별도 공격·소리·표정 변화는 없다. 현재 Three.js는 Quaternius Standard의 무료 CC0 인체에서 원작 머리를 제외한 로컬 `piano-boy-body.glb`를 불러온다. 어린아이 비율과 무릎 위 손·앉은 허벅지·종아리로 변형해 엉덩이는 의자 위, 맨발은 바닥에 맞췄다. 얼굴의 눈·코·입·턱 사진 비율을 보존한 앞면과 둥근 뒷머리를 실제 몸통에 연결하고, 원본 의상은 앞면에만 투영한다. 상의/소매와 반바지는 인체와 분리된 느슨한 입체 표면으로 보완했다. 손목/무릎/종아리 비율과 발가락을 조정하고 원본의 손 사진을 바지에 중복하지 않는다. 사진의 알파를 늘려 만든 몸통은 대체했다. 옆/뒤 의상은 원본 색을 참고한 근사이며 머리도 사진 기반이므로 정확한 옆얼굴 조형은 아니다. 로딩 실패 때 이전 외형으로 플레이를 계속하고 다음 음악실 입장에 다시 시도한다. Canvas는 원본 사진 투영이다. 실행 중 외부 모델 서비스나 계정이 필요 없다. [최신 명세](specs/piano-boy-free-body.md), [모델 출처·CC0·재현 방법](assets/models/piano-boy-body.md).
 
 3-2 가운데 오른쪽 의자에는 칠판을 바라보는 긴 머리 여학생의 입체 뒷모습을 추가했다. 일반 교실 세 곳은 높이 1.55m의 칠판과 금속 프레임/받침, 분필·지우개, ‘오늘의 당번’ 글씨를 사용한다. 새 여학생도 공격하지 않는 정적인 분위기 요소다.
+
+여고생의 기본/공격 얼굴과 돌진 구도 비교: `http://127.0.0.1:8080/tests/fixtures/attacker-review.html` (`?compat`는 Canvas). 비교 화면에는 게임 판정이 없고 실제 시작·발견·게임 오버·재시작은 일반 게임 컨트롤러로 확인한다.

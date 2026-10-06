@@ -33,8 +33,8 @@ body[data-screen="intro"] .brand{display:none}
 .poster-faceless img{filter:grayscale(.6) contrast(1.2) brightness(.60) drop-shadow(1px 1px 15px #74131977)}
 .poster-doll{--left:43%;--top:11%;--height:118%;--tilt:-5deg;z-index:2}
 .poster-boy{--left:81%;--top:29%;--height:88%;z-index:3}
-.poster-rabbit{--left:19%;--top:-3%;--height:124%;--tilt:-9deg;z-index:4}
-.poster-rabbit img{filter:grayscale(.34) contrast(1.17) brightness(.70) drop-shadow(7px 2px 15px #b4262577)}
+.poster-attacker{--left:24%;--top:-4%;--height:160%;--tilt:-2deg;z-index:4}
+.poster-attacker img{filter:grayscale(.34) contrast(1.17) brightness(.70) drop-shadow(7px 2px 15px #b4262577)}
 .poster-shade{position:absolute;inset:0;background:linear-gradient(0deg,#030406 0%,#030406fa 7%,#030406bf 27%,#03040618 49%,transparent 70%),radial-gradient(ellipse at 50% 35%,transparent 24%,#03040688 79%,#030406cc);z-index:5}
 .poster-scratches{position:absolute;inset:0;z-index:6;opacity:.24;background:repeating-linear-gradient(116deg,transparent 0 147px,#a8836b33 148px,transparent 149px 381px),repeating-linear-gradient(23deg,transparent 0 411px,#58131c88 413px,transparent 416px 793px);mask-image:linear-gradient(transparent 10%,#000 70%)}
 .intro-content{position:relative;z-index:7;text-align:center;width:min(100%,940px);padding-top:420px}
@@ -59,7 +59,7 @@ body[data-screen="intro"] :is(button,input):focus-visible{outline:2px solid #ffe
   .poster-doll{--left:22%;--top:3%;--height:65%;--tilt:2deg;z-index:1}
   .poster-ghost{--left:83%;--top:5%;--height:74%;--tilt:3deg;z-index:2}
   .poster-faceless{--left:53%;--top:10%;--height:64%;z-index:0}
-  .poster-rabbit{--left:25%;--top:25%;--height:67%;--tilt:-5deg;z-index:4}
+  .poster-attacker{--left:25%;--top:20%;--height:90%;--tilt:-2deg;z-index:4}
   .poster-boy{--left:73%;--top:34%;--height:57%;z-index:3}
   .poster-shade{background:linear-gradient(0deg,#030406 0%,#030406f2 9%,#030406cc 24%,#03040610 50%,transparent 80%),radial-gradient(ellipse at 50% 35%,transparent 10%,#03040699 91%)}
   .intro-content{padding-top:clamp(380px,calc(100svh - 230px),540px)}
@@ -71,7 +71,7 @@ body[data-screen="intro"] :is(button,input):focus-visible{outline:2px solid #ffe
   #intro{min-height:max(390px,100svh);padding-bottom:20px}.intro-content{padding-top:clamp(200px,calc(100svh - 200px),340px)}
   #intro .intro-title{font-size:clamp(58px,12svh,72px);margin-bottom:16px}
   .poster-ghost{--height:110%;--top:15%}.poster-doll{--height:126%;--top:10%}
-  .poster-boy{--height:104%;--top:21%}.poster-rabbit{--height:135%;--top:-7%}
+  .poster-boy{--height:104%;--top:21%}.poster-attacker{--height:175%;--top:-11%}
 }
 
 /* A dedicated loss screen, separate from the opening poster and old ending. */
