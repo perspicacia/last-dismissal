@@ -2,7 +2,7 @@
 
 학교를 배경으로 한 생존 공포게임. 목표는 짧은 플레이로 규칙과 분위기를 전달하는 것이다.
 
-시작 화면은 교복 여고생 귀신·금발 인형·긴 머리 귀신·음악실 남자아이·얼굴 없는 학생을 모은 어두운 학교 포스터다. 토끼 자리는 새 여고생 귀신으로 교체하고, 영문 게임명 `LAST DISMISSAL`을 거친 페인트 펜 느낌의 Lacquer 서체로 표시한다. 제목과 시작·음향 조작만 남기며 화면 크기에 맞춰 캐릭터 배치를 바꾼다. [첫 화면 명세](specs/horror-title-screen.md), [서체 출처·OFL 라이선스](assets/fonts/README.md).
+시작 화면은 토끼·교복 여고생 귀신·금발 인형·긴 머리 귀신·음악실 남자아이·얼굴 없는 학생을 모은 어두운 학교 포스터다. 여섯 캐릭터가 함께 등장하고, 영문 게임명 `LAST DISMISSAL`을 거친 페인트 펜 느낌의 Lacquer 서체로 표시한다. 제목과 시작·음향 조작만 남기며 화면 크기에 맞춰 캐릭터 배치를 바꾼다. [첫 화면 명세](specs/horror-title-screen.md), [서체 출처·OFL 라이선스](assets/fonts/README.md).
 
 ## 실행
 
@@ -10,7 +10,7 @@
 
 이 주소는 로컬 서버가 실행 중일 때만 열린다. `ERR_CONNECTION_REFUSED`(연결 거부)가 표시되면 프로젝트 폴더에서 `npm start`를 다시 실행하고 웹 화면을 새로고침한다. 플레이하는 동안 서버를 실행한 터미널/프로세스를 유지한다.
 
-- 일반 플레이: 3-1·3-2·3-3 교실·음악실·무용실을 둘러본다. 교복 여고생 귀신은 매번 무작위 방에 숨어 있고 시작 시 보이지 않는다. [공격자 교체 명세](specs/schoolgirl-attacker.md).
+- 일반 플레이: 3-1·3-2·3-3 교실·음악실·무용실을 둘러본다. 교복 여고생 귀신은 매번 무작위 방에 숨어 있고 시작 시 보이지 않는다. [공격자 교체 명세](specs/schoolgirl-attacker.md). 토끼는 3-1에 별도로 서 있으며 가까이 응시하면 이빨 표정을 보여도 게임 오버는 일으키지 않는다. [토끼 등장 명세](specs/rabbit-presence.md).
 - WASD 이동(W/S 전후, A/D 옆걸음), 마우스 상하/좌우 시점. 시작/계속 클릭으로 마우스 잠금을 요청하고, 제한된 브라우저에서는 화면 드래그를 사용한다. ↑↓ 이동·←→ 느린 회전, Page Up/Down 위아래 보기·Home 정면 복귀도 지원한다. 가까운 문에서 E/클릭/입장 버튼, 안에서는 E/복귀 버튼으로 돌아간다.
 - 걷는 중 카메라 높이를 고정하고 소품/계단 자동 시점과 흔들림을 없앴다. Esc 또는 일시정지 버튼으로 탐색/음향을 멈추고 커서를 해제한다. 일시정지 창에서 좌우/상하 감도(기본 65%/32.5%)를 따로 조절하거나 ‘상하 시점 고정’으로 정면 높이에서 좌우만 둘러볼 수 있다. 설정은 재시작과 새로고침에서도 유지하며 저장이 차단되면 기본값으로 진행한다. 포커스 이탈/잠금 해제도 일시정지하며 기존 위치/방문/귀신 배치를 유지한다. [최신 접근성 명세](specs/accessible-camera-controls.md), [기존 조작 명세](specs/mouse-look-comfort.md).
 - 영역 캡처가 필요하면 **P → Mac ⌘⇧4 / Windows Win+Shift+S → 영역 선택** 순서로 사용한다. P 또는 Esc 메뉴의 ‘화면 캡처’는 장면·이벤트·소리를 고정하고 커서 잠금/드래그를 해제한다. 캡처 도구로 포커스가 바뀌어도 유지하며 P/계속하기로 재개한다. OS 단축키가 브라우저에 전달되면 자동 고정하지만 환경에 따라 P를 먼저 누르는 편이 확실하다. [캡처 명세](specs/capture-cursor-release.md).
@@ -70,8 +70,8 @@ last-dismissal/
 | 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [camera-preferences.js](camera-preferences.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 축별 마우스 감도·상하 고정·키보드 시점/저장, 영역 캡처 조작 |
 | 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-tone.js](school-tone.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸·색감, 창문과 계단 |
 | 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
-| 캐릭터 외형 | [schoolgirl-attacker.js](schoolgirl-attacker.js), [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [piano-boy-body.js](piano-boy-body.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 무료 인체 기반 남자아이 몸통, 곡면 인물·고양이, 여고생 공격 표정·원본 비율과 고양이 접지 보행 (토끼 비교 보존) |
-| 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [schoolgirl-attacker.js](schoolgirl-attacker.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 여고생 돌진 (이전 토끼 모듈 보존), 무작위 고양이와 계단 접근 이벤트 |
+| 캐릭터 외형 | [schoolgirl-attacker.js](schoolgirl-attacker.js), [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [piano-boy-body.js](piano-boy-body.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 무료 인체 기반 남자아이 몸통, 곡면 인물·고양이, 여고생 공격 표정·원본 비율과 고양이 접지 보행·토끼 원본 외형 보존 |
+| 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [schoolgirl-attacker.js](schoolgirl-attacker.js), [rabbit-arrival.js](rabbit-arrival.js), [rabbit-presence.js](rabbit-presence.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 여고생 돌진, 3-1 토끼의 비공격 등장·근접 표정, 무작위 고양이와 계단 접근 이벤트 |
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
 | 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
 | 이전 규칙 | [survival.js](survival.js), [logic.js](logic.js) | 이전 생존·관찰 버전의 회귀 검증용 보존 모듈 |
@@ -111,11 +111,11 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 일반 게
 ## 3D 화면과 검증
 
 - 최신 색감은 그림자복도 공식 화면의 따뜻한 국소 조명과 어두운 공간 대비를 학교에 적용했다. 누런 전등, 청회색 창가/암부, 낮은 채도와 고정된 벽 얼룩을 사용한다. 노출 0.76, 주변광 0.28(3-3은 0.22), 달빛 0.35, 천장등 6.0·범위 9m로 바닥과 문/가구 경계를 살린다. `school-tone.js`의 팔레트·Canvas 채도는 두 렌더가 공유하고 UI 글자는 별도로 유지한다. 첫 화면/종료 배경도 같은 색감으로 연결한다. [학교 톤 명세](specs/shadow-corridor-tone.md).
-- 과거 토끼 비교 외형에는 원본 털 무늬/투명도를 보존하는 결정적인 피 번짐을 겹친다. 일반 탐색과 첫 화면은 새 여고생 귀신을 사용한다. 원본 PNG 파일은 수정하지 않는다. [피 얼룩 토끼 명세](specs/darker-school-blood-rabbit.md).
+- 토끼 외형에는 원본 털 무늬/투명도를 보존하는 결정적인 피 번짐을 겹친다. 3-1 교실의 비공격 등장과 첫 화면에 유지하며 게임 오버 공격은 여고생 귀신이 담당한다. [토끼 등장 복구](specs/rabbit-presence.md). 원본 PNG 파일은 수정하지 않는다. [피 얼룩 토끼 명세](specs/darker-school-blood-rabbit.md).
 - 밤 학교의 기본 노출·주변광·천장등을 낮췄다. 복도 다섯 전등은 위치마다 다른 시점에 약 1~2초간 꺼졌다 켜지고, 교실은 고정 조명이다. 새 게임은 점멸 시계를 초기화하며 동작 줄이기 환경에서는 고정 조명으로 표시한다. [조명 명세](specs/horror-lighting.md), 개발용 비교 `http://127.0.0.1:8080/tests/fixtures/lighting-review.html` (`?compat`는 Canvas 호환).
 - Three.js 0.186.1 (MIT). `package-lock.json` 버전을 고정하고 배포 모듈·라이선스를 `vendor/`에 보관한다. 라이브러리 갱신 시 `npm ci` 후 `node_modules/three/build/three.module.js`, `three.core.js` 및 LICENSE를 vendor에 동기화한다.
 - WebGL2 지원 브라우저가 필요하다. 3D 초기화 실패 시 기존 Canvas 화면으로 전환하며 시작 화면에 호환 화면 안내를 표시한다. 모바일 성능은 별도 확인이 필요하다.
-- 공격자 여고생과 창밖 귀신은 투명 이미지의 빌보드다. 공간·가구·나무·계단의 3D 전환과 캐릭터 모델링 완료를 구분한다.
+- 공격자 여고생·3-1 토끼·창밖 귀신은 투명 이미지의 빌보드다. 공간·가구·나무·계단의 3D 전환과 캐릭터 모델링 완료를 구분한다.
 - 3D 정상/이상 비교: `http://127.0.0.1:8080/tests/fixtures/three-review.html`. 이 개발용 화면의 버튼은 일반 게임에 표시되지 않는다.
 - 실제 탐색 UI/컨트롤러 검증: `http://127.0.0.1:8080/tests/fixtures/three-flow.html`. `?compat`를 붙이면 WebGL 실패를 강제해 Canvas 호환을 확인한다.
 

@@ -4,9 +4,10 @@ import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
-import {ATTACKER_ASSETS,attackerImagesReady,attackerImage,attackerArrival,attackerProjection} from './schoolgirl-attacker.js?v=masked-schoolgirl-2';
+import {ATTACKER_ASSETS,attackerImagesReady,attackerImage,attackerArrival,attackerProjection} from './schoolgirl-attacker.js?v=rabbit-presence-1';
+import {rabbitPresence,recordRabbitPresence} from './rabbit-presence.js?v=rabbit-presence-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=masked-schoolgirl-2';
+import { ThreeSchoolView } from './three-school.js?v=rabbit-presence-1';
 import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
@@ -14,7 +15,7 @@ import { drawSceneDepth } from './scene-depth.js?v=shadow-tone-1';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=cat-boy-likeness-1';
+import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=rabbit-presence-1';
 import {ROOM_BLOCKERS} from './room-props.js';
 import {newCatEvent,advanceCatEvent,catPose} from './cat-event.js?v=cat-polish-2';
 import {drawBlackCat} from './black-cat.js?v=cat-boy-likeness-1';
@@ -69,6 +70,7 @@ export class Corridor {
   }
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
   attackerImagesReady(){return attackerImagesReady(this);}
+  updateRabbitPresence(){const pose=rabbitPresence(this);recordRabbitPresence(this.canvas,pose);return pose;}
   loadAttackerImages(){
     for(const [key,path] of [['schoolgirl',ATTACKER_ASSETS.normal],['schoolgirlAttack',ATTACKER_ASSETS.attack]]){
       const previous=this[key];if(previous&&(!previous.complete||previous.naturalWidth))continue;
@@ -230,6 +232,7 @@ export class Corridor {
     drawRabbitPose(c,this.rabbitPartCache.get(img),x,y,width,height,raisedArms((time-this.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches));
   }
   draw(time) {
+    const rabbit=this.updateRabbitPresence();
     if(this.view3D){this.view3D.draw(this,time);return;}
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -237,7 +240,7 @@ export class Corridor {
     const levels=this.lighting.update(time,{active:this.scene==='corridor'&&!this.exploration?.ended,reduced:reduce});recordLighting(this.canvas,levels);
     this.updateExterior(time);
     const cat=catPose(this.catEvent,reduce);
-    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,faceless:this.facelessStudent,cat,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
+    if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,faceless:this.facelessStudent,rabbit,cat,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const bob=!p.manualLook&&(this.keys.has('forward')||this.keys.has('back'))&&!reduce?Math.sin(time/130)*2:0;
     const lens=w*.68,horizon=h*.48+bob+(p.manualLook?Math.tan(p.pitch||0)*lens:0);
     const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,SCHOOL_TONE.canvasCeilingTop);ceiling.addColorStop(1,SCHOOL_TONE.canvasCeilingBottom);c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);

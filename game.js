@@ -2,10 +2,11 @@ import {newStairHaunt,advanceStairHaunt,stairSoundPan} from './stair-haunt.js?v=
 import {MouseLookController,lookPlayer,inputAction,lookKeyAction,keyboardLookPlayer} from './mouse-controls.js?v=accessible-camera-1';
 import {loadLookSettings,saveLookSettings,normalizeLookSettings} from './camera-preferences.js?v=accessible-camera-1';
 import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-controls.js';
-import {ARRIVAL,attackerArrival} from './schoolgirl-attacker.js?v=masked-schoolgirl-2';
+import {ARRIVAL,attackerArrival} from './schoolgirl-attacker.js?v=rabbit-presence-1';
+import {decorateRabbitElement} from './rabbit-appearance.js?v=dark-blood-1';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
-import {Corridor} from './corridor.js?v=masked-schoolgirl-2';
-import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=masked-schoolgirl-2';
+import {Corridor} from './corridor.js?v=rabbit-presence-1';
+import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=rabbit-presence-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
@@ -21,6 +22,7 @@ const corridor=new Corridor($('corridor'),({player,scene})=>{
 },()=>audio.footstep(corridor.scene==='corridor'?'corridor':'classroom'));
 corridor.onCatCue=variant=>audio.catMeow(variant);
 corridor.manualLook=true;
+decorateRabbitElement($('poster-rabbit-image'),corridor.mascotOpen);
 const canPlay=()=>!$('game').hidden&&Boolean(state)&&!state.ended&&!paused;
 const mouse=new MouseLookController($('corridor'),{
  canPlay,onLook:(dx,dy)=>{corridor.player=lookPlayer(corridor.player,dx,dy,lookSettings);corridor.notify();},
@@ -100,9 +102,10 @@ function updateUI(){
  if($('threat-status').textContent!==message)$('threat-status').textContent=message;
  $('survival-hud').dataset.phase=state.ended?'warning':'exploring';
  $('corridor').dataset.survivalPhase=state.ended?'caught':'exploring';
- $('corridor').dataset.rabbitVisible='false';$('corridor').dataset.attackerVisible=String(state.ended);
+ $('corridor').dataset.attackerVisible=String(state.ended);
  $('corridor').dataset.visited=state.visited.join(',');
  corridor.exploration=state;
+ corridor.updateRabbitPresence();
 }
 async function start(){
  clearTimeout(endingTimer);closePause();mouse.release();audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.loadAttackerImages();corridor.reset(null);corridor.screamTriggered=false;
@@ -127,7 +130,7 @@ function interact(){
 }
 function leaveRoom(){if(!state||state.ended||paused)return;audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt={...stairHaunt,elapsed:0};corridor.leaveClassroom();updateUI();$('corridor').focus();}
 $('room-action').onclick=interact;$('room-return').onclick=leaveRoom;
-function restart(){closePause();mouse.release();clearTimeout(endingTimer);hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);corridor.view3D?.resetHauntings();Object.assign($('corridor').dataset,{attackerVisible:'false',attackerExpression:'normal',rabbitVisible:'false'});$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
+function restart(){closePause();mouse.release();clearTimeout(endingTimer);hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);corridor.view3D?.resetHauntings();corridor.updateRabbitPresence();Object.assign($('corridor').dataset,{attackerVisible:'false',attackerExpression:'normal',rabbitVisible:'false'});$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
 function refreshKeys(){corridor.keys.clear();for(const action of heldKeys.values())corridor.keys.add(action);}
 document.addEventListener('keydown',e=>{
  const command=captureCommand(e,{canCapture:!$('game').hidden&&Boolean(state)&&!state.ended,capturing});
