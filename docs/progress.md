@@ -633,3 +633,4 @@
 - Canvas 강제 호환에서 동일한 드래그 감도와 상하 고정/해제를 확인했다. 의도된 WebGL 생성 오류/호환 전환 경고를 제외한 오류는 없다. 일반 게임에서도 우회 없이 음소거 시작·드래그·Home·Esc 설정을 확인했다. 기본값 65%/32.5%·고정 꺼짐으로 복구했다. 정상 Three.js 흐름에 오류/경고는 없다.
 - 증거는 `/Users/perspicacia/.codex/visualizations/2026/10/01/01a0f669-ef7c-7ec3-86a8-aa865954cf4c/accessible-camera-settings.png`이며 일반 게임의 설정 화면이다. 로컬 확인 자료로 저장소에 포함하지 않는다. 최신 일반 게임은 음소거·일시정지 설정으로 남겼고 개발 확인 탭은 닫았다.
 - 미확인: 실제 사용자 어지러움/편안함과 장치별 적정 감도, Chrome/트랙패드의 실제 Pointer Lock·모바일 GPU는 재확인하지 않았다. IAB에서는 드래그 대안으로 확인했으며 Pointer Lock 자체는 자동 검증으로 구분한다. Canvas 전체 종료 흐름은 이번에 반복하지 않았다. main 병합/배포는 미진행이다. 다음 작은 작업은 사용자 2~3명이 교실 하나를 탐색하며 기본 상하 감도와 고정 모드를 비교해 기본값을 조정하는 것이다.
+- 수정 JS 3개·흐름 검증 모듈의 구문 검사, 수정 문서 5개의 상대 링크와 `git diff --check`도 통과했다. 커밋/Push 후 검토용 draft [PR #102](https://github.com/perspicacia/last-dismissal/pull/102)를 생성하고 채팅에 연결했다. 대상은 이전 게시판 사진 PR #100의 `codex/aged-erased-photo`다. main 병합은 미진행이다.
