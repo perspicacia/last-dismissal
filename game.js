@@ -1,9 +1,10 @@
+import {decorateRabbitElement} from './rabbit-appearance.js?v=dark-blood-1';
 import {newStairHaunt,advanceStairHaunt,stairSoundPan} from './stair-haunt.js?v=stair-haunt-1';
 import {MouseLookController,lookPlayer,inputAction,DEFAULT_SENSITIVITY} from './mouse-controls.js?v=capture-cursor-1';
 import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-controls.js';
-import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
+import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js?v=dark-blood-1';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
-import {Corridor} from './corridor.js?v=character-original-1';
+import {Corridor} from './corridor.js?v=dark-blood-1';
 import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=mouse-comfort-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
@@ -18,6 +19,7 @@ const corridor=new Corridor($('corridor'),({player,scene})=>{
  $('position').dataset.scene=scene;for(const key of ['x','z','angle','pitch'])$('position').dataset[key]=(player[key]||0).toFixed(3);
  updateUI();
 },()=>audio.footstep(corridor.scene==='corridor'?'corridor':'classroom'));
+for(const element of document.querySelectorAll('.poster-rabbit img, #jumpscare img'))decorateRabbitElement(element,corridor.mascotOpen);
 corridor.onCatCue=variant=>audio.catMeow(variant);
 corridor.manualLook=true;
 const canPlay=()=>!$('game').hidden&&Boolean(state)&&!state.ended&&!paused;

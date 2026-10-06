@@ -66,7 +66,7 @@ last-dismissal/
 | 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 마우스 시점과 잠금, 영역 캡처 조작 |
 | 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸, 창문과 계단 |
 | 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
-| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 연속 곡면 인물·고양이, 토끼 팔 자세와 접지 보행 |
+| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 연속 곡면 인물·고양이, 토끼 피 얼룩·팔 자세와 접지 보행 |
 | 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 토끼 돌진, 무작위 고양이와 계단 접근 이벤트 |
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
 | 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
@@ -104,6 +104,7 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 ## 3D 화면과 검증
 
+- 최신 조도는 노출 0.70, 주변광 0.22(3-3은 0.17), 달빛 0.35와 천장등 5.2로 더 낮췄다. 토끼 얼굴에는 원본 털 무늬/투명도를 보존하는 결정적인 피 번짐을 겹치며 두 표정, Three.js/Canvas 돌진과 첫 화면에 공유한다. 원본 PNG 파일은 수정하지 않는다. [어두운 학교·피 얼룩 토끼 명세](specs/darker-school-blood-rabbit.md).
 - 밤 학교의 기본 노출·주변광·천장등을 낮췄다. 복도 다섯 전등은 위치마다 다른 시점에 약 1~2초간 꺼졌다 켜지고, 교실은 고정 조명이다. 새 게임은 점멸 시계를 초기화하며 동작 줄이기 환경에서는 고정 조명으로 표시한다. [조명 명세](specs/horror-lighting.md), 개발용 비교 `http://127.0.0.1:8080/tests/fixtures/lighting-review.html` (`?compat`는 Canvas 호환).
 - Three.js 0.186.1 (MIT). `package-lock.json` 버전을 고정하고 배포 모듈·라이선스를 `vendor/`에 보관한다. 라이브러리 갱신 시 `npm ci` 후 `node_modules/three/build/three.module.js`, `three.core.js` 및 LICENSE를 vendor에 동기화한다.
 - WebGL2 지원 브라우저가 필요하다. 3D 초기화 실패 시 기존 Canvas 화면으로 전환하며 시작 화면에 호환 화면 안내를 표시한다. 모바일 성능은 별도 확인이 필요하다.

@@ -29,6 +29,6 @@ test('교실·중단·동작 줄이기에서 시계가 진행되지 않고 재�
 
 test('Canvas는 주변 전등 소등을 어두워지는 표현으로 반영한다',()=>{
   let fill;const c={save(){},restore(){},fillRect(){fill=this.fillStyle;}};
-  shadeCanvasSchool(c,100,100,[0,1,1,1,1],{z:3});assert.equal(fill,'rgba(2,8,13,0.35)');
-  shadeCanvasSchool(c,100,100,[0,1,1,1,1],{z:23});assert.equal(fill,'rgba(2,8,13,0.22)');
+  shadeCanvasSchool(c,100,100,[0,1,1,1,1],{z:3});assert.equal(fill,'rgba(2,8,13,0.5)');
+  shadeCanvasSchool(c,100,100,[0,1,1,1,1],{z:23});assert.equal(fill,'rgba(2,8,13,0.38)');
 });

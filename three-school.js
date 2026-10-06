@@ -1,6 +1,6 @@
 import {manualCameraPose} from './mouse-controls.js?v=mouse-comfort-1';
-import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js';
-import {rabbitArrival,rabbitSize} from './rabbit-arrival.js';
+import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js?v=dark-blood-1';
+import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=character-original-1';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
@@ -11,7 +11,8 @@ import {buildRoomProps} from './room-props.js?v=music-ghost-polish-2';
 import { DOLL, DOLL_GAZE, dollRise, facingDoll } from './doll-event.js';
 import {volumeFromImage} from './doll-volume.js?v=character-original-1';
 import {loadStudentModel,prepareStudentModel} from './student-model.js?v=student-glb-1';
-import {CORRIDOR_LAMPS,SchoolLighting,recordLighting} from './school-lighting.js';
+import {CORRIDOR_LAMPS,SCHOOL_DARKNESS,SchoolLighting,recordLighting} from './school-lighting.js?v=dark-blood-1';
+import {bloodiedRabbit,rabbitImageSize} from './rabbit-appearance.js?v=dark-blood-1';
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js';
@@ -32,7 +33,7 @@ export class ThreeSchoolView {
     this.renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFShadowMap;
-    this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.0;
+    this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=SCHOOL_DARKNESS.exposure;
     this.scenes={};this.refs={};this.build('corridor');for(const room of ROOMS)this.build(room.id);this.syncTextures(source);this.resize();
     canvas.dataset.rendererReady='three';
     // Keep the adopted image identity until a matching 3D sculpt is approved.
@@ -73,7 +74,7 @@ export class ThreeSchoolView {
   }
   resize(){const w=Math.max(1,this.source.canvas.clientWidth),h=Math.max(1,this.source.canvas.clientHeight);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.fov=THREE.MathUtils.radToDeg(2*Math.atan(h/(w*.68)*.5));this.camera.updateProjectionMatrix();}
   build(kind){
-    const scene=new THREE.Scene();scene.background=new THREE.Color('#0b171f');scene.fog=new THREE.FogExp2('#14242c',.013);scene.scale.z=-1;this.scenes[kind]=scene;
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#071119');scene.fog=new THREE.FogExp2('#09151c',.013);scene.scale.z=-1;this.scenes[kind]=scene;
     const g=new THREE.Group();scene.add(g);const classroom=kind!=='corridor',half=classroom?4.4:3,end=classroom?9.8:24.6;
     const plaster=material('#d0cbb8',{map:plasterTexture()}),lower=material('#365d60'),trim=material('#a7aa99'),base=material('#183934'),wood=material('#b69b73',{map:woodTexture(),roughness:.48,bumpScale:.013});wood.bumpMap=wood.map;
     const floor=box(g,0,-.075,end/2,half*2,.15,end,wood);floor.castShadow=false;
@@ -126,15 +127,15 @@ export class ThreeSchoolView {
       for(const x of [92,420]){pc.beginPath();pc.ellipse(x,78,24,22,-.1,0,Math.PI*2);pc.fill();for(let i=0;i<5;i++){pc.beginPath();pc.ellipse(x-24+i*12,43-(i%3)*5,5,20,.08,0,Math.PI*2);pc.fill();}}
       this.refs.dollPrint=this.picture(g,print,1.45,.32,[-2.643,1.96,5],Math.PI/2);Object.assign(this.refs.dollPrint.material,{transparent:true,alphaTest:.1,depthWrite:false});this.refs.dollPrint.visible=false;this.refs.dollPrintBack=this.refs.dollPrint.clone();this.refs.dollPrintBack.position.z=15;g.add(this.refs.dollPrintBack);
     }
-    const ambient=new THREE.HemisphereLight('#baceda','#756751',kind==='classroom33'?.34:.45);scene.add(ambient);
-    const moon=new THREE.DirectionalLight('#b7cfdf',.7);moon.position.set(classroom?-16:16,24,12);moon.target.position.set(0,0,end/2);scene.add(moon,moon.target);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);Object.assign(moon.shadow.camera,{left:-30,right:30,top:40,bottom:-40,near:.5,far:90});moon.shadow.bias=-.0004;moon.shadow.normalBias=.035;
+    const ambient=new THREE.HemisphereLight('#baceda','#756751',kind==='classroom33'?SCHOOL_DARKNESS.deepAmbient:SCHOOL_DARKNESS.ambient);scene.add(ambient);
+    const moon=new THREE.DirectionalLight('#b7cfdf',SCHOOL_DARKNESS.moon);moon.position.set(classroom?-16:16,24,12);moon.target.position.set(0,0,end/2);scene.add(moon,moon.target);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);Object.assign(moon.shadow.camera,{left:-30,right:30,top:40,bottom:-40,near:.5,far:90});moon.shadow.bias=-.0004;moon.shadow.normalBias=.035;
     const housing=material('#65726d');
     if(!classroom)this.refs.corridorLamps=[];
     for(const z of classroom?[2,6]:CORRIDOR_LAMPS){
-      const fixture=material('#8b9486',{emissive:'#dfedcf',emissiveIntensity:.92});
+      const fixture=material('#8b9486',{emissive:'#dfedcf',emissiveIntensity:.02+SCHOOL_DARKNESS.lampGlow});
       box(g,0,2.94,z,1.25,.085,.43,housing);const bulb=box(g,0,2.88,z,1.13,.035,.34,fixture);
-      const light=new THREE.PointLight('#e0e5c8',8.5,11,2);light.position.set(0,2.65,z);scene.add(light);
-      if(!classroom)this.refs.corridorLamps.push({bulb,light,power:8.5,glow:.9});
+      const light=new THREE.PointLight('#e0e5c8',SCHOOL_DARKNESS.lampPower,11,2);light.position.set(0,2.65,z);scene.add(light);
+      if(!classroom)this.refs.corridorLamps.push({bulb,light,power:SCHOOL_DARKNESS.lampPower,glow:SCHOOL_DARKNESS.lampGlow});
     }
     scene.add(buildOutdoors({side:classroom?'classroom':'corridor'}));
     const cat=buildBlackCat();g.add(cat);(this.refs.cats??={})[kind]=cat;
@@ -249,7 +250,7 @@ export class ThreeSchoolView {
     }
     box(g,-1.65,5.4,27.8,2.15,.16,6.6,plaster).name='stair-ceiling-up';box(g,1.65,3.08,27.8,2.15,.16,6.6,plaster);
   }
-  partsFor(image){this.rabbitPartCache??=new WeakMap();if(!image?.naturalWidth||image.complete===false)return null;if(!this.rabbitPartCache.has(image))this.rabbitPartCache.set(image,rabbitParts(image));return this.rabbitPartCache.get(image);}
+  partsFor(image){this.rabbitPartCache??=new WeakMap();if(!rabbitImageSize(image))return null;if(!this.rabbitPartCache.has(image))this.rabbitPartCache.set(image,rabbitParts(image));return this.rabbitPartCache.get(image);}
   syncTextures(source){
     if(!this.refs.photo)return;
     for(const t of this.textures)t.dispose();this.textures=[];
@@ -258,7 +259,9 @@ export class ThreeSchoolView {
     for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':d.userData.label]);
     assign(this.refs.clock,source.clockFace);
     assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
-    assign(this.refs.rabbit,source.mouthOpen?source.mascotOpen:source.mascot);for(const rabbit of Object.values(this.refs.roomRabbits||{})){const image=source.mouthOpen?source.mascotOpen:source.mascot;const parts=this.partsFor(image);if(parts){assign(rabbit.userData.body,parts.body);assign(rabbit.userData.arms[0],parts.left);assign(rabbit.userData.arms[1],parts.right);}}
+    const originalRabbit=source.mouthOpen?source.mascotOpen:source.mascot;const rabbitSkin=originalRabbit?.naturalWidth?bloodiedRabbit(originalRabbit):originalRabbit;
+    if(source.canvas)source.canvas.dataset.rabbitAppearance=rabbitSkin&&rabbitSkin!==originalRabbit?'bloodied':'loading';
+    assign(this.refs.rabbit,rabbitSkin);for(const rabbit of Object.values(this.refs.roomRabbits||{})){const parts=this.partsFor(rabbitSkin);if(parts){assign(rabbit.userData.body,parts.body);assign(rabbit.userData.arms[0],parts.left);assign(rabbit.userData.arms[1],parts.right);}}
     assign(this.refs.ghost,source.windowGhost);for(const ghost of this.refs.ambienceGhosts||[])assign(ghost,source.windowGhost);
     for(const [root,image] of [[this.refs.pianoBoy,source.pianoBoy],[this.refs.facelessStudent,source.facelessStudent]])if(root){
       root.visible=Boolean(image?.complete!==false&&image?.naturalWidth>0&&image?.naturalHeight>0);

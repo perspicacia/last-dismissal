@@ -1,3 +1,4 @@
+import {rabbitImageSize} from './rabbit-appearance.js?v=dark-blood-1';
 export const ARRIVAL={still:.30,teeth:.55,rush:.70,end:1.50};
 // Shared by 3D, Canvas and the sound trigger: elapsed seconds since discovery.
 export function rabbitArrival(elapsed,reduced=false){
@@ -7,6 +8,6 @@ export function rabbitArrival(elapsed,reduced=false){
  return {teeth:time>=ARRIVAL.teeth,rush,growth:1+.15*rush,centerY:1.05+.20*rush,done:time>=ARRIVAL.end};
 }
 export function rabbitSize(image,growth=1){
- const ratio=image?.naturalWidth>0&&image?.naturalHeight>0?image.naturalWidth/image.naturalHeight:2/3;
+ const size=rabbitImageSize(image),ratio=size?size.width/size.height:2/3;
  const height=2.1*growth;return {width:height*ratio,height};
 }
