@@ -4,7 +4,7 @@ import {manualCameraPose} from './mouse-controls.js?v=mouse-comfort-1';
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
-import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=cat-boy-likeness-1';
+import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=piano-boy-depth-1';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,buildSchoolWindow,windowWood} from './school-windows.js';
 import {buildBlackCat,updateBlackCat} from './black-cat.js?v=cat-boy-likeness-1';
