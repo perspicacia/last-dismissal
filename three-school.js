@@ -4,6 +4,7 @@ import {manualCameraPose} from './mouse-controls.js?v=mouse-comfort-1';
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import {attackerImagesReady,attackerImage,attackerArrival,attackerSize,attackerPosition} from './schoolgirl-attacker.js?v=masked-schoolgirl-2';
+import {RABBIT_PRESENCE,rabbitPresence,recordRabbitPresence} from './rabbit-presence.js?v=rabbit-presence-1';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=human-shape-2';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
@@ -78,7 +79,7 @@ export class ThreeSchoolView {
     if(source.canvas)Object.assign(source.canvas.dataset,{studentModel:useSolid?'glb':'image-volume',dollReady:String(useSolid||Boolean(this.dollVolumeReady))});
     return useSolid;
   }
-  resetHauntings(){for(const attacker of Object.values(this.refs.roomAttackers||{}))attacker.visible=false;for(const rabbit of Object.values(this.refs.roomRabbits||{}))rabbit.visible=false;this.lastViewTime=null;this.dollLook=0;this.lighting?.reset();this.applyCorridorLighting(CORRIDOR_LAMPS.map(()=>1));for(const group of Object.values(this.refs.hauntings||{}))updateRoomHauntings(group,{player:this.source.player,time:0,dt:0,active:false});for(const ghost of this.refs.ambienceGhosts||[])updateGhostSmile(ghost.userData.smile,ghost,this.source.player,ghost.userData.config,{active:false});if(this.source.canvas)Object.assign(this.source.canvas.dataset,{ballActive:'false',ballHeight:'0',ghostSmile:'0',cornerVisible:'false'});}
+  resetHauntings(){if(this.refs.ambienceRabbit)this.refs.ambienceRabbit.visible=false;recordRabbitPresence(this.source?.canvas,null);for(const attacker of Object.values(this.refs.roomAttackers||{}))attacker.visible=false;for(const rabbit of Object.values(this.refs.roomRabbits||{}))rabbit.visible=false;this.lastViewTime=null;this.dollLook=0;this.lighting?.reset();this.applyCorridorLighting(CORRIDOR_LAMPS.map(()=>1));for(const group of Object.values(this.refs.hauntings||{}))updateRoomHauntings(group,{player:this.source.player,time:0,dt:0,active:false});for(const ghost of this.refs.ambienceGhosts||[])updateGhostSmile(ghost.userData.smile,ghost,this.source.player,ghost.userData.config,{active:false});if(this.source.canvas)Object.assign(this.source.canvas.dataset,{ballActive:'false',ballHeight:'0',ghostSmile:'0',cornerVisible:'false'});}
   applyCorridorLighting(levels){
     for(const [i,lamp] of (this.refs.corridorLamps||[]).entries()){
       lamp.light.intensity=lamp.power*levels[i];
@@ -140,6 +141,7 @@ export class ThreeSchoolView {
       Object.assign(this.refs.doll.material,{transparent:true,alphaTest:.55,roughness:1});this.refs.doll.castShadow=true;this.refs.doll.receiveShadow=true;
       tilt.rotation.x=Math.PI/2;this.contactShadow(g,DOLL.x,.008,DOLL.z-DOLL.height*.5,.70,1.55);}
       this.addAmbience(g,kind);
+      if(kind===RABBIT_PRESENCE.room){const r=RABBIT_PRESENCE;this.refs.ambienceRabbit=this.sprite(g,r.height,r.height/2,[r.x,r.height/2,r.z]);this.refs.ambienceRabbit.name='ambience-rabbit';this.refs.ambienceRabbit.visible=false;this.contactShadow(g,r.x,.009,r.z,.55,.35).name='rabbit-feet-shadow';}
       const haunting=buildRoomHauntings(kind);g.add(haunting);(this.refs.hauntings??={})[kind]=haunting;
       (this.refs.roomRabbits??={})[kind]=this.rabbitRig(g);this.refs.roomRabbits[kind].visible=false;
       const attacker=this.sprite(g,1.85,.925,[0,.925,6.8]);attacker.name='schoolgirl-attacker';attacker.visible=false;
@@ -285,6 +287,7 @@ export class ThreeSchoolView {
     const originalRabbit=source.mouthOpen?source.mascotOpen:source.mascot;const rabbitSkin=originalRabbit?.naturalWidth?bloodiedRabbit(originalRabbit):originalRabbit;
     if(source.canvas)source.canvas.dataset.rabbitAppearance=rabbitSkin&&rabbitSkin!==originalRabbit?'bloodied':'loading';
     assign(this.refs.rabbit,rabbitSkin);for(const rabbit of Object.values(this.refs.roomRabbits||{})){const parts=this.partsFor(rabbitSkin);if(parts){assign(rabbit.userData.body,parts.body);assign(rabbit.userData.arms[0],parts.left);assign(rabbit.userData.arms[1],parts.right);}}
+    const presence=rabbitPresence(source);if(this.refs.ambienceRabbit&&presence)assign(this.refs.ambienceRabbit,bloodiedRabbit(presence.image));
     const schoolgirl=attackerImage(source,source.mouthOpen);for(const attacker of Object.values(this.refs.roomAttackers||{}))assign(attacker,schoolgirl);
     assign(this.refs.ghost,source.windowGhost);for(const ghost of this.refs.ambienceGhosts||[])assign(ghost,source.windowGhost);
     for(const [root,image] of [[this.refs.pianoBoy,source.pianoBoy],[this.refs.facelessStudent,source.facelessStudent]])if(root){
@@ -300,7 +303,9 @@ export class ThreeSchoolView {
   }
   draw(source,time){
     this.updatePianoBoyBodyLoading(source);
-    const state=`${source.attackerKind}|${Boolean(source.exploration)}|${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
+    const presence=rabbitPresence(source);recordRabbitPresence(source.canvas,presence);
+    const state=`${source.attackerKind}|${Boolean(source.exploration)}|${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}|${presence?.teeth??'hidden'}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
+    if(this.refs.ambienceRabbit){const rabbit=this.refs.ambienceRabbit;rabbit.visible=Boolean(presence&&rabbit.material.map);if(presence){rabbit.position.set(presence.x,presence.height/2,presence.z);rabbit.scale.set(presence.width,presence.height,1);}}
     const schoolgirl=source.attackerKind==='schoolgirl';
     this.refs.rabbit.visible=!schoolgirl&&!source.exploration;
     for(const [room,attacker] of Object.entries(this.refs.roomAttackers||{})){

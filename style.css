@@ -33,6 +33,7 @@ body[data-screen="intro"] .brand{display:none}
 .poster-faceless img{filter:grayscale(.6) contrast(1.2) brightness(.60) drop-shadow(1px 1px 15px #74131977)}
 .poster-doll{--left:43%;--top:11%;--height:118%;--tilt:-5deg;z-index:2}
 .poster-boy{--left:81%;--top:29%;--height:88%;z-index:3}
+.poster-rabbit{--left:9%;--top:0%;--height:92%;--tilt:3deg;z-index:2}
 .poster-attacker{--left:24%;--top:-4%;--height:160%;--tilt:-2deg;z-index:4}
 .poster-attacker img{filter:grayscale(.34) contrast(1.17) brightness(.70) drop-shadow(7px 2px 15px #b4262577)}
 .poster-shade{position:absolute;inset:0;background:linear-gradient(0deg,#030406 0%,#030406fa 7%,#030406bf 27%,#03040618 49%,transparent 70%),radial-gradient(ellipse at 50% 35%,transparent 24%,#03040688 79%,#030406cc);z-index:5}
@@ -61,6 +62,7 @@ body[data-screen="intro"] :is(button,input):focus-visible{outline:2px solid #ffe
   .poster-faceless{--left:53%;--top:10%;--height:64%;z-index:0}
   .poster-attacker{--left:25%;--top:20%;--height:90%;--tilt:-2deg;z-index:4}
   .poster-boy{--left:73%;--top:34%;--height:57%;z-index:3}
+  .poster-rabbit{--left:53%;--top:24%;--height:70%;--tilt:3deg;z-index:3}
   .poster-shade{background:linear-gradient(0deg,#030406 0%,#030406f2 9%,#030406cc 24%,#03040610 50%,transparent 80%),radial-gradient(ellipse at 50% 35%,transparent 10%,#03040699 91%)}
   .intro-content{padding-top:clamp(380px,calc(100svh - 230px),540px)}
   #intro .intro-title{font-size:clamp(46px,15.6vw,82px);margin-bottom:30px}

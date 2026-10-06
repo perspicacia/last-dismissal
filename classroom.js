@@ -12,6 +12,7 @@ import {drawBlackCat} from './black-cat.js?v=cat-boy-likeness-1';
 import {buildSeatedGirl,seatedGirlLook,drawFigureVolume} from './ghost-figures.js?v=cat-boy-likeness-1';
 import {boardCanvas,drawClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {movementDelta} from './movement.js?v=mouse-comfort-1';
+import {drawRabbitPresence} from './rabbit-presence.js?v=rabbit-presence-1';
 const boards=new Map(),figures=new Map();
 function seatedGirl(){if(!figures.has('girl'))figures.set('girl',buildSeatedGirl());return figures.get('girl');}
 export const CLASSROOM_SPAWN = { x: 0, z: 1.4, angle: 0 };
@@ -58,6 +59,7 @@ export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classro
   if(ghost&&doll?.ghost?.naturalWidth){const pos=project(ghost.x,ghost.y,ghost.z),target=ghostSmileAmount(p,ghost,{active});haunting.smile=active?(reduced?target:haunting.smile+(target-haunting.smile)*(1-Math.exp(-dt*5))):0;if(pos){const height=ghost.height*lens/pos.d,width=height*2/3;c.save();clipWindows();c.translate(pos.x,pos.y);c.rotate(-haunting.smile*.12);c.drawImage(doll.ghost,-width/2,-height/2,width,height);if(haunting.smile>.02){c.globalAlpha=haunting.smile;c.translate(width*.006,height*(.173-.5));c.scale(height*(.5+haunting.smile*.22),height*(.22+haunting.smile*.44));drawGhostSmile(c);}c.restore();}}
   if(regularClassroom(kind)){if(!boards.has(kind))boards.set(kind,boardCanvas(kind));drawClassroomBoard(c,project,boards.get(kind));}
   const faces=[];
+  if(doll?.rabbit){const r=doll.rabbit,foot=project(r.x,0,r.z);if(foot)faces.push({d:foot.d,draw:()=>drawRabbitPresence(c,project,lens,r)});}
   if(kind==='classroom'){const girl=seatedGirl(),center=project(girl.position.x,.8,girl.position.z);if(center)faces.push({d:center.d,draw:()=>drawFigureVolume(c,project,girl)});}
   if(doll?.cat){const pos=project(doll.cat.x,doll.cat.y+.25,doll.cat.z);if(pos)faces.push({d:pos.d,draw:()=>drawBlackCat(c,project,doll.cat)});}
   const polygon=(vertices,color)=>{const pts=vertices.map(v=>project(...v));if(pts.every(Boolean))faces.push({pts,color,d:pts.reduce((s,v)=>s+v.d,0)/pts.length});};
