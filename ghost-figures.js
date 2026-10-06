@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {facelessStudentLayout} from './faceless-student.js';
 import {loftGeometry,clothMaterial} from './character-shape.js';
-import {buildPianoBoyFigure,setPianoBoyTexture} from './piano-boy-volume.js?v=free-body-fit-14';
+import {buildPianoBoyFigure,setPianoBoyTexture} from './piano-boy-volume.js?v=human-shape-2';
 
 const portrait={naturalWidth:1024,naturalHeight:1536,complete:true};
 const material=(color,roughness=.9)=>new THREE.MeshStandardMaterial({color,roughness});

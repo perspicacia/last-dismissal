@@ -5,7 +5,7 @@ import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js?v=dark
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import {attackerImagesReady,attackerImage,attackerArrival,attackerSize,attackerPosition} from './schoolgirl-attacker.js?v=schoolgirl-attacker-1';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
-import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=free-body-fit-14';
+import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=human-shape-2';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,buildSchoolWindow,windowWood} from './school-windows.js';
 import {buildBlackCat,updateBlackCat} from './black-cat.js?v=cat-boy-likeness-1';
@@ -17,8 +17,8 @@ import {loadStudentModel,prepareStudentModel} from './student-model.js?v=student
 import {CORRIDOR_LAMPS,SCHOOL_DARKNESS,SchoolLighting,recordLighting} from './school-lighting.js?v=shadow-tone-1';
 import {bloodiedRabbit,rabbitImageSize} from './rabbit-appearance.js?v=dark-blood-1';
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
-import {loadPianoBoyBody} from './piano-boy-body.js?v=free-body-fit-14';
-import {attachPianoBoyBody} from './piano-boy-volume.js?v=free-body-fit-14';
+import {loadPianoBoyBody} from './piano-boy-body.js?v=human-shape-2';
+import {attachPianoBoyBody} from './piano-boy-volume.js?v=human-shape-2';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js?v=shadow-tone-1';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=cat-boy-likeness-1';

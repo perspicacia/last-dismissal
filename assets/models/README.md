@@ -2,9 +2,9 @@
 
 ## 음악실 남자아이 몸통
 
-`piano-boy-body.glb`는 Quaternius의 무료 CC0 인체를 어린아이 비율과 앉은 자세로 변형한 정적 몸통/사지다. 일반 Three.js 게임의 음악실에 적용한다. 원작 모델의 머리·눈·재질을 제외하고 기존 `piano-boy-ghost.png`의 얼굴/머리와 앞면 의상 질감을 연결한다. 인체와 분리한 헐렁한 상의/소매·반바지와 실제 손/발가락 표면을 포함한다. 옆/뒤 옷과 사진 기반 머리 표면은 근사이며 완전한 얼굴 조형은 아니다.
+`piano-boy-body.glb`는 Quaternius의 무료 CC0 인체를 어린아이 비율과 앉은 자세로 변형한 정적 몸통/사지다. 일반 Three.js 게임의 음악실에 적용한다. 원작 모델의 얼굴/눈/헤어 재질을 제외하고 두개골–턱–목은 어린아이로 변형해 기존 `piano-boy-ghost.png`의 얼굴/머리와 앞면 의상 질감을 연결한다. 인체와 분리한 헐렁한 상의/소매·반바지와 실제 손/발가락 표면을 포함한다. 내려오는 어깨·둥근 목선·소매는 연속 의상 표면이다. 옆/뒤 옷과 사진을 적용한 머리의 측면은 근사이며 완전한 원본 얼굴 복원은 아니다.
 
-- glTF 2.0 binary, 289,808 bytes, 1 mesh, 6,557 vertices, 13,042 triangles. 스킨/애니메이션/외부 텍스처 없음.
+- glTF 2.0 binary, 496,792 bytes, 2 meshes, 11,227 vertices, 22,390 triangles. 스킨/애니메이션/외부 텍스처 없음.
 - 출처·CC0 문서·원본 SHA-256·변형 범위: [piano-boy-body.md](piano-boy-body.md).
 - 재현: `node modeling/build-piano-boy-body.mjs`. 원본 무료 `.gltf`/`.bin`과 라이선스는 `modeling/source/quaternius/`에 보관한다.
 - 로딩 실패에는 기존 사진 기반 외형으로 탐색을 계속하고 다음 음악실 입장에서 다시 시도한다. Canvas는 원본 사진을 유지한다.
