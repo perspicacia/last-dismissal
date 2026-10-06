@@ -774,3 +774,4 @@
 - 로컬 확인 캡처: `artifacts/rabbit-presence/rabbit-restored-title.png`, `artifacts/rabbit-presence/rabbit-restored-game.png`. 사용자 참고/확인 캡처는 저장소에 추가하지 않는다.
 - 미확인/한계: 토끼는 기존 투명 PNG의 공간 빌보드이며 새 관절형 3D 모델은 아니다. 이번 실제 확인은 IAB와 음소거이며 Chrome/모바일/저사양 GPU·실제 청감, Canvas 전체 종료/재시작·다섯 방 전체 순회는 미확인이다. 자동 테스트와 실제 확인을 구분한다.
 - 다음 작은 작업: 사용자가 복구한 토끼 배치/근접 표정을 실제 플레이에서 확인한다. 검토용 PR로 제출하며 main 병합/배포는 미진행이다.
+- 커밋 `b553333`을 Push하고 draft [PR #116](https://github.com/perspicacia/last-dismissal/pull/116)를 생성·채팅에 연결했다. 대상은 가면 여고생 PR #114의 `codex/masked-schoolgirl-ghost`다. main 병합/배포는 미진행이다.
