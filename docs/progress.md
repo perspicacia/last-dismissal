@@ -609,3 +609,14 @@
 
 - 수정 JS 12개 `node --check`, 수정 문서 7개의 상대 링크 검사와 `git diff --check` 모두 통과했다. 기존 `assets/` 변경은 없다.
 - 커밋/Push 후 검토용 draft [PR #98](https://github.com/perspicacia/last-dismissal/pull/98)를 생성·채팅에 연결했다. PR #96 위에 쌓았으며 대상은 `codex/shadow-corridor-tone`다. 최신 게임은 음소거 첫 화면으로, 별도 비교 화면은 남자아이 원본/정면으로 열어 두었다. main 병합은 미진행이다.
+
+## 2026-10-06 — 얼굴을 지운 낡은 게시판 사진 (Issue #99)
+
+- 사용자가 칠판 사진을 검은 얼굴 초안으로 바꾸고 낡게 보완하도록 요청했다. 현재 사진이 있는 복도 게시판에 적용했다. `codex/cat-boy-likeness`에서 `codex/aged-erased-photo`를 분기하고 [명세](../specs/aged-erased-photo.md)와 [Issue #99](https://github.com/perspicacia/last-dismissal/issues/99)로 범위를 정했다.
+- 일반 탐색은 기존 `school-group-photo-erased.png`를 사용한다. `board-photo.js`가 전체 원본 구도 위에 바랜 색/누런 인화지, 모서리 얼룩·얇은 긁힘·접힌 흔적과 닳은 테두리를 코드로 생성한다. 두 PNG 원본·1.05×0.70m 크기·3:2 비율·위치와 기존 관찰 모드의 정상/이상 구분은 보존했다.
+- 완료된 원본만 처리해 한 번 캐시하며 Three.js/Canvas에서 같은 결과를 공유한다. 아직 로딩되지 않은 일반 게임 사진은 정상 얼굴 사진으로 대체하지 않는다. 게임 진입/렌더 캐시는 `aged-photo-1`로 갱신했다. 이미지 가공 난수는 독립적인 고정 시드를 사용한다. 토끼·방문·종료/재시작·음향·조작·학교 조도는 변경하지 않았다.
+- 자동 검증: `npm test` 195개 모두 통과. 수정 JS 4개 구문 검사와 `git diff --check` 통과. 테스트를 시각적 채택의 증거로 사용하지 않는다.
+- 실제 브라우저(IAB): `board-photo-review.html`의 학교 조명에서 게시판 전체/근접, 이전 정상 얼굴/이전 검은 얼굴 사진 전환과 Canvas 호환 화면을 확인했다. 일반 게임을 음소거 시작하고 실제 W/화살표 조작으로 게시판까지 이동해 검은 얼굴·바랜 사진·테두리를 확인했다. 일반 게임의 ready/erased-aged 상태와 Three.js, P 캡처 고정을 확인했고 오류/경고는 없었다. 검증 화면만 정지된 카메라를 사용하며 일반 게임에는 별도 우회가 없다.
+- 캡처: `/Users/perspicacia/.codex/visualizations/2026/10/01/01a0f669-ef7c-7ec3-86a8-aa865954cf4c/aged-erased-photo-game.png`는 일반 게임의 실제 화면이며 저장소에는 포함하지 않는다. 최신 확인 탭은 음소거/사진 앞/P 고정 상태로 남겨 두었다.
+- 미확인: 사용자 모니터에서의 낡은 질감 채택, 이번 Chrome/모바일 GPU 확인과 전체 다섯 방→종료→재시작 플레이 반복은 미진행이다. 종료/재시작 자동 회귀는 통과했다. main 병합/배포는 미진행이다. 다음 작은 작업은 사용자에게 실제 게시판 사진의 낡은 정도를 확인받고 필요할 때 해당 색/얼룩 강도만 조정하는 것이다.
+- 수정 문서 5개의 상대 링크와 개발 확인 화면의 모듈 구문 검사도 통과했다. 커밋/Push 후 검토용 draft [PR #100](https://github.com/perspicacia/last-dismissal/pull/100)을 생성하고 채팅에 연결했다. 대상은 이전 외형 PR #98의 `codex/cat-boy-likeness`다. main 병합은 미진행이다.

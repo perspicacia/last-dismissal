@@ -36,6 +36,7 @@ last-dismissal/
 ├── three-school.js            # 학교 실내 3D 화면
 ├── three-outdoors.js          # 창밖 풍경 3D 화면
 ├── school-tone.js             # 학교 색감·벽 얼룩·공유 화면 채도
+├── board-photo.js             # 얼굴을 지운 게시판 사진·낡은 인화지 질감
 ├── audio.js                   # 음량·음소거와 효과음 재생
 ├── …                          # 입력·캐릭터·소품·공포 연출의 JS 모듈
 ├── assets/                    # 게임 자산과 출처 문서
@@ -72,6 +73,8 @@ last-dismissal/
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
 | 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
 | 이전 규칙 | [survival.js](survival.js), [logic.js](logic.js) | 이전 생존·관찰 버전의 회귀 검증용 보존 모듈 |
+
+복도 게시판은 얼굴을 검게 지운 기존 단체사진 초안을 사용한다. [board-photo.js](board-photo.js)는 바랜 누런 색, 모서리 얼룩·긁힘과 닳은 인화지 테두리를 한 번 생성해 Three.js/Canvas에서 공유한다. 원본 PNG·사진 크기/위치는 보존하며 이전 관찰 모드의 정상/이상 사진은 별도로 유지한다. [명세](specs/aged-erased-photo.md), [브라우저 비교 화면](tests/fixtures/board-photo-review.html).
 
 처음 살펴볼 때는 [기획과 범위](docs/PRD.md) → [현재 게임 규칙](specs/hidden-rabbit-rooms.md) → [게임 진입 코드](game.js) → [작업·검증 기록](docs/progress.md) 순서로 읽으면 된다. 자동 테스트는 `npm test`로 실행하며, `tests/fixtures/`는 일반 게임과 구분된 개발용 확인 화면이다.
 

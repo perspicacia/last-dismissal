@@ -6,6 +6,8 @@
 
 `school-group-photo.png`와 `school-group-photo-erased.png`는 내장 image_gen 도구로 생성·편집한 1536×1024 PNG다. 실제 인물을 촬영한 사진이 아니라 가상의 학생들을 실사 느낌으로 표현한 이미지다. 정상·이상 사진은 같은 구도를 사용한다.
 
+현재 일반 탐색 게임은 얼굴을 검게 지운 초안을 사용한다. `board-photo.js`가 코드로 누런 인화지·색바램·얼룩·긁힘·닳은 모서리를 덧입힌 공유 Canvas 질감을 생성한다. PNG 원본 두 파일은 보존한다. 이전 관찰 모드의 정상/이상 구분은 유지한다. [최신 명세](../specs/aged-erased-photo.md).
+
 정상 사진 최종 프롬프트:
 
 Use case: photorealistic-natural. Asset type: landscape school group photograph texture for a Korean school horror game's bulletin board. Create an ordinary realistic camera photograph of 10 fictional Korean high-school students in navy school uniforms on a school trip, two clear rows of five, standing and seated in front of leafy trees and a modest school courtyard. All look directly at camera, natural subtle smiles, distinct realistic human faces, realistic skin hair fabric, softly overcast daylight. Composition: straight-on horizontal 3:2 group photo, heads well separated and all fully visible, no overlap, face centers roughly aligned in two regular rows. Upper row faces approximately 25% image height; lower row faces approximately 56% image height; five columns around 14%,32%,50%,68%,86% width. Slightly faded consumer-camera printed photograph from early 2000s, believable candid school-trip keepsake. Fill entire image with the photo itself, no frame, no bulletin board, no writing, no watermarks. No cartoon, no illustration, no 3D render, no horror, no distorted faces. These are fictional people, not identifiable real students.
