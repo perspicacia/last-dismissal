@@ -8,18 +8,34 @@ import {pngPixels,resizePixels} from './png-pixels.js';
 
 const art=pngPixels(new URL('../assets/piano-boy-ghost.png',import.meta.url)),image={complete:true,naturalWidth:art.width,naturalHeight:art.height},config=ROOM_AMBIENCE.music.boy,pose=pianoBoyLayout(image,config);
 const geometry=()=>buildPianoBoyVolume(art.pixels,art.width,art.height,pose);
-test('남자아이의 원본 XY·얼굴 UV를 보존하면서 앞면도 완만한 곡면을 가진다',()=>{
+test('남자아이의 원본 XY·얼굴 UV와 닫힌 볼륨을 보존하고 중앙 얼굴 깊이를 제한한다',()=>{
  const g=geometry(),p=g.attributes.position,uv=g.attributes.uv,face=new Set(g.index.array.slice(0,g.groups[0].count)),depth=[];
  assert.ok(g.groups[0].count>0&&g.groups[1].count>0);
  for(const i of face){
   assert.ok(Math.abs(p.getX(i)-(uv.getX(i)-.5)*pose.width)<1e-6);
   assert.ok(Math.abs(p.getY(i)-(pose.top-(1-uv.getY(i))*pose.height))<1e-6);
-  const v=1-uv.getY(i);if(v>.14&&v<.23&&uv.getX(i)>.40&&uv.getX(i)<.59)depth.push(p.getZ(i));
+  const u=uv.getX(i),v=1-uv.getY(i),features=v>.15&&v<.223&&u>.457&&u<.545||v>=.223&&v<.242&&u>.484&&u<.518;
+  if(features){depth.push(p.getZ(i));assert.ok(g.attributes.photoBlend.getX(i)>.999,'facial features retain the original photograph');}
  }
- assert.ok(depth.length>40);const relief=Math.max(...depth)-Math.min(...depth);assert.ok(relief>.055&&relief<.14,'face has bounded anatomical relief rather than a flat front or exaggerated sphere');
+ assert.ok(depth.length>40);const relief=Math.max(...depth)-Math.min(...depth);assert.ok(relief>.007&&relief<.040,'central facial features have gentle relief rather than a forehead-to-chin taper');
  const edges=new Map();for(let i=0;i<g.index.count;i+=3)for(let j=0;j<3;j++){const a=g.index.array[i+j],b=g.index.array[i+(j+1)%3],key=a<b?`${a},${b}`:`${b},${a}`;edges.set(key,(edges.get(key)||0)+1);}
  assert.ok([...edges.values()].every(n=>n===2));for(const n of [...p.array,...g.attributes.normal.array])assert.ok(Number.isFinite(n));
  assert.ok(g.boundingBox.max.z-g.boundingBox.min.z>.24,'head, seated knees and feet occupy distinct depth ranges');
+});
+test('근거리 정면·양쪽 사선에서 눈과 턱의 투영 비율이 원본보다 눌리지 않는다',()=>{
+ const g=geometry(),p=g.attributes.position,uv=g.attributes.uv,front=new Set(g.index.array.slice(0,g.groups[0].count));
+ const at=(u,v)=>{let nearest=Infinity,result;for(const i of front){const d=(uv.getX(i)-u)**2+(1-uv.getY(i)-v)**2;if(d<nearest){nearest=d;result=new THREE.Vector3().fromBufferAttribute(p,i);}}return result;};
+ // Source-image landmarks: eye centres, nose, closed mouth and chin. The
+ // reference is the same photograph viewed from the same standing camera.
+ const landmarks=[at(.457,.160),at(.548,.160),at(.501,.190),at(.501,.218),at(.501,.242)];
+ for(const distance of [.60,.85,1.20])for(const yaw of [-35,0,35]){
+  const target=new THREE.Vector3(0,pose.eyeY-.035,-.075),theta=THREE.MathUtils.degToRad(yaw),camera=new THREE.PerspectiveCamera(36,1,.01,30);
+  camera.position.set(Math.sin(theta)*distance,1.5,target.z-Math.cos(theta)*distance);camera.lookAt(target);camera.updateMatrixWorld();
+  const projected=landmarks.map(l=>l.clone().project(camera)),reference=landmarks.map(l=>new THREE.Vector3(l.x,l.y,-.075).project(camera));
+  const ratio=points=>points[0].clone().add(points[1]).multiplyScalar(.5).distanceTo(points[4])/points[0].distanceTo(points[1]);
+  const change=ratio(projected)/ratio(reference);assert.ok(change>.95&&change<1.05,`${distance}m/${yaw}° eye-to-chin ratio: ${change}`);
+  for(const index of [2,3]){const eyes=pts=>pts[0].clone().add(pts[1]).multiplyScalar(.5),relative=pts=>eyes(pts).distanceTo(pts[index])/eyes(pts).distanceTo(pts[4]);assert.ok(Math.abs(relative(projected)-relative(reference))<.08,'nose/mouth positions remain stable within the face');}
+ }
 });
 test('앞뒤 두께를 나누고 앉은 무릎·종아리 및 사진의 측면 전환을 조형한다',()=>{
  const g=geometry(),p=g.attributes.position,uv=g.attributes.uv,front=new Set(g.index.array.slice(0,g.groups[0].count)),back=new Set(g.index.array.slice(g.groups[0].count));

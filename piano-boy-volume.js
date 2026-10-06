@@ -2,8 +2,9 @@ import * as THREE from './vendor/three.module.js';
 import {pianoBoyLayout} from './piano-boy.js';
 
 // Preserve photographed X/Y and UV positions while sculpting BOTH surfaces.
-// Identity comes from the original projection, not from leaving the face flat.
-export function buildPianoBoyVolume(pixels,width,height,pose,columns=160,rows=240){
+// Facial landmarks need gentler depth than the surrounding skull silhouette:
+// a spherical forehead-to-chin taper compresses the photo at close range.
+export function buildPianoBoyVolume(pixels,width,height,pose,columns=256,rows=384){
  const stride=columns+1,active=new Uint8Array(columns*rows),dist=new Float32Array(stride*(rows+1));
  const sample=(u,v)=>4*(Math.min(height-1,Math.round(v*(height-1)))*width+Math.min(width-1,Math.round(u*(width-1))));
  for(let y=0;y<rows;y++)for(let x=0;x<columns;x++)active[y*columns+x]=pixels[sample((x+.5)/columns,(y+.5)/rows)+3]>96;
@@ -25,7 +26,7 @@ export function buildPianoBoyVolume(pixels,width,height,pose,columns=160,rows=24
  // Each region supplies front/back radii, rather than a deep rear attached to
  // a flat photograph. The thigh-to-shin center line creates a seated L profile.
  const regions=[
-  [.497,.126,.151,.130,.108,.122], // skull / face
+  [.497,.126,.151,.130,.108,.122], // skull (front profile is specialized below)
   [.497,.256,.085,.078,.065,.077], // neck
   [.497,.405,.252,.183,.115,.112], // rib cage / shirt
   [.323,.462,.080,.132,.105,.080], [.679,.462,.080,.132,.105,.080], // forearms
@@ -43,13 +44,19 @@ export function buildPianoBoyVolume(pixels,width,height,pose,columns=160,rows=24
   // An elliptical rim meets the contour with a side-facing tangent. A smooth
   // step with zero edge slope leaves a flat photo strip and a visible seam.
   const rimDistance=Math.min(1,dist[i]/.028),rim=Math.sqrt(1-(1-rimDistance)**2);
-  for(const [cx,cy,rx,ry,frontRadius,backRadius] of regions){
+  for(const [region,[cx,cy,rx,ry,frontRadius,backRadius]] of regions.entries()){
    const r=1-((u-cx)/rx)**2-((v-cy)/ry)**2;if(r<=0)continue;
-   const dome=Math.sqrt(r);fields[0][i]=union(fields[0][i],frontRadius*dome);fields[1][i]=union(fields[1][i],backRadius*dome);
+   const dome=Math.sqrt(r);if(region!==0)fields[0][i]=union(fields[0][i],frontRadius*dome);fields[1][i]=union(fields[1][i],backRadius*dome);
   }
-  // Nose, brow, cheeks and chin remain aligned with the ORIGINAL photograph.
+  // Broad cranial curvature rounds the temples, while the face stays gently
+  // convex through the jaw instead of tapering back into the neck below eyes.
+  const head=1-((u-.497)/.151)**4-((v-.130)/.150)**4;
+  if(head>0)fields[0][i]=union(fields[0][i],.096*Math.sqrt(head));
+  const faceShell=1-((u-.500)/.112)**4-((v-.192)/.100)**4;
+  if(faceShell>0)fields[0][i]=union(fields[0][i],.096*Math.sqrt(faceShell)*smooth((v-.120)/.022)*(1-smooth((v-.250)/.032)));
+  // Features keep the source's alignment without a deep protruding nose.
   const bump=(cx,cy,rx,ry,d)=>d*Math.exp(-2*(((u-cx)/rx)**2+((v-cy)/ry)**2));
-  fields[0][i]+=bump(.501,.190,.028,.036,.027)+bump(.447,.177,.041,.043,.009)+bump(.551,.177,.041,.043,.009)+bump(.50,.230,.048,.025,.008);
+  fields[0][i]+=bump(.501,.190,.028,.036,.012)+bump(.447,.177,.041,.043,.003)+bump(.551,.177,.041,.043,.003)+bump(.50,.230,.048,.025,.003);
   fields[0][i]*=rim;fields[1][i]*=rim;
  }
  // Smooth joined anatomical regions without changing the photographed outline.
@@ -74,7 +81,7 @@ export function buildPianoBoyVolume(pixels,width,height,pose,columns=160,rows=24
   if(v<.28){
    const hair=rear?v<.242:(v<.150||Math.abs(u-.497)>.113&&v<.234);
    // Only hair/skin swatches are sampled here, never the eyes or whole face.
-   if(hair)sourceTint(.5+(u-.497)*.45,Math.min(.11,.015+v*.42));
+   if(hair)sourceTint(.48,.060);
    else sourceTint(.552,.211);
   }else if(arm)sourceTint(u<.5?.319:.681,.474);
   else if(leg)sourceTint(u<.52?.440:.594,Math.min(.89,Math.max(.71,v)));
@@ -91,15 +98,39 @@ export function buildPianoBoyVolume(pixels,width,height,pose,columns=160,rows=24
   points.push((u-.5)*pose.width,pose.top-v*pose.height,z);uv.push(u,1-v);colours.push(...sideColour(u,v,rear));
   const id=points.length/3-1;vertices.set(key,id);return id;
  };
- const seal=(a,b)=>back.push(a[0],b[1],b[0],a[0],a[1],b[1]);
+ const contour=new Map(),pairs=new Map();
+ const seal=(a,b)=>{
+  back.push(a[0],b[1],b[0],a[0],a[1],b[1]);
+  for(const [p,q] of [[a,b],[b,a]]){if(!contour.has(p[0]))contour.set(p[0],new Set());contour.get(p[0]).add(q[0]);pairs.set(p[0],p[1]);}
+ };
  for(let y=0;y<rows;y++)for(let x=0;x<columns;x++)if(cell(x,y)){
   const a=[vertex(x,y,false),vertex(x,y,true)],b=[vertex(x+1,y,false),vertex(x+1,y,true)],c=[vertex(x,y+1,false),vertex(x,y+1,true)],d=[vertex(x+1,y+1,false),vertex(x+1,y+1,true)];
   front.push(a[0],b[0],c[0],b[0],d[0],c[0]);back.push(a[1],c[1],b[1],b[1],c[1],d[1]);
   if(!cell(x,y-1))seal(a,b);if(!cell(x+1,y))seal(b,d);if(!cell(x,y+1))seal(d,c);if(!cell(x-1,y))seal(c,a);
  }
+ // Smooth only the pixel-stepped head outline, with the front and back seam
+ // moving together. Update UV with XY so the photograph never stretches.
+ for(let pass=0;pass<5;pass++){
+  const source=points.slice();for(const [i,neighbours] of contour){
+   if(1-uv[i*2+1]>=.28||neighbours.size!==2)continue;
+   const [a,b]=[...neighbours],rear=pairs.get(i);
+   for(const axis of [0,1]){const value=source[i*3+axis]*.5+(source[a*3+axis]+source[b*3+axis])*.25;points[i*3+axis]=points[rear*3+axis]=value;}
+   uv[i*2]=uv[rear*2]=points[i*3]/pose.width+.5;uv[i*2+1]=uv[rear*2+1]=1-(pose.top-points[i*3+1])/pose.height;
+  }
+ }
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colours,3));geometry.setIndex([...front,...back]);geometry.addGroup(0,front.length,0);geometry.addGroup(front.length,back.length,1);geometry.computeVertexNormals();
- const normals=geometry.attributes.normal,photoBlend=[];
- for(let i=0;i<normals.count;i++)photoBlend.push(smooth((-normals.getZ(i)-.12)/.28));
+ const normals=geometry.attributes.normal,photoBlend=[],frontVertices=new Set(front);
+ for(let i=0;i<normals.count;i++){
+  const u=uv[i*2],v=1-uv[i*2+1];
+  // Preserve both eyes, mouth and jaw even at the cheek-to-temple transition.
+  // The back never receives facial photography.
+  const isFront=frontVertices.has(i),face=isFront?smooth((u-.425)/.025)*smooth((.578-u)/.025)*smooth((v-.135)/.013)*smooth((.255-v)/.013):0;
+  // The sampled alpha outline has small steps. Its alternating edge normals
+  // must not turn the cheek/hair photograph into horizontal stripes.
+  const outline=dist[Math.round(v*rows)*stride+Math.round(u*columns)];
+  const surface=isFront&&v<.28?smooth(outline/.028):smooth((-normals.getZ(i)-.12)/.28);
+  photoBlend.push(Math.max(face,surface));
+ }
  geometry.setAttribute('photoBlend',new THREE.Float32BufferAttribute(photoBlend,1));geometry.computeBoundingBox();return geometry;
 }
 export function buildPianoBoyFigure(config){
@@ -130,7 +161,7 @@ export function buildPianoBoyFigure(config){
 export function setPianoBoyTexture(root,image,texture){
  const pose=pianoBoyLayout(image,root.userData.config);root.visible=false;if(!pose)return false;
  if(root.userData.sourceImage!==image){
-  const canvas=document.createElement('canvas');canvas.width=288;canvas.height=Math.round(288*image.naturalHeight/image.naturalWidth);
+  const canvas=document.createElement('canvas');canvas.width=384;canvas.height=Math.round(384*image.naturalHeight/image.naturalWidth);
   const ctx=canvas.getContext('2d');if(!ctx)return false;ctx.drawImage(image,0,0,canvas.width,canvas.height);
   const geometry=buildPianoBoyVolume(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height,pose);
   if(!geometry.index.count){geometry.dispose();return false;}
