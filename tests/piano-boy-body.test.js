@@ -26,7 +26,7 @@ function closed(g){
 
 test('로컬 무료 인체 GLB는 얼굴 없는 닫힌 앉은 몸통이며 좌석·맨발이 접지한다',()=>{
  closed(body);body.computeBoundingBox();const p=body.attributes.position;
- assert.ok(p.count>3000&&p.count<7000,'authored anatomy is independent of the PNG alpha grid');
+ assert.ok(p.count>3000&&p.count<9000,'anatomy, separate garments and toes remain a small authored mesh');
  assert.ok(body.boundingBox.max.y<1.10,'source model head is excluded');
  assert.ok(body.boundingBox.max.z-body.boundingBox.min.z>.45,'seated knees have an L profile');
  let seat=0,chest=[],back=[],knees=0;
@@ -94,6 +94,55 @@ test('인체의 앞면만 원본 의상을 연결하고 옆·등은 원본 색�
   for(const v of [g.attributes.uv.getX(i),g.attributes.uv.getY(i),...Array.from({length:3},(_,axis)=>g.attributes.color.getComponent(i,axis))])assert.ok(Number.isFinite(v));
  }
  assert.ok(faceOn>100&&backOff>100);assert.equal(body.attributes.photoBlend,undefined,'shared source geometry remains immutable');
+});
+
+test('소매와 반바지는 원본 폭을 유지하는 별도 입체 표면이고 팔·다리의 두께는 끊기지 않는다',()=>{
+ const p=body.attributes.position,garment=body.attributes._garment;
+ const part=(kind,y,tolerance=.014)=>Array.from({length:p.count},(_,i)=>i).filter(i=>garment.getX(i)===kind&&Math.abs(p.getY(i)-y)<tolerance);
+ const range=(ids,axis)=>[Math.min(...ids.map(i=>p.getComponent(i,axis))),Math.max(...ids.map(i=>p.getComponent(i,axis)))];
+ const originalWidth=(v,side=false)=>{const row=Math.round(v*(art.height-1)),xs=[];for(let x=0;x<art.width;x++)if((!side||x<art.width/2)&&art.pixels[4*(row*art.width+x)+3]>96)xs.push(x);return (Math.max(...xs)-Math.min(...xs))/art.width*pose.width;};
+ const shirt=part(1,pose.top-.405*pose.height,.025),[left,right]=range(shirt,0),reference=originalWidth(.405);
+ assert.ok(shirt.length>20&&right-left>reference*.85&&right-left<reference*1.15,'loose sleeves retain the original photographed breadth');
+ assert.ok(part(2,.56,.025).length>10,'shorts have their own lower surface');
+ const bareArm=part(0,.84,.03).filter(i=>Math.abs(p.getX(i))>.14),clothedArm=shirt.filter(i=>Math.abs(p.getX(i))>.14);
+ assert.ok(range(clothedArm,0)[1]>range(bareArm,0)[1]+.008,'cuffs have ease beyond the underlying arm');
+ for(const y of [.25,.32,.40]){
+  const calf=part(0,y).filter(i=>p.getX(i)<0),[min,max]=range(calf,0),width=max-min,reference=originalWidth((pose.top-y)/pose.height,true);
+  assert.ok(width>reference*.75&&width<reference*1.5,`${y}m calf follows the original child proportions`);
+ }
+ // Surface edges must not jump across a hard inflation threshold at joints.
+ for(let i=0;i<body.index.count;i+=3)for(let edge=0;edge<3;edge++){
+  const a=body.index.getX(i+edge),b=body.index.getX(i+(edge+1)%3);
+  if(garment.getX(a)!==0||Math.abs(p.getX(a))<.03||p.getY(a)>.50||p.getY(a)<.12)continue;
+  assert.ok(new THREE.Vector3().fromBufferAttribute(p,a).distanceTo(new THREE.Vector3().fromBufferAttribute(p,b))<.10,'calf and ankle surface stays locally continuous');
+ }
+});
+
+test('모델 손·발에 사진 손가락을 중복하지 않고 바지 위의 원본 손 사진도 제외한다',()=>{
+ const g=preparePianoBoyBody(body,pose,art.pixels,art.width,art.height),p=g.attributes.position,tag=g.attributes._garment,detail=g.attributes._skindetail;
+ let bare=0,shorts=0,toes=0;
+ for(let i=0;i<p.count;i++){
+  const u=g.attributes.uv.getX(i),v=1-g.attributes.uv.getY(i),blend=g.attributes.photoBlend.getX(i);
+  if(detail.getX(i)>.99){bare++;assert.ok(blend<.011,'actual digits use continuous skin, not duplicate photographic fingers');if(p.getY(i)<.06&&p.getZ(i)<-.310)toes++;}
+  if(tag.getX(i)===2&&v>.53&&v<.58&&Math.abs(u-.5)>.085&&Math.abs(u-.5)<.175){shorts++;assert.ok(blend<.02,'photographic hands cannot be printed on the shorts');}
+ }
+ assert.ok(bare>100&&shorts>3&&toes>40);g.dispose();
+});
+
+test('양손은 무릎 위 가까이에 머무르고 발가락은 발끝과 연결된다',()=>{
+ const p=body.attributes.position,tag=body.attributes._garment,detail=body.attributes._skindetail;
+ for(const sign of [-1,1]){
+  const hands=[],knees=[],feet=[],toes=[];
+  for(let i=0;i<p.count;i++)if(tag.getX(i)===0&&p.getX(i)*sign>0){
+   const point=new THREE.Vector3().fromBufferAttribute(p,i);
+   if(detail.getX(i)>.99&&point.y>.5&&point.y<.7)hands.push(point);
+   if(detail.getX(i)<.01&&point.y>.5&&point.y<.61&&point.z<-.15)knees.push(point);
+   if(point.y<.06)(point.z<-.310?toes:feet).push(point);
+  }
+  const distance=(a,b)=>Math.min(...a.flatMap(p=>b.map(q=>p.distanceTo(q))));
+  assert.ok(hands.length>20&&knees.length>10&&distance(hands,knees)<.035,'hand surface rests within a few centimetres of its knee');
+  assert.ok(toes.length>15&&distance(toes,feet)<.018,'toe volumes join the authored foot tip');
+ }
 });
 
 test('무료 모델 로더는 동시에 한 번 읽고 실패 후 다시 불러올 수 있다',async()=>{

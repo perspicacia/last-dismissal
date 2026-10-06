@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {pianoBoyLayout} from './piano-boy.js';
-import {preparePianoBoyBody} from './piano-boy-body.js?v=free-body-7';
+import {preparePianoBoyBody} from './piano-boy-body.js?v=free-body-fit-14';
 
 // Preserve photographed X/Y and UV positions while sculpting BOTH surfaces.
 // Facial landmarks need gentler depth than the surrounding skull silhouette:

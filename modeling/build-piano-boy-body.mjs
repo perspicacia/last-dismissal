@@ -3,6 +3,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {closedSurface,joinSurfaces,roundedToe,looseShirt} from './closed-surface.mjs';
 
 globalThis.ProgressEvent??=class{constructor(type,info){this.type=type;Object.assign(this,info);}};
 globalThis.FileReader??=class{readAsArrayBuffer(blob){blob.arrayBuffer().then(result=>{this.result=result;this.onloadend?.();});}};
@@ -19,9 +20,9 @@ const original=bones.map(b=>facing.clone().multiply(b.matrixWorld)),byName=new M
 const targets={root:[0,0,0],pelvis:[0,.616,.145],spine_01:[0,.714,.075],spine_02:[0,.805,.065],spine_03:[0,.905,.045],neck_01:[0,1.067,.010],Head:[0,1.137,.015]};
 for(const [side,sign] of [['l',-1],['r',1]])Object.assign(targets,{
  ['clavicle_'+side]:[sign*.025,.979,.025],['upperarm_'+side]:[sign*.171,.963,.015],
- ['lowerarm_'+side]:[sign*.186,.749,-.052],['hand_'+side]:[sign*.112,.619,-.180],
+ ['lowerarm_'+side]:[sign*.182,.745,-.073],['hand_'+side]:[sign*.108,.622,-.183],
  ['thigh_'+side]:[sign*.096,.614,.105],['calf_'+side]:[sign*.088,.498,-.211],
- ['foot_'+side]:[sign*.045,.081,-.216],['ball_'+side]:[sign*.045,.032,-.285],['ball_leaf_'+side]:[sign*.045,.026,-.312]
+ ['foot_'+side]:[sign*.052,.081,-.216],['ball_'+side]:[sign*.052,.032,-.285],['ball_leaf_'+side]:[sign*.052,.026,-.312]
 });
 const paths={root:'pelvis',pelvis:'spine_01',spine_01:'spine_02',spine_02:'spine_03',spine_03:'neck_01',neck_01:'Head'};
 for(const side of ['l','r'])for(const [a,b] of [['clavicle','upperarm'],['upperarm','lowerarm'],['lowerarm','hand'],['hand','middle_01'],['thigh','calf'],['calf','foot'],['foot','ball'],['ball','ball_leaf']])paths[a+'_'+side]=b+'_'+side;
@@ -31,61 +32,46 @@ for(let i=0;i<bones.length;i++){
  if(!targets[name])continue;
  const target=new THREE.Vector3(...targets[name]),next=paths[name],child=byName.get(next),world=original[i].clone();
  const q=new THREE.Quaternion(),scale=new THREE.Vector3(),dummy=new THREE.Vector3();world.decompose(dummy,q,scale);
- let radial=/thigh|pelvis/.test(name)?.69:/calf|foot|ball/.test(name)?.62:/arm|hand/.test(name)?.70:.74,length=radial;
- if(child!==undefined){const end=/^hand/.test(name)?new THREE.Vector3(target.x*.95,target.y-.030,target.z-.030):new THREE.Vector3(...targets[next]);const a=new THREE.Vector3().setFromMatrixPosition(original[child]).sub(start),b=end.sub(target);length=b.length()/a.length();q.premultiply(new THREE.Quaternion().setFromUnitVectors(a.normalize(),b.normalize()));}
+ let radial=/thigh|pelvis/.test(name)?.88:/calf/.test(name)?.93:/foot|ball/.test(name)?.84:/hand/.test(name)?.60:/arm/.test(name)?.82:.85,length=radial;
+ if(child!==undefined){const end=/^hand/.test(name)?new THREE.Vector3(target.x*.98,target.y-.027,target.z-.030):new THREE.Vector3(...targets[next]);const a=new THREE.Vector3().setFromMatrixPosition(original[child]).sub(start),b=end.sub(target);length=b.length()/a.length();q.premultiply(new THREE.Quaternion().setFromUnitVectors(a.normalize(),b.normalize()));}
  const posed=new THREE.Matrix4().compose(target,q,new THREE.Vector3(radial,length,radial));maps[i]=posed.multiply(original[i].clone().invert());
 }
 // Fingers inherit the posed hand's transform, preserving the authored topology.
 for(let i=0;i<bones.length;i++)if(!maps[i]){let parent=bones[i].parent;while(parent&&!maps[byName.get(parent.name)])parent=parent.parent;maps[i]=parent?maps[byName.get(parent.name)]:new THREE.Matrix4();}
-const input=skin.geometry,positions=input.attributes.position,joints=input.attributes.skinIndex,weights=input.attributes.skinWeight,posed=[];
+const input=skin.geometry,positions=input.attributes.position,joints=input.attributes.skinIndex,weights=input.attributes.skinWeight;
+const smooth=n=>{n=Math.max(0,Math.min(1,n));return n*n*(3-2*n);};
+const rest=[],anatomy=[],shorts=[];
+const posePoint=(p,i)=>{const out=new THREE.Vector3();for(let j=0;j<4;j++){const weight=weights.getComponent(i,j);if(weight)out.addScaledVector(p.clone().applyMatrix4(maps[joints.getComponent(i,j)]),weight);}return out;};
 for(let i=0;i<positions.count;i++){
- const originalPoint=new THREE.Vector3().fromBufferAttribute(positions,i).applyMatrix4(facing),result=new THREE.Vector3();
- for(let j=0;j<4;j++){const weight=weights.getComponent(i,j);if(weight)result.addScaledVector(originalPoint.clone().applyMatrix4(maps[joints.getComponent(i,j)]),weight);}
- // Worn loose clothes soften the muscular source and fill out child limbs.
- const restY=positions.getY(i),restX=Math.abs(positions.getX(i));
- if(restY>1.02&&restY<1.50&&restX<.24){result.x*=1.27;result.z=.065+(result.z-.065)*1.28;}
- // Sleeves have volume around the shoulder, rather than clinging to biceps.
- if(result.y>.825&&result.y<.967&&Math.abs(result.x)>.14){const centre=Math.sign(result.x)*.18;result.x=centre+(result.x-centre)*1.22;result.z=.015+(result.z-.015)*1.18;}
- if(restY>.12&&restY<.95){const sign=result.x<0?-1:1,centre=sign*(restY>.53?.09:.045);result.x=centre+(result.x-centre)*1.30;}
- posed.push(result);
+ const p=new THREE.Vector3().fromBufferAttribute(positions,i).applyMatrix4(facing),normal=new THREE.Vector3().fromBufferAttribute(input.attributes.normal,i).transformDirection(facing);
+ rest.push(p);anatomy.push(posePoint(p,i));
+ // The clothes are independent closed surfaces. Continuous ease around the
+ // thighs replaces the old hard inflation thresholds; the shirt is authored separately.
+ const cuff=1-smooth((p.y-.70)/.25);shorts.push(posePoint(p.clone().addScaledVector(normal,.028+.015*cuff),i));
 }
-// Clip above the neck in the REST mesh, so none of the free model's face survives.
-const points=[],triangles=[],vertexMap=new Map(),cut=1.535;
-const point=(id)=>{if(vertexMap.has(id))return vertexMap.get(id);const p=posed[id];points.push(p.x,p.y,p.z);const index=points.length/3-1;vertexMap.set(id,index);return index;};
-for(let i=0;i<input.index.count;i+=3){const ids=[0,1,2].map(j=>input.index.getX(i+j));if(ids.some(id=>positions.getY(id)>cut))continue;triangles.push(...ids.map(point));}
-// Weld UV seams before smoothing; the body remains continuous at every joint.
-const keys=new Map(),welded=[],remap=[];
-for(let i=0;i<points.length;i+=3){const key=points.slice(i,i+3).map(n=>Math.round(n*1e6)).join(',');if(!keys.has(key)){keys.set(key,welded.length/3);welded.push(...points.slice(i,i+3));}remap.push(keys.get(key));}
-const indices=triangles.map(i=>remap[i]),neighbours=Array.from({length:welded.length/3},()=>new Set()),edges=new Map();
-for(let i=0;i<indices.length;i+=3)for(let j=0;j<3;j++){const a=indices[i+j],b=indices[i+(j+1)%3];neighbours[a].add(b);neighbours[b].add(a);const key=[a,b].sort((a,b)=>a-b).join(',');edges.set(key,(edges.get(key)||0)+1);}
-const boundary=new Set([...edges].filter(([,n])=>n===1).flatMap(([key])=>key.split(',').map(Number)));
-for(let pass=0;pass<10;pass++){const previous=welded.slice();for(let i=0;i<neighbours.length;i++){if(boundary.has(i))continue;for(let axis=0;axis<3;axis++){let sum=0;for(const n of neighbours[i])sum+=previous[n*3+axis];welded[i*3+axis]=previous[i*3+axis]*.75+sum/neighbours[i].size*.25;}}}
-// Seal each boundary in its actual topological order. Sorting the neck by angle
-// can skip the small folds at the collar and leave overlapping triangles.
-const openEdges=[];
-for(let i=0;i<indices.length;i+=3)for(let j=0;j<3;j++){
- const a=indices[i+j],b=indices[i+(j+1)%3];
- if(edges.get([a,b].sort((a,b)=>a-b).join(','))===1)openEdges.push([a,b]);
+const parts=[
+ closedSurface(rest,anatomy,input.index.array,[(_rest,posed)=>.900-posed.y],0,10,p=>Math.max(smooth((Math.abs(p.x)-.65)/.08),1-smooth((p.y-.10)/.08))),
+ ...looseShirt(),
+ closedSurface(rest,shorts,input.index.array,[p=>p.y-.71,p=>1.045-p.y,p=>.28-p.x,p=>.28+p.x],2,8)
+];
+// Close the covered adult shoulder in the seated pose, then connect a narrow
+// child neck to the original chin. Rest-pose arm cuts would bridge the wrists.
+parts.push(roundedToe([0,1.027,-.047],[.045,.064,.055],32,10,0));
+// The free base has a single smooth foot tip. Small, overlapping toe volumes
+// restore the original barefoot silhouette without painting toes on a wedge.
+for(const sign of [-1,1])for(let toe=0;toe<5;toe++){
+ const size=1-toe*.13,x=sign*(.032+toe*.012),ry=.012*size;
+ parts.push(roundedToe([x,.026+ry,-.301+toe*.002],[.0105*size,ry,.023*size]));
 }
-const remaining=new Set(openEdges.map((_,i)=>i));
-while(remaining.size){
- const seed=remaining.values().next().value,component=[],vertices=new Set(openEdges[seed]);
- let expanded=true;
- while(expanded){expanded=false;for(const id of remaining){const edge=openEdges[id];if(edge.some(v=>vertices.has(v))){remaining.delete(id);component.push(edge);edge.forEach(v=>vertices.add(v));expanded=true;}}}
- const centre=new THREE.Vector3();for(const id of vertices)centre.add(new THREE.Vector3(...welded.slice(id*3,id*3+3)));centre.divideScalar(vertices.size);
- const c=welded.length/3;welded.push(...centre.toArray());
- for(const [a,b] of component)indices.push(c,b,a);
-}
+const geometry=joinSurfaces(parts),welded=geometry.attributes.position.array,regions=geometry.attributes.garment;
 // Flatten only the bench contact and sole contact, retaining a seated L profile.
 for(let i=0;i<welded.length;i+=3){
  let [x,y,z]=welded.slice(i,i+3);if(z>=.04&&y<.545)y=.525;if(y<.026)y=.026;
- // The retained photographic chin sits forward of the source neck. Move the
- // upper neck underneath it without shifting shoulders or facial landmarks.
- const neck=Math.max(0,Math.min(1,(y-.965)/.080));z-=.090*neck*neck*(3-2*neck);
+ if(regions.getX(i/3)===0&&y<.95){const covered=smooth((y-.85)/.05);z=z*(1-covered)+Math.max(-.050,Math.min(.105,z))*covered;}
  welded[i+1]=y;welded[i+2]=z;
 }
-const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(welded,3));geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingBox();
+geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();
 const body=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#c5beb2',roughness:.95}));body.name='piano-boy-free-body';
-body.userData={source:'Quaternius Universal Base Characters Standard / Superhero_Male',license:'CC0-1.0',adaptation:'head removed, child proportions, static seated pose'};
+body.userData={source:'Quaternius Universal Base Characters Standard / Superhero_Male',license:'CC0-1.0',adaptation:'head removed, child proportions, static seated pose, separate loose shirt and shorts, child neck and toes'};
 const binary=await new GLTFExporter().parseAsync(body,{binary:true});await mkdir(new URL('../assets/models/',import.meta.url),{recursive:true});await writeFile(new URL('../assets/models/piano-boy-body.glb',import.meta.url),new Uint8Array(binary));
-console.log(JSON.stringify({bytes:binary.byteLength,vertices:welded.length/3,triangles:indices.length/3,bounds:geometry.boundingBox},null,2));
+console.log(JSON.stringify({bytes:binary.byteLength,vertices:welded.length/3,triangles:geometry.index.count/3,bounds:geometry.boundingBox},null,2));
