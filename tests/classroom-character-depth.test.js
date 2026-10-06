@@ -17,7 +17,7 @@ function withCanvas(fn){const old=globalThis.document,words=[];const ctx=new Pro
 test('두 남학생은 앞뒤가 닫힌 머리·몸·사지와 사진 앞면만 갖고 UV가 늘어나지 않는다',()=>{
  for(const [kind,config] of [['boy',ROOM_AMBIENCE.music.boy],['faceless',ROOM_AMBIENCE.classroom33.faceless]]){
   const root=buildPortraitGhost(kind,config);assert.equal(root.visible,false);
-  for(const name of ['ghost-head','ghost-torso','ghost-hips','ghost-thigh','ghost-shin']){const mesh=root.getObjectByName(name),b=bounds(mesh);assert.ok(closed(mesh.geometry),name);assert.ok(b.max.z-b.min.z>.08,name);}
+  for(const name of ['ghost-head','ghost-torso','ghost-hips',...(kind==='boy'?['ghost-thigh','ghost-shin']:['ghost-trouser','ghost-sleeve'])]){const mesh=root.getObjectByName(name),b=bounds(mesh);assert.ok(closed(mesh.geometry),name);assert.ok(b.max.z-b.min.z>.08,name);}
   assert.ok(bounds(root.getObjectByName('ghost-head')).getSize(new THREE.Vector3()).z>.2);
   assert.ok(bounds(root.getObjectByName('ghost-torso')).getSize(new THREE.Vector3()).z>.2);
   const pose=root.userData.pose;

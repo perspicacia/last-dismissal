@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {catLimbPose} from './cat-gait.js?v=cat-polish-2';
+import {loftGeometry} from './character-shape.js';
 
 function ellipsoid(g,name,position,scale,material){const m=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),material);m.name=name;m.position.set(...position);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
 let furMap;
@@ -14,18 +15,20 @@ function coatTexture(){
  furMap=new THREE.DataTexture(data,size,size);furMap.wrapS=furMap.wrapT=THREE.RepeatWrapping;furMap.repeat.set(3,2);furMap.needsUpdate=true;return furMap;
 }
 function ear(g,side,fur,inner){
- const shape=new THREE.Shape();shape.moveTo(-.040,0);shape.quadraticCurveTo(-.036,.052,-.007,.104);shape.quadraticCurveTo(.004,.112,.012,.098);shape.quadraticCurveTo(.035,.050,.041,0);shape.closePath();
- const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.022,bevelEnabled:true,bevelThickness:.005,bevelSize:.005,bevelSegments:2,steps:1,curveSegments:8}),fur);
- mesh.name='cat-pointed-ear';mesh.position.set(side*.065,.491,.267);mesh.rotation.z=-side*.18;mesh.castShadow=true;g.add(mesh);
+ const shape=new THREE.Shape();shape.moveTo(-.035,0);shape.quadraticCurveTo(-.031,.050,-.008,.105);shape.quadraticCurveTo(.001,.109,.007,.098);shape.quadraticCurveTo(.030,.048,.035,0);shape.closePath();
+ const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.010,bevelEnabled:true,bevelThickness:.003,bevelSize:.003,bevelSegments:3,steps:1,curveSegments:10}),fur);
+ mesh.name='cat-pointed-ear';mesh.position.set(side*.050,.486,.272);mesh.scale.y=.86;mesh.rotation.z=-side*.12;mesh.castShadow=true;g.add(mesh);
  const inset=new THREE.Shape();inset.moveTo(-.023,.018);inset.quadraticCurveTo(-.020,.055,-.006,.085);inset.quadraticCurveTo(.010,.06,.024,.018);inset.closePath();
- const lining=new THREE.Mesh(new THREE.ShapeGeometry(inset,10),inner);lining.position.z=.028;lining.name='cat-inner-ear';mesh.add(lining);
+ const lining=new THREE.Mesh(new THREE.ShapeGeometry(inset,10),inner);lining.position.z=.014;lining.name='cat-inner-ear';mesh.add(lining);
 }
 function almond(g,side,lid,iris,black){
- const shape=new THREE.Shape();shape.moveTo(-.030,0);shape.quadraticCurveTo(0,.027,.030,0);shape.quadraticCurveTo(0,-.023,-.030,0);
- const eye=new THREE.Group();eye.name='cat-eye';eye.position.set(side*.044,.449,.379);eye.rotation.z=side*.12;g.add(eye);
+ const shape=new THREE.Shape();shape.moveTo(-.024,0);shape.quadraticCurveTo(0,.014,.024,0);shape.quadraticCurveTo(0,-.012,-.024,0);
+ const eye=new THREE.Group();eye.name='cat-eye';eye.position.set(side*.044,.450,.374);eye.rotation.z=side*.13;eye.rotation.y=side*.27;g.add(eye);
  const rim=new THREE.Mesh(new THREE.ShapeGeometry(shape,16),lid);rim.scale.set(1.12,1.15,1);eye.add(rim);
- const golden=new THREE.Mesh(new THREE.ShapeGeometry(shape,16),iris);golden.position.z=.002;eye.add(golden);
- ellipsoid(eye,'cat-eye-slit',[0,0,.0035],[.003,.0115,.0017],black).castShadow=false;
+ const goldenGeometry=new THREE.ShapeGeometry(shape,16),p=goldenGeometry.attributes.position;
+ for(let i=0;i<p.count;i++)p.setZ(i,.002*(1-(p.getX(i)/.024)**2));goldenGeometry.computeVertexNormals();
+ const golden=new THREE.Mesh(goldenGeometry,iris);golden.position.z=.002;eye.add(golden);
+ ellipsoid(eye,'cat-eye-slit',[0,0,.005],[.0023,.0083,.0017],black).castShadow=false;
  const glint=new THREE.Mesh(new THREE.SphereGeometry(.0017,8,6),new THREE.MeshBasicMaterial({color:'#d7c58a'}));glint.position.set(-.008,.005,.006);eye.add(glint);
 }
 function link(mesh,a,b,radius){
@@ -35,26 +38,25 @@ function link(mesh,a,b,radius){
 }
 export function buildBlackCat(){
  const root=new THREE.Group();root.name='black-cat';root.visible=false;
- const map=coatTexture(),fur=new THREE.MeshStandardMaterial({color:'#272829',map,bumpMap:map,bumpScale:.0035,roughness:.69,metalness:0});
+ const map=coatTexture(),fur=new THREE.MeshStandardMaterial({color:'#242627',map,bumpMap:map,bumpScale:.0012,roughness:.72,metalness:0});
  const faceFur=fur.clone();faceFur.color.set('#202223');
  const inner=new THREE.MeshStandardMaterial({color:'#443732',roughness:1,side:THREE.DoubleSide}),black=new THREE.MeshStandardMaterial({color:'#090b0c',roughness:.65});
- const iris=new THREE.MeshStandardMaterial({color:'#c6a441',emissive:'#9c751d',emissiveIntensity:.22,roughness:.32});
+ const iris=new THREE.MeshStandardMaterial({color:'#bd9e35',emissive:'#9c751d',emissiveIntensity:.10,roughness:.26});
  const torso=new THREE.Group();torso.name='cat-torso';root.add(torso);
- ellipsoid(torso,'cat-body',[0,.284,-.035],[.095,.116,.244],fur);
- ellipsoid(torso,'cat-shoulders',[0,.294,.145],[.087,.120,.114],fur);
- ellipsoid(torso,'cat-haunches',[0,.265,-.180],[.102,.127,.108],fur);
- ellipsoid(torso,'cat-chest',[0,.285,.227],[.076,.106,.071],faceFur);
+ const bodyGeometry=loftGeometry([[-.310,0,0,-.278],[-.270,.073,.091,-.278],[-.180,.101,.119,-.278],[-.035,.095,.112,-.284],[.105,.088,.116,-.294],[.195,.080,.101,-.299],[.255,.052,.073,-.316],[.300,0,0,-.335]],{steps:56});bodyGeometry.rotateX(Math.PI/2);
+ const body=new THREE.Mesh(bodyGeometry,fur);body.name='cat-body';body.castShadow=body.receiveShadow=true;torso.add(body);
  ellipsoid(torso,'cat-neck',[0,.361,.234],[.064,.100,.069],faceFur);
  const head=new THREE.Group();head.name='cat-head-rig';root.add(head);
- ellipsoid(head,'cat-head',[0,.431,.285],[.088,.094,.094],faceFur);
- ellipsoid(head,'cat-forehead',[0,.472,.290],[.068,.052,.080],faceFur);
+ const headGeometry=loftGeometry([[.346,0,0,.319],[.370,.043,.049,.323],[.405,.075,.079,.303],[.447,.087,.088,.286],[.480,.078,.082,.281],[.507,.049,.053,.280],[.528,0,0,.280]],{steps:40});
+ headGeometry.translate(0,-.431,-.285);const skull=new THREE.Mesh(headGeometry,faceFur);skull.name='cat-head';skull.position.set(0,.431,.285);skull.castShadow=skull.receiveShadow=true;head.add(skull);
  for(const side of [-1,1]){
-  ellipsoid(head,'cat-cheek',[side*.050,.405,.308],[.050,.054,.056],faceFur);
-  ellipsoid(head,'cat-muzzle',[side*.023,.398,.365],[.030,.022,.026],fur);
+  ellipsoid(head,'cat-muzzle',[side*.020,.407,.371],[.025,.018,.024],faceFur);
   ear(head,side,faceFur,inner);almond(head,side,black,iris,black);
  }
+ // A narrow nasal bridge joins the brow and nose, rather than two spherical cheeks.
+ ellipsoid(head,'cat-nose-bridge',[0,.433,.366],[.015,.029,.023],faceFur);
  const noseShape=new THREE.Shape();noseShape.moveTo(-.011,.003);noseShape.lineTo(.011,.003);noseShape.quadraticCurveTo(.009,-.003,0,-.009);noseShape.quadraticCurveTo(-.009,-.003,-.011,.003);
- const nose=new THREE.Mesh(new THREE.ShapeGeometry(noseShape),black);nose.name='cat-nose';nose.position.set(0,.412,.394);head.add(nose);
+ const nose=new THREE.Mesh(new THREE.ExtrudeGeometry(noseShape,{depth:.004,bevelEnabled:true,bevelThickness:.001,bevelSize:.001,bevelSegments:2}),black);nose.name='cat-nose';nose.position.set(0,.412,.396);head.add(nose);
  const lines=[];
  for(const side of [-1,1])for(let i=0;i<3;i++)lines.push(side*.034,.395+i*.003,.385,side*(.122+i*.012),.38+i*.014,.370-i*.016);
  const whiskerGeometry=new THREE.BufferGeometry();whiskerGeometry.setAttribute('position',new THREE.Float32BufferAttribute(lines,3));

@@ -84,13 +84,13 @@ test('명시적으로 선택한 GLB 비교만 로딩 후 교체하며 이전 기
   assert.equal(v.source.canvas.dataset.studentModelStatus,'loading');assert.equal(v.refs.doll.visible,true);
   resolve(asset());await loading;assert.equal(v.source.canvas.dataset.studentModelStatus,'ready');assert.equal(v.source.canvas.dataset.studentModel,'glb');assert.equal(v.refs.doll.visible,false);assert.equal(v.refs.dollSolid.visible,true);
   const y=v.refs.dollRoot.position.y;assert.ok(y>.15);
-  v.source.exploration=null;v.updateStudentModel(v.source);assert.equal(v.refs.dollSolid.visible,false);assert.equal(v.refs.doll.visible,true);assert.equal(v.refs.dollRoot.position.y,.035);
+  v.source.exploration=null;v.updateStudentModel(v.source);assert.equal(v.refs.dollSolid.visible,false);assert.equal(v.refs.doll.visible,true);assert.equal(v.refs.dollRoot.position.y,.005);
   v.source.exploration={ended:false};v.updateStudentModel(v.source);assert.equal(v.refs.dollRoot.position.y,y);assert.equal(v.refs.dollSolid.visible,true);
 });
 test('3D 시안이 메모리에 있어도 기본 게임은 기존 인형 외형을 유지한다',()=>{
   const v=view();v.refs.dollSolid=prepareStudentModel(asset(),1.55);v.refs.dollTilt.add(v.refs.dollSolid);
   assert.equal(v.updateStudentModel(v.source),false);assert.equal(v.refs.doll.visible,true);assert.equal(v.refs.dollSolid.visible,false);
-  assert.equal(v.source.canvas.dataset.studentModel,'image-volume');assert.equal(v.refs.dollRoot.position.y,.035);
+  assert.equal(v.source.canvas.dataset.studentModel,'image-volume');assert.equal(v.refs.dollRoot.position.y,.005);
   v.previewStudentModel=true;assert.equal(v.updateStudentModel(v.source),true);assert.equal(v.refs.dollSolid.visible,true);
   v.previewStudentModel=false;assert.equal(v.updateStudentModel(v.source),false);assert.equal(v.refs.doll.visible,true);assert.equal(v.refs.dollSolid.visible,false);
 });

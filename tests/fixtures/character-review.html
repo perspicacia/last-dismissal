@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>기존 캐릭터 입체 외형 비교</title>
+<style>body{margin:0;background:#11171b;color:#dadbd5;font:15px sans-serif;height:100vh;display:flex;flex-direction:column}header{padding:14px 20px}h1{font-size:18px;margin:0 0 10px}nav{display:flex;gap:8px;flex-wrap:wrap}button,a{padding:9px 13px;background:#253038;color:#e4e4dc;border:1px solid #4c565b;border-radius:4px;text-decoration:none;cursor:pointer}button[aria-pressed=true]{border-color:#b5a371;background:#3c4038}main{display:flex;flex:1;min-height:0}aside{width:200px;padding:15px;background:#182025;overflow:auto}aside img{width:100%;max-height:55vh;object-fit:contain}aside p{line-height:1.6;color:#b7bebd}canvas{flex:1;min-width:0;display:block}#status{font-size:13px;color:#aab3b4;margin-top:10px}@media(max-width:700px){aside{width:120px;padding:8px}}</style>
+<header><h1>기존 캐릭터 입체 외형 비교</h1><nav id="characters"></nav><nav id="views" style="margin-top:8px"><button data-view="front">정면 / 뒷모습</button><button data-view="angle">사선</button><button data-view="side">측면</button><button data-view="low">낮은 시점</button><button id="walk">고양이 보행</button><a href="/">게임으로</a></nav><div id="status" role="status">원본 이미지 로딩 중</div></header>
+<main><aside><img id="reference" alt="원본 외형 기준"><p id="note"></p></aside><canvas id="view" aria-label="캐릭터 입체 외형"></canvas></main>
+<script type="module">
+import * as THREE from '../../vendor/three.module.js';
+import {buildPortraitGhost,buildSeatedGirl,setPortraitTexture} from '../../ghost-figures.js?v=character-original-1';
+import {buildBlackCat,updateBlackCat} from '../../black-cat.js?v=character-original-1';
+import {volumeFromImage} from '../../doll-volume.js?v=character-original-1';
+import {ROOM_AMBIENCE} from '../../exploration.js';
+import {catPose} from '../../cat-event.js';
+const canvas=document.querySelector('canvas'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#1a2228');const camera=new THREE.PerspectiveCamera(36,1,.01,30);
+scene.add(new THREE.HemisphereLight('#ccd8df','#363027',1.35));
+for(const [x,y,z,intensity] of [[-2,4,-3,2.4],[2,3,2,2.2]]){const light=new THREE.DirectionalLight('#e7e1d6',intensity);light.position.set(x,y,z);light.castShadow=true;light.shadow.mapSize.set(1024,1024);light.shadow.camera.left=light.shadow.camera.bottom=-3;light.shadow.camera.right=light.shadow.camera.top=3;scene.add(light);}
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(12,12),new THREE.MeshStandardMaterial({color:'#333537',roughness:.94}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.position.y=-.004;scene.add(floor);
+const grid=new THREE.GridHelper(6,30,'#444a4c','#3b4143');grid.position.y=-.002;scene.add(grid);
+const load=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error(src));image.src=src;});
+const texture=image=>{const map=new THREE.Texture(image);map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=renderer.capabilities.getMaxAnisotropy();map.needsUpdate=true;return map;};
+const [dollImage,studentImage]=await Promise.all([load('../../assets/doll-student-concept.png'),load('../../assets/faceless-student.png')]);
+const mannequin=buildPortraitGhost('faceless',{...ROOM_AMBIENCE.classroom33.faceless,x:0,z:0,angle:0});setPortraitTexture(mannequin,studentImage,texture(studentImage));
+const girl=buildSeatedGirl({x:0,z:0,angle:0,seat:.448});
+const cat=buildBlackCat();updateBlackCat(cat,{x:0,y:0,z:0,yaw:0,cycle:0,motion:0,opacity:1});
+const doll=new THREE.Group(),dollMesh=new THREE.Mesh(volumeFromImage(dollImage),[new THREE.MeshStandardMaterial({map:texture(dollImage),transparent:true,alphaTest:.35,roughness:.8,side:THREE.DoubleSide}),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide})]);dollMesh.castShadow=dollMesh.receiveShadow=true;doll.add(dollMesh);doll.rotation.x=Math.PI/2;doll.position.y=.003;
+// The comparison chair has the same seat height as the game, so contact can be assessed.
+const chair=new THREE.Group(),wood=new THREE.MeshStandardMaterial({color:'#756045',roughness:.83}),metal=new THREE.MeshStandardMaterial({color:'#424f50',metalness:.55,roughness:.4});
+for(const [x,y,z,w,h,d,mat] of [[0,.424,0,.44,.048,.42,wood],[0,.74,.21,.44,.19,.035,wood],[-.17,.22,-.15,.027,.44,.027,metal],[.17,.22,-.15,.027,.44,.027,metal],[-.17,.4,.18,.027,.8,.027,metal],[.17,.4,.18,.027,.8,.027,metal]]){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);mesh.castShadow=mesh.receiveShadow=true;chair.add(mesh);}girl.add(chair);
+const models={doll,mannequin,girl,cat};for(const model of Object.values(models))scene.add(model);
+const descriptions={doll:['누운 금발 인형','../../assets/doll-student-concept.png','원본의 얼굴·금발·리본·남색 의상을 그대로 투영하고 머리와 몸의 깊이를 구분했습니다. 사진에 없는 옆·뒷모습은 근사입니다.'],mannequin:['얼굴 없는 남학생','../../assets/faceless-student.png','원본 사진을 앞면에 유지하면서 턱·어깨·등의 연결을 조형했습니다. 뒷면에는 얼굴을 반복하지 않습니다.'],girl:['앉은 여학생',null,'긴 검은 머리·어두운 교복·흰 양말을 유지했습니다. 머리카락 덩어리와 접힌 치마를 곡면으로 연결한 코드 기반 모델입니다.'],cat:['검은 고양이',null,'검은 털·금빛 아몬드 눈·좁은 코와 곧은 귀를 다듬었습니다. 기존 접지 보행을 사용하는 코드 기반 모델이며 실제 털 스캔은 아닙니다.']};
+descriptions.all=['전체 비교',null,'네 캐릭터의 원본 특징과 입체 보완을 함께 확인합니다. 사진 기반 인형·남학생의 옆/뒷면과 코드 기반 여학생·고양이는 정밀 조형 자산을 대신하는 근사입니다.'];
+const homes=Object.fromEntries(Object.entries(models).map(([id,m])=>[id,{position:m.position.clone(),rotation:m.rotation.clone()}]));
+let selected='all',view='angle',walking=false,start=0;
+for(const [id,[name]] of Object.entries(descriptions)){const button=document.createElement('button');button.textContent=name;button.dataset.character=id;button.onclick=()=>{selected=id;walking=false;update();};document.querySelector('#characters').append(button);}
+for(const button of document.querySelectorAll('button[data-view]'))button.onclick=()=>{view=button.dataset.view;walking=false;update();};
+document.querySelector('#walk').onclick=()=>{selected='cat';view='side';walking=!walking;start=performance.now();update();};
+function update(){
+ for(const [id,model] of Object.entries(models)){model.visible=selected==='all'||id===selected;model.position.copy(homes[id].position);model.rotation.copy(homes[id].rotation);}
+ if(selected==='all'){mannequin.position.set(-.65,0,-.85);mannequin.rotation.y=Math.PI;girl.position.set(.9,0,-.85);cat.position.set(.45,0,.7);doll.position.set(-1.45,.003,.7);}
+ const [name,src,note]=descriptions[selected];document.querySelector('#reference').hidden=!src;if(src)document.querySelector('#reference').src=src;document.querySelector('#note').textContent=note;
+ document.querySelector('#walk').hidden=selected!=='cat';
+ for(const button of document.querySelectorAll('button[data-character]'))button.setAttribute('aria-pressed',String(button.dataset.character===selected));for(const button of document.querySelectorAll('button[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
+ const targets={all:[0,.70,0],doll:[0,.10,0],mannequin:[0,.90,0],girl:[0,.72,0],cat:[0,.29,0]},distances={all:5.7,doll:2.8,mannequin:3.9,girl:2.9,cat:1.55},d=distances[selected],front=selected==='mannequin'?-1:1;
+ let direction=view==='front'?[0,.22,front]:view==='side'?[1,.12,.02]:view==='low'?[.75,.06,front*.85]:[.63,.34,front*.9];if(selected==='all')direction=view==='front'?[0,.22,1]:view==='side'?[1,.22,.1]:view==='low'?[.16,.08,1]:[.16,.36,1];if(selected==='doll')direction=view==='front'?[0,1.2,.05]:view==='low'?[1,.05,.22]:view==='side'?[1,.16,0]:[.7,.9,.7];
+ const target=new THREE.Vector3(...targets[selected]);camera.position.copy(target).add(new THREE.Vector3(...direction).normalize().multiplyScalar(d));camera.lookAt(target);
+ canvas.dataset.character=selected;canvas.dataset.view=view;canvas.dataset.ready='true';document.querySelector('#status').textContent=name+' · '+(walking?'접지 보행 비교':'정지 외형 비교')+' · 바닥 격자 20cm';resize();
+}
+function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);}
+new ResizeObserver(resize).observe(canvas);update();
+function frame(now){if(walking){const elapsed=((now-start)/1000)%3,pose=catPose({cat:{path:{from:{x:0,z:-.25},to:{x:0,z:.25}},elapsed}});updateBlackCat(cat,pose);renderer.render(scene,camera);}requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></html>

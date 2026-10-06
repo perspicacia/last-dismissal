@@ -66,7 +66,7 @@ last-dismissal/
 | 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 마우스 시점과 잠금, 영역 캡처 조작 |
 | 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸, 창문과 계단 |
 | 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
-| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [rabbit-pose.js](rabbit-pose.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 정적인 인물, 토끼 팔 자세와 고양이 보행 |
+| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 연속 곡면 인물·고양이, 토끼 팔 자세와 접지 보행 |
 | 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 토끼 돌진, 무작위 고양이와 계단 접근 이벤트 |
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
 | 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
@@ -117,7 +117,9 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 일반 교실 칠판은 로컬 Nanum Pen Script 손글씨에 분필 입자·불균일한 농담·작은 획 끊김·지우개 자국을 더한다. 반 이름과 당번 문구는 유지한다. 방별 고정 질감을 한 번 만들어 Three.js/Canvas가 공유하고 게임 난수는 소비하지 않는다. 서체 실패 시 시스템 서체로 표시한다. [글씨 명세](specs/chalkboard-writing.md), [서체 출처·라이선스](assets/fonts/README.md).
 
-학생 인형의 기본 2.5D 화면은 `doll-volume.js`에서 기존 사진의 XY·UV 비율을 보존하는 닫힌 메시로 만든다. 일반 게임과 기본 교실 비교에 사용하고, Canvas 호환은 기존 이미지를 렌더한다. [측면 왜곡 수정 명세](specs/student-doll-sides.md). 낮은 측면·후면에서 납작하게 보이는 구조적 한계는 남는다.
+학생 인형의 기본 2.5D 화면은 `doll-volume.js`에서 기존 사진의 XY·UV 비율을 보존하는 닫힌 메시로 만든다. 머리·몸·팔다리의 깊이를 구분하고 머리 앞뒤를 둥글게 연결한다. 일반 게임과 기본 교실 비교에 사용하고, Canvas 호환은 기존 이미지를 렌더한다. 최신 [원본 입체 보완 명세](specs/character-original-depth.md)는 이전 14cm 균일 깊이와 평면 얼굴 기준을 대체한다. 낮은 측면·후면을 사진과 동일한 실제 인체로 복원한 것은 아니다.
+
+남자 마네킹(얼굴 없는 학생)은 턱·어깨·소매·바지를 연속 곡면으로 연결하고 원본 사진을 앞에 유지한다. 앉은 여학생은 긴 검은 머리·교복·흰 양말을 유지하며 얇은 머리카락 결·접힌 치마와 좌석 접촉을 갖는다. 검은 고양이는 연결된 몸·머리·좁은 코·작은 금빛 눈을 사용하며 기존 두 관절 보행은 유지한다. `tests/fixtures/character-review.html`에서 네 외형의 정면/사선/측면·낮은 시점과 고양이 보행을 비교한다. 이 화면의 밝은 비교 조명과 버튼은 일반 게임에 적용하지 않는다.
 
 개발용 GLB 비교는 `http://127.0.0.1:8080/tests/fixtures/room-review.html?model=glb`에서 명시적으로 선택한다. 일반 실행에서는 GLB를 자동 로딩/대체하지 않는다. `student-model.js`는 이 비교에서 로컬 `GLTFLoader`로 `assets/models/student-doll.glb`를 읽는다. 1.55m 정적 모델이며 실제 누운 경계로 바닥 높이를 계산한다. 원본보다 단순한 시안으로 리깅/새 표정은 없다. 자산에는 메시·PBR 재질·절차적 천/머리 무늬가 포함되며 추가 캐릭터 이미지는 생성하지 않았다.
 
