@@ -37,12 +37,12 @@ if(new URLSearchParams(location.search).has('attackerFailOnce')){
 let qualityCorridor;
 const qualityRoute=new URLSearchParams(location.search).has('quality');
 if(qualityRoute){
- const {Corridor}=await import('../../corridor.js?v=quality-2');
+ const {Corridor}=await import('../../corridor.js?v=quality-4');
  const reset=Corridor.prototype.reset;
  Corridor.prototype.reset=function(...args){qualityCorridor=this;return reset.apply(this,args);};
  document.querySelector('#corridor').dataset.profile='true';
 }
-await import('../../game.js?v=quality-2');
+await import('../../game.js?v=quality-4');
 if(qualityRoute){
  const {ROOMS}=await import('../../exploration.js?v=mouse-comfort-1');
  const nav=document.createElement('nav');nav.setAttribute('aria-label','개발용 경로');

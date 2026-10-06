@@ -5,14 +5,14 @@ import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-cont
 import {ARRIVAL,attackerArrival} from './schoolgirl-attacker.js?v=rabbit-presence-1';
 import {decorateRabbitElement} from './rabbit-appearance.js?v=dark-blood-1';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
-import {Corridor} from './corridor.js?v=quality-2';
+import {Corridor} from './corridor.js?v=quality-4';
 import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=rabbit-presence-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
 let paused=false,capturing=false,lookSettings=loadLookSettings();const heldKeys=new Map();
 let state=null,endingTimer,audioError='',hauntingAudio=newHauntingAudio(),stairHaunt=newStairHaunt();
-function show(id){if(id!=='game'){closePause();mouse.release();}document.body.dataset.screen=id;document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
+function show(id){if(id!=='game'){closePause();mouse.release();}document.body.dataset.screen=id;document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;corridor.view3D?.shaderWarmup?.schedule();}
 function updateAudioStatus(){const status=$('audio-status'),message=audioError||(!audio.ctx?'BGM 대기':audio.muted||audio.volume===0?'BGM 음소거':audio.ctx.state==='running'?'BGM 재생 중':'BGM 일시 정지 · 소리 확인');if(status.textContent!==message)status.textContent=message;status.dataset.level=String(audio.level().toFixed(5));const needsHelp=Boolean(audioError)||Boolean(audio.ctx&&audio.ctx.state!=='running'&&!audio.muted&&state&&!state.ended&&!paused);status.classList.toggle('sr-only',!needsHelp);$('sound-test').hidden=!needsHelp;}
 setInterval(updateAudioStatus,500);
 async function enableAudio(test=false){if(!test&&($('game').hidden||!state||state.ended||paused))return;audioError='';try{await(test?audio.test():audio.start());}catch{audioError='재생 실패 · 소리 확인';}$('audio-status').dataset.recordedDoor=String(audio.recordedBuffers.has('door-slide'));$('audio-status').dataset.recordedRabbit=String(audio.recordedBuffers.has('jumpscare'));updateAudioStatus();}

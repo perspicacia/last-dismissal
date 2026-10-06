@@ -27,6 +27,7 @@ import {surfaceMaterial,schoolReflectionEnvironment} from './school-surfaces.js?
 import {CORRIDOR_DESK} from './school-colliders.js?v=quality-2';
 import {RenderMetrics} from './render-metrics.js?v=quality-2';
 import {repeatFurniture} from './static-furniture.js?v=quality-2';
+import {SceneShaderWarmup} from './shader-warmup.js?v=shader-warmup-1';
 
 import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 
@@ -51,13 +52,20 @@ export class ThreeSchoolView {
     if(this.previewStudentModel)this.loadStudentModel();
     else canvas.dataset.studentModelStatus='original';
     this.loadPianoBoyBody();
+    if(canvas.dataset.shaderPrewarm!=='false'){
+      this.shaderWarmup=new SceneShaderWarmup({renderer:this.renderer,scenes:this.scenes,camera:this.camera,
+        canRun:()=>!this.source.active&&!document.hidden&&document.querySelector('#intro')?.hidden===false,
+        onStatus:({status,prepared,failed})=>Object.assign(canvas.dataset,{shaderPreparation:status,shaderPrepared:prepared.join(','),shaderFailed:failed.join(',')})});
+      this.shaderWarmup.schedule();
+      document.addEventListener('visibilitychange',()=>this.shaderWarmup.schedule());
+    }else canvas.dataset.shaderPreparation='disabled';
   }
   loadPianoBoyBody(load=loadPianoBoyBody){
     if(!this.refs.pianoBoy||this.refs.pianoBoy.userData.bodySource)return Promise.resolve();
     if(this.pianoBoyBodyLoading)return this.pianoBoyBodyLoading;
     const data=this.source.canvas.dataset;data.pianoBoyBodyStatus='loading';
     this.pianoBoyBodyLoading=Promise.resolve().then(load).then(geometry=>{
-      attachPianoBoyBody(this.refs.pianoBoy,geometry);data.pianoBoyBodyStatus='ready';this.lastState='';
+      attachPianoBoyBody(this.refs.pianoBoy,geometry);data.pianoBoyBodyStatus='ready';this.lastState='';this.shaderWarmup?.invalidate(['music']);
     }).catch(()=>{data.pianoBoyBodyStatus='fallback';}).finally(()=>{this.pianoBoyBodyLoading=null;});
     return this.pianoBoyBodyLoading;
   }
@@ -72,6 +80,7 @@ export class ThreeSchoolView {
       const asset=await load(),model=prepareStudentModel(asset,DOLL.height);
       this.refs.dollSolid=model;this.refs.dollTilt.add(model);data.studentModelStatus='ready';
       this.updateStudentModel(this.source);
+      this.shaderWarmup?.invalidate(['classroom']);
     }catch{data.studentModelStatus='fallback';this.updateStudentModel(this.source);}
   }
   updateStudentModel(source){
@@ -303,11 +312,12 @@ export class ThreeSchoolView {
     if(!this.refs.photo)return;
     this.textures??=[];this.imageTextureCache??=new WeakMap();
     const textureCache=this.imageTextureCache;
+    let shaderChanged=false;
     // Each restart authors a new clock canvas. Retain static expression maps,
     // but release this replaced dynamic map instead of keeping every restart.
     if(this.clockTextureImage&&this.clockTextureImage!==source.clockFace){const old=textureCache.get(this.clockTextureImage);old?.dispose();textureCache.delete(this.clockTextureImage);this.textures=this.textures.filter(t=>t!==old);}
     this.clockTextureImage=source.clockFace;
-    const assign=(mesh,image)=>{if(!image||image.complete===false||(!image.getContext&&!image.naturalWidth))return;let t=textureCache.get(image);if(!t){t=canvasTexture(image);textureCache.set(image,t);this.textures.push(t);}if(!mesh.material.map)mesh.material.needsUpdate=true;mesh.material.map=t;};
+    const assign=(mesh,image)=>{if(!image||image.complete===false||(!image.getContext&&!image.naturalWidth))return;let t=textureCache.get(image);if(!t){t=canvasTexture(image);textureCache.set(image,t);this.textures.push(t);}if(!mesh.material.map){mesh.material.needsUpdate=true;shaderChanged=true;}mesh.material.map=t;};
     for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':d.userData.label]);
     assign(this.refs.clock,source.clockFace);
     const boardPhoto=boardPhotoFor(source);this.refs.photo.visible=Boolean(boardPhoto);
@@ -315,19 +325,22 @@ export class ThreeSchoolView {
     const originalRabbit=source.mouthOpen?source.mascotOpen:source.mascot;const rabbitSkin=originalRabbit?.naturalWidth?bloodiedRabbit(originalRabbit):originalRabbit;
     if(source.canvas)source.canvas.dataset.rabbitAppearance=rabbitSkin&&rabbitSkin!==originalRabbit?'bloodied':'loading';
     assign(this.refs.rabbit,rabbitSkin);for(const rabbit of Object.values(this.refs.roomRabbits||{})){const parts=this.partsFor(rabbitSkin);if(parts){assign(rabbit.userData.body,parts.body);assign(rabbit.userData.arms[0],parts.left);assign(rabbit.userData.arms[1],parts.right);}}
-    const presence=rabbitPresence(source);if(this.refs.ambienceRabbit&&presence)assign(this.refs.ambienceRabbit,bloodiedRabbit(presence.image));
+    // Attach the ordinary map before the room becomes visible so preparation
+    // includes its shader variant. Visibility still follows rabbitPresence.
+    const presence=rabbitPresence(source);if(this.refs.ambienceRabbit){const image=presence?.image||source.mascot;assign(this.refs.ambienceRabbit,image?.naturalWidth?bloodiedRabbit(image):image);}
     const schoolgirl=attackerImage(source,source.mouthOpen);for(const attacker of Object.values(this.refs.roomAttackers||{}))assign(attacker,schoolgirl);
     assign(this.refs.ghost,source.windowGhost);for(const ghost of this.refs.ambienceGhosts||[])assign(ghost,source.windowGhost);
     for(const [root,image] of [[this.refs.pianoBoy,source.pianoBoy],[this.refs.facelessStudent,source.facelessStudent]])if(root){
       root.visible=Boolean(image?.complete!==false&&image?.naturalWidth>0&&image?.naturalHeight>0);
-      if(root.visible){let texture=textureCache.get(image);if(!texture){texture=canvasTexture(image);textureCache.set(image,texture);this.textures.push(texture);}setPortraitTexture(root,image,texture);}
+      if(root.visible){let texture=textureCache.get(image);if(!texture){texture=canvasTexture(image);textureCache.set(image,texture);this.textures.push(texture);}if(root.userData.photoMeshes.some(mesh=>!(Array.isArray(mesh.material)?mesh.material[0]:mesh.material).map))shaderChanged=true;setPortraitTexture(root,image,texture);}
     }
     if(!this.dollVolumeReady&&source.dollImage?.naturalWidth){
-      const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;}
+      const volume=volumeFromImage(source.dollImage);if(volume){this.refs.doll.geometry.dispose();this.refs.doll.geometry=volume;this.refs.dollFace=this.refs.doll.material;this.refs.doll.material=[this.refs.dollFace,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];this.dollVolumeReady=true;shaderChanged=true;}
     }
     for(const mesh of this.refs.ambienceDolls||[]){if(this.dollVolumeReady&&!mesh.userData.volumeReady){mesh.geometry.dispose();mesh.geometry=this.refs.doll.geometry;mesh.material=[mesh.material,material('#ffffff',{vertexColors:true,side:THREE.DoubleSide,roughness:.9})];mesh.userData.volumeReady=true;}assign({material:Array.isArray(mesh.material)?mesh.material[0]:mesh.material},source.dollImage);mesh.visible=Boolean(this.dollVolumeReady);}
     const scary=dollRise(source.dollState)>.25;const face=this.refs.dollFace||this.refs.doll.material;
     assign({material:face},scary?source.dollScary:source.dollImage);this.updateStudentModel(source);if(source.canvas)Object.assign(source.canvas.dataset,{dollImageSize:`${source.dollImage?.naturalWidth}x${source.dollImage?.naturalHeight}`,dollMesh:String(this.refs.doll.geometry.index?.count)});this.lastState='';
+    if(shaderChanged)this.shaderWarmup?.invalidate();
   }
   draw(source,time){
     const profiling=source.canvas?.dataset?.profile==='true',started=profiling?performance.now():0;

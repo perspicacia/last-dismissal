@@ -1,0 +1,25 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>첫 셰이더 준비 검토</title>
+<style>body{margin:0;background:#10191e;color:#e7e5db;font:15px system-ui}[hidden]{display:none!important}nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px}button{background:#223139;color:#eee;border:1px solid #687779;border-radius:4px;padding:10px;cursor:pointer}button:focus-visible{outline:3px solid #e3cb8c}p,output{display:block;margin:0 12px 10px}a{color:#dfc989}canvas{display:block;width:100vw;height:calc(100vh - 150px)}</style>
+<nav><button data-room="corridor">복도 첫 렌더</button><button data-room="classroom31">3-1 첫 렌더</button><button data-room="music">음악실 첫 렌더</button></nav>
+<p id="intro">첫 화면에서 준비 중 · 완료 후 원하는 방을 한 번 그립니다.</p><output id="status" aria-live="off">준비 중</output>
+<p>개발용 · 첫 CPU 제출은 GPU 시간이 아닙니다. 매 비교는 새 페이지에서 같은 방 하나로 시작하세요. <a id="compare">비교 모드</a></p>
+<canvas data-renderer="three" data-profile="true" aria-label="첫 렌더 검토 장면"></canvas>
+<script type="module">
+import {Corridor} from '../../corridor.js?v=quality-4';
+const canvas=document.querySelector('canvas'),disabled=new URLSearchParams(location.search).has('cold');canvas.dataset.shaderPrewarm=String(!disabled);
+document.querySelector('#compare').textContent=disabled?'사전 준비 켜짐으로 비교':'사전 준비 꺼짐으로 비교';document.querySelector('#compare').href=disabled?'?':'?cold';
+const c=new Corridor(canvas,()=>{},()=>{});c.exploration={ended:false};c.tutorial=false;c.player={x:0,z:1.8,angle:0,manualLook:true,pitch:0};
+const first=new Map();let drawing=false,selected='';
+for(const b of document.querySelectorAll('[data-room]'))b.onclick=()=>{
+ selected=b.dataset.room;c.reset(null);c.exploration={ended:false};if(selected!=='corridor')c.enterClassroom(selected);
+ c.player={x:0,z:selected==='classroom31'?4.2:selected==='music'?7.35:1.8,angle:selected==='music'?Math.PI/2:0,manualLook:true,pitch:0};
+ document.querySelector('#intro').hidden=true;c.view3D.shaderWarmup?.schedule();drawing=true;
+};
+function frame(t){
+ if(drawing){const started=performance.now();c.draw(t);if(!first.has(selected)){first.set(selected,performance.now()-started);canvas.dataset.firstCpu=first.get(selected).toFixed(2);canvas.dataset.firstRoom=selected;}}
+ const d=canvas.dataset,programs=c.view3D.renderer.info.programs.length;
+ canvas.dataset.programs=String(programs);document.querySelector('#status').textContent=`${disabled?'사전 준비 꺼짐':'사전 준비 켜짐'} · ${d.shaderPreparation} · 준비 ${d.shaderPrepared||'없음'} · programs ${programs} · 첫 ${selected||'대기'} CPU ${first.has(selected)?first.get(selected).toFixed(2):'—'}ms · 정상 CPU ${d.cpuMedian||'—'}ms / p95 ${d.cpuP95||'—'}ms`;
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script></html>

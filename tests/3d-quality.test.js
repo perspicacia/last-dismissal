@@ -64,3 +64,9 @@ test('성능 측정은 CPU 제출 시간과 프레임 간격을 분리하고 일
  for(let i=0;i<8;i++)report=m.sample(i*10,i*10+2,i*16);assert.equal(report.samples,4);assert.equal(report.cpuMedian,2);assert.equal(report.frameMedian,16);assert.equal(report.fps,62.5);
  report=m.sample(100,108,5000);assert.equal(report.frameMedian,16);assert.equal(report.cpuP95,8);assert.equal(m.intervals.length,4);
 });
+test('첫 화면의 토끼 맵 준비는 복도 등장이나 탐색 판정을 진행하지 않는다',()=>{
+ const old=globalThis.document;globalThis.document={createElement:mockCanvas};try{
+  const v=view();v.build('classroom31');const mascot=mockCanvas(),source={canvas:{dataset:{}},scene:'corridor',mascot,mascotOpen:mockCanvas(),clockFace:mockCanvas(),player:{x:0,z:1.8,angle:0}};v.source=source;
+  v.syncTextures(source);assert.ok(v.refs.ambienceRabbit.material.map);assert.equal(v.refs.ambienceRabbit.visible,false);assert.equal(source.exploration,undefined);assert.deepEqual(source.player,{x:0,z:1.8,angle:0});
+ }finally{globalThis.document=old;}
+});
