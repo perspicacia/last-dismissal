@@ -1,6 +1,6 @@
 # 공포 포스터형 첫 화면 (Issue #68)
 
-2026-10-06 최신 채택: [schoolgirl-attacker.md](schoolgirl-attacker.md)에 따라 일반 공격자/첫 화면의 토끼는 교복 여고생 귀신으로 교체한다. 이 문서의 기존 토끼 이름·팔/이미지 제작 제한은 과거 기록이며 새 공격자는 최신 명세를 따른다. 방 무작위 배치·발견 타이밍·GAME OVER/다시 하기 규칙은 유지한다.
+2026-10-06 최신 채택: [schoolgirl-attacker.md](schoolgirl-attacker.md)에 따라 일반 공격자/첫 화면의 토끼는 교복 여고생 귀신으로 교체한다. 최신 여고생 외형은 [masked-schoolgirl-ghost.md](masked-schoolgirl-ghost.md)의 하얀 가면 얼굴·남색 세일러복이며 첫 화면에는 무표정 기본 PNG를 사용한다. 이 문서의 기존 토끼 이름·팔/이미지 제작 제한은 과거 기록이며 새 공격자는 최신 명세를 따른다. 방 무작위 배치·발견 타이밍·GAME OVER/다시 하기 규칙은 유지한다.
 
 ## 사용자 채택 방향
 
