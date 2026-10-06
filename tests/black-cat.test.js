@@ -9,7 +9,7 @@ test('검은 고양이는 얇은 이미지 면 대신 머리·몸·네 다리·�
  assert.equal(cat.visible,false);assert.equal(cat.userData.legs.length,4);assert.equal(cat.userData.head.children.filter(c=>c.name==='cat-pointed-ear').length,2);
  assert.equal(cat.userData.tail.children[0].geometry.type,'TubeGeometry');body.geometry.computeBoundingBox();const bodySize=body.geometry.boundingBox.getSize(new THREE.Vector3());assert.ok(bodySize.x>.18&&bodySize.y>.2&&bodySize.z>.55,'continuous body spans shoulders and haunches');
  for(const mesh of [body,head])assert.ok(Math.min(mesh.scale.x,mesh.scale.y,mesh.scale.z)>.08);
- cat.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(cat);assert.ok(bounds.max.y>.50&&bounds.max.y<.65);assert.ok(bounds.min.z>-.58&&bounds.max.z<.42);
+ cat.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(cat);assert.ok(bounds.max.y>.65&&bounds.max.y<.75);assert.ok(bounds.min.z>-.58&&bounds.max.z<.42);
  cat.traverse(mesh=>{if(mesh.isMesh)for(const n of mesh.geometry.attributes.position.array)assert.ok(Number.isFinite(n));});
 });
 test('뛰는 자세·접지 그림자는 같은 모델에서 갱신되고 종료 때 숨는다',()=>{

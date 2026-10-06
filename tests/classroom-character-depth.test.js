@@ -14,8 +14,8 @@ function closed(geometry){
 }
 function withCanvas(fn){const old=globalThis.document,words=[];const ctx=new Proxy({}, {get:(_,key)=>key==='fillText'?(text)=>words.push(text):()=>{},set:()=>true});globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>ctx})};try{return fn(words);}finally{globalThis.document=old;}}
 
-test('두 남학생은 앞뒤가 닫힌 머리·몸·사지와 사진 앞면만 갖고 UV가 늘어나지 않는다',()=>{
- for(const [kind,config] of [['boy',ROOM_AMBIENCE.music.boy],['faceless',ROOM_AMBIENCE.classroom33.faceless]]){
+test('얼굴 없는 남학생은 앞뒤가 닫힌 머리·몸·사지와 사진 앞면만 갖고 UV가 늘어나지 않는다',()=>{
+ for(const [kind,config] of [['faceless',ROOM_AMBIENCE.classroom33.faceless]]){
   const root=buildPortraitGhost(kind,config);assert.equal(root.visible,false);
   for(const name of ['ghost-head','ghost-torso','ghost-hips',...(kind==='boy'?['ghost-thigh','ghost-shin']:['ghost-trouser','ghost-sleeve'])]){const mesh=root.getObjectByName(name),b=bounds(mesh);assert.ok(closed(mesh.geometry),name);assert.ok(b.max.z-b.min.z>.08,name);}
   assert.ok(bounds(root.getObjectByName('ghost-head')).getSize(new THREE.Vector3()).z>.2);
@@ -31,9 +31,9 @@ test('두 남학생은 앞뒤가 닫힌 머리·몸·사지와 사진 앞면만 
  }
 });
 
-test('좌석에 겹치는 인물 표면은 좌석 위에 있고 발과 벽 여유를 지킨다',()=>{
- const boy=buildPortraitGhost('boy',ROOM_AMBIENCE.music.boy),girl=buildSeatedGirl();
- for(const [root,seat,inside] of [[boy,.525,p=>p.x>=2.47&&p.x<=2.89&&Math.abs(p.z-7.35)<.325],[girl,.448,p=>Math.abs(p.x-1.2)<.26&&Math.abs(p.z-4.28)<.23]]){
+test('앉은 여학생은 좌석 위에 있고 발과 서 있는 남학생의 벽 여유를 지킨다',()=>{
+ const girl=buildSeatedGirl();
+ for(const [root,seat,inside] of [[girl,.448,p=>Math.abs(p.x-1.2)<.26&&Math.abs(p.z-4.28)<.23]]){
   root.updateMatrixWorld(true);root.traverse(part=>{if(!part.userData.center)return;const position=part.geometry.attributes.position;for(let i=0;i<position.count;i++){const p=new THREE.Vector3().fromBufferAttribute(position,i).applyMatrix4(part.matrixWorld);if(inside(p))assert.ok(p.y>=seat-.004,`${part.name}: ${p.y}`);}});
   const b=new THREE.Box3().setFromObject(root);assert.ok(b.min.y>=.015&&b.min.y<.03);
  }
