@@ -5,15 +5,15 @@
 <p>개발용 · 첫 CPU 제출은 GPU 시간이 아닙니다. 매 비교는 새 페이지에서 같은 방 하나로 시작하세요. <a id="compare">비교 모드</a></p>
 <canvas data-renderer="three" data-profile="true" aria-label="첫 렌더 검토 장면"></canvas>
 <script type="module">
-import {Corridor} from '../../corridor.js?v=quality-4';
-const canvas=document.querySelector('canvas'),disabled=new URLSearchParams(location.search).has('cold');canvas.dataset.shaderPrewarm=String(!disabled);
+import {Corridor} from '../../corridor.js?v=quality-5';
+const canvas=document.querySelector('canvas'),disabled=new URLSearchParams(location.search).has('cold');canvas.dataset.shaderPrewarm=String(!disabled);canvas.dataset.texturePrewarm='false';
 document.querySelector('#compare').textContent=disabled?'사전 준비 켜짐으로 비교':'사전 준비 꺼짐으로 비교';document.querySelector('#compare').href=disabled?'?':'?cold';
 const c=new Corridor(canvas,()=>{},()=>{});c.exploration={ended:false};c.tutorial=false;c.player={x:0,z:1.8,angle:0,manualLook:true,pitch:0};
 const first=new Map();let drawing=false,selected='';
 for(const b of document.querySelectorAll('[data-room]'))b.onclick=()=>{
  selected=b.dataset.room;c.reset(null);c.exploration={ended:false};if(selected!=='corridor')c.enterClassroom(selected);
  c.player={x:0,z:selected==='classroom31'?4.2:selected==='music'?7.35:1.8,angle:selected==='music'?Math.PI/2:0,manualLook:true,pitch:0};
- document.querySelector('#intro').hidden=true;c.view3D.shaderWarmup?.schedule();drawing=true;
+ document.querySelector('#intro').hidden=true;c.view3D.schedulePreparation();drawing=true;
 };
 function frame(t){
  if(drawing){const started=performance.now();c.draw(t);if(!first.has(selected)){first.set(selected,performance.now()-started);canvas.dataset.firstCpu=first.get(selected).toFixed(2);canvas.dataset.firstRoom=selected;}}

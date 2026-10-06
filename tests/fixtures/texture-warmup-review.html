@@ -1,0 +1,34 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>첫 텍스처 업로드 검토</title>
+<style>body{margin:0;background:#10191e;color:#e7e5db;font:14px system-ui}[hidden]{display:none!important}nav{display:flex;gap:8px;flex-wrap:wrap;padding:10px}button{padding:8px;background:#223139;color:#eee;border:1px solid #687779}p,pre{margin:8px 10px}canvas{display:block;width:100vw;height:calc(100vh - 210px)}pre{white-space:pre-wrap}</style>
+<nav><button id="prepare">텍스처만 준비</button><button data-room="corridor">복도 첫 렌더</button><button data-room="classroom31">3-1 첫 렌더</button><button data-room="music">음악실 첫 렌더</button></nav>
+<p id="intro">준비 완료 뒤 같은 방을 한 번 측정합니다. <a id="compare">준비 모드 비교</a> · 새 페이지/같은 방으로 비교하세요.</p>
+<pre id="status">준비 중</pre><p>개발용: CPU 제출·WebGL 호출 시간이며 GPU 실행 시간은 아닙니다. 실제 장면/원본 외형을 사용합니다.</p>
+<canvas data-renderer="three" data-profile="true" aria-label="텍스처 업로드 검토 장면"></canvas>
+<script type="module">
+document.querySelector('#status').textContent='게임 모듈 로딩 중';
+const {Corridor}=await import('../../corridor.js?v=quality-5');
+document.querySelector('#status').textContent='렌더러 생성 중';
+const canvas=document.querySelector('canvas'),disabled=new URLSearchParams(location.search).has('cold');canvas.dataset.texturePrewarm=String(!disabled);
+document.querySelector('#compare').href=disabled?'?':'?cold';document.querySelector('#compare').textContent=disabled?'자동 준비 켜짐으로 비교':'자동 준비 꺼짐으로 비교';document.querySelector('#prepare').disabled=!disabled;
+const c=new Corridor(canvas,()=>{},()=>{});
+c.exploration={ended:false};c.tutorial=false;c.player={x:0,z:1.8,angle:0,manualLook:true,pitch:0};
+const images=[c.windowGhost,c.pianoBoy,c.facelessStudent,c.mascot,c.mascotOpen,c.boardPhoto,c.boardPhotoErased,c.dollImage,c.dollScary,c.schoolgirl,c.schoolgirlAttack];
+Promise.all(images.map(image=>image.complete?Promise.resolve():new Promise(done=>{image.addEventListener('load',done,{once:true});image.addEventListener('error',done,{once:true});}))).then(()=>{c.view3D.syncTextures(c);canvas.dataset.assetsSettled='true';canvas.dataset.assetFailures=String(images.filter(image=>!image.naturalWidth).length);});
+const renderer=c.view3D.renderer,gl=renderer.getContext(),methods=['texImage2D','texSubImage2D','texStorage2D','generateMipmap'];
+let phase='idle',measured=null;
+const buckets={prepare:{},first:{}},prepared={uploads:0,cpuMs:0,maxMs:0,counts:buckets.prepare};
+for(const method of methods){const original=gl[method].bind(gl);gl[method]=(...args)=>{const start=performance.now();try{return original(...args);}finally{if(phase!=='idle'){const metric=buckets[phase][method]??={calls:0,ms:0};metric.calls++;metric.ms+=performance.now()-start;}}};}
+const initTexture=renderer.initTexture.bind(renderer);renderer.initTexture=texture=>{const previous=phase;phase='prepare';const start=performance.now();try{return initTexture(texture);}finally{const cost=performance.now()-start;prepared.uploads++;prepared.cpuMs+=cost;prepared.maxMs=Math.max(prepared.maxMs,cost);phase=previous;canvas.dataset.texturePrepared=JSON.stringify(prepared);}};
+function collect(){const set=new Set();for(const scene of Object.values(c.view3D.scenes))scene.traverse(object=>{for(const material of Array.isArray(object.material)?object.material:[object.material])if(material)for(const value of Object.values(material))if(value?.isTexture&&!value.isRenderTargetTexture)set.add(value);});return [...set];}
+document.querySelector('#prepare').onclick=async()=>{
+ document.querySelector('#prepare').disabled=true;
+ for(const texture of collect()){renderer.initTexture(texture);await new Promise(done=>requestAnimationFrame(done));}
+};
+for(const button of document.querySelectorAll('[data-room]'))button.onclick=()=>{
+ if(measured)return;const room=button.dataset.room;c.reset(null);c.exploration={ended:false};if(room!=='corridor')c.enterClassroom(room);
+ c.player={x:0,z:room==='classroom31'?4.2:room==='music'?7.35:1.8,angle:room==='music'?Math.PI/2:0,manualLook:true,pitch:0};
+ document.querySelector('#intro').hidden=true;c.view3D.schedulePreparation();phase='first';const before=renderer.info.memory.textures,start=performance.now();c.draw(performance.now());
+ measured={room,cpuMs:performance.now()-start,texturesBefore:before,texturesAfter:renderer.info.memory.textures,counts:structuredClone(buckets.first),calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};phase='idle';canvas.dataset.measurement=JSON.stringify(measured);
+};
+function status(){const d=canvas.dataset;document.querySelector('#status').textContent=`셰이더 ${d.shaderPreparation} · ${d.shaderPrepared||''}\n텍스처 ${d.texturePreparation} · ${d.texturePreparedCount||0}장 준비 · ${d.texturePending||0}장 대기 · ${JSON.stringify(prepared)}\n첫 렌더 ${JSON.stringify(measured)}`;requestAnimationFrame(status);}requestAnimationFrame(status);
+</script></html>

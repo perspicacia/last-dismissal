@@ -28,6 +28,7 @@ import {CORRIDOR_DESK} from './school-colliders.js?v=quality-2';
 import {RenderMetrics} from './render-metrics.js?v=quality-2';
 import {repeatFurniture} from './static-furniture.js?v=quality-2';
 import {SceneShaderWarmup} from './shader-warmup.js?v=shader-warmup-1';
+import {TextureWarmup,sceneTextures} from './texture-warmup.js?v=texture-warmup-1';
 
 import {buildRoomHauntings,updateRoomHauntings,createGhostSmile,updateGhostSmile,ghostSmileAmount,ROOM_HAUNTINGS} from './room-hauntings.js?v=music-ghost-polish-1';
 
@@ -52,20 +53,27 @@ export class ThreeSchoolView {
     if(this.previewStudentModel)this.loadStudentModel();
     else canvas.dataset.studentModelStatus='original';
     this.loadPianoBoyBody();
+    const canPrepare=()=>!this.source.active&&!document.hidden&&document.querySelector('#intro')?.hidden===false;
     if(canvas.dataset.shaderPrewarm!=='false'){
       this.shaderWarmup=new SceneShaderWarmup({renderer:this.renderer,scenes:this.scenes,camera:this.camera,
-        canRun:()=>!this.source.active&&!document.hidden&&document.querySelector('#intro')?.hidden===false,
-        onStatus:({status,prepared,failed})=>Object.assign(canvas.dataset,{shaderPreparation:status,shaderPrepared:prepared.join(','),shaderFailed:failed.join(',')})});
+        canRun:canPrepare,
+        onStatus:({status,prepared,failed})=>{Object.assign(canvas.dataset,{shaderPreparation:status,shaderPrepared:prepared.join(','),shaderFailed:failed.join(',')});this.textureWarmup?.schedule();}});
       this.shaderWarmup.schedule();
-      document.addEventListener('visibilitychange',()=>this.shaderWarmup.schedule());
     }else canvas.dataset.shaderPreparation='disabled';
+    if(canvas.dataset.texturePrewarm!=='false')this.textureWarmup=new TextureWarmup({renderer:this.renderer,getTextures:()=>sceneTextures(this.scenes),
+      canRun:()=>canPrepare()&&!this.shaderWarmup?.busy,
+      onStatus:({status,prepared,pending,failed})=>Object.assign(canvas.dataset,{texturePreparation:status,texturePreparedCount:String(prepared),texturePending:String(pending),textureFailed:String(failed)})});
+    else canvas.dataset.texturePreparation='disabled';
+    document.addEventListener('visibilitychange',()=>this.schedulePreparation());
   }
+  schedulePreparation(){this.shaderWarmup?.schedule();this.textureWarmup?.schedule();}
   loadPianoBoyBody(load=loadPianoBoyBody){
     if(!this.refs.pianoBoy||this.refs.pianoBoy.userData.bodySource)return Promise.resolve();
     if(this.pianoBoyBodyLoading)return this.pianoBoyBodyLoading;
     const data=this.source.canvas.dataset;data.pianoBoyBodyStatus='loading';
     this.pianoBoyBodyLoading=Promise.resolve().then(load).then(geometry=>{
       attachPianoBoyBody(this.refs.pianoBoy,geometry);data.pianoBoyBodyStatus='ready';this.lastState='';this.shaderWarmup?.invalidate(['music']);
+      this.textureWarmup?.refresh();
     }).catch(()=>{data.pianoBoyBodyStatus='fallback';}).finally(()=>{this.pianoBoyBodyLoading=null;});
     return this.pianoBoyBodyLoading;
   }
@@ -81,6 +89,7 @@ export class ThreeSchoolView {
       this.refs.dollSolid=model;this.refs.dollTilt.add(model);data.studentModelStatus='ready';
       this.updateStudentModel(this.source);
       this.shaderWarmup?.invalidate(['classroom']);
+      this.textureWarmup?.refresh();
     }catch{data.studentModelStatus='fallback';this.updateStudentModel(this.source);}
   }
   updateStudentModel(source){
@@ -341,6 +350,7 @@ export class ThreeSchoolView {
     const scary=dollRise(source.dollState)>.25;const face=this.refs.dollFace||this.refs.doll.material;
     assign({material:face},scary?source.dollScary:source.dollImage);this.updateStudentModel(source);if(source.canvas)Object.assign(source.canvas.dataset,{dollImageSize:`${source.dollImage?.naturalWidth}x${source.dollImage?.naturalHeight}`,dollMesh:String(this.refs.doll.geometry.index?.count)});this.lastState='';
     if(shaderChanged)this.shaderWarmup?.invalidate();
+    this.textureWarmup?.refresh();
   }
   draw(source,time){
     const profiling=source.canvas?.dataset?.profile==='true',started=profiling?performance.now():0;

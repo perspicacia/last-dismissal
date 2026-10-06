@@ -7,7 +7,7 @@ import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import {ATTACKER_ASSETS,attackerImagesReady,attackerImage,attackerArrival,attackerProjection} from './schoolgirl-attacker.js?v=rabbit-presence-1';
 import {rabbitPresence,recordRabbitPresence} from './rabbit-presence.js?v=rabbit-presence-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=quality-4';
+import { ThreeSchoolView } from './three-school.js?v=quality-5';
 import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
@@ -85,7 +85,7 @@ export class Corridor {
   leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.resetCat();this.notify();}
   move(keys,dt) {const blocker=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene],blocker?[blocker]:[]):movePlayer(this.player,keys,dt);}
   reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)Object.assign(this.canvas.dataset,{rabbitArms:'0',attackerVisible:'false',attackerExpression:'normal'});this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN,...(this.manualLook?{manualLook:true,pitch:0}:{})};this.keys.clear();this.steps=0;this.catCount=0;this.resetCat();this.buildTextures();this.notify();}
-  setActive(value,{preserveCat=false}={}) {this.active=value;this.keys.clear();if(!value&&!preserveCat)this.resetCat();this.view3D?.shaderWarmup?.schedule();}
+  setActive(value,{preserveCat=false}={}) {this.active=value;this.keys.clear();if(!value&&!preserveCat)this.resetCat();this.view3D?.schedulePreparation?.();}
   resetCat(){this.catEvent=newCatEvent();if(this.canvas)Object.assign(this.canvas.dataset,{catVisible:'false',catCount:String(this.catCount||0),catHeight:'0'});for(const cat of Object.values(this.view3D?.refs.cats||{}))cat.visible=false;}
   catBlockers(){
     if(this.scene==='corridor')return CORRIDOR_BLOCKERS;
