@@ -1,0 +1,5 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>첫 화면 크기별 검증</title>
+<style>body{margin:0;padding:14px;background:#111;color:#eee;font:14px sans-serif}button,a{padding:10px;border:1px solid #777;background:#292929;color:#eee;margin-right:8px}iframe{display:block;border:1px solid #777;margin-top:12px}</style>
+<button data-size="390,844">세로 390 × 844</button><button data-size="1000,500">가로 1000 × 500</button><a href="/">게임으로</a>
+<iframe title="실제 게임 첫 화면" src="/" width="390" height="844"></iframe>
+<script>for(const button of document.querySelectorAll('button'))button.onclick=()=>{const [width,height]=button.dataset.size.split(',');const frame=document.querySelector('iframe');frame.width=width;frame.height=height;};</script></html>

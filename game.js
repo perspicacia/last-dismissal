@@ -1,12 +1,11 @@
-import {decorateRabbitElement} from './rabbit-appearance.js?v=dark-blood-1';
 import {newStairHaunt,advanceStairHaunt,stairSoundPan} from './stair-haunt.js?v=stair-haunt-1';
 import {MouseLookController,lookPlayer,inputAction,lookKeyAction,keyboardLookPlayer} from './mouse-controls.js?v=accessible-camera-1';
 import {loadLookSettings,saveLookSettings,normalizeLookSettings} from './camera-preferences.js?v=accessible-camera-1';
 import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-controls.js';
-import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js?v=dark-blood-1';
+import {ARRIVAL,attackerArrival} from './schoolgirl-attacker.js?v=schoolgirl-attacker-1';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
-import {Corridor} from './corridor.js?v=free-body-fit-14';
-import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=mouse-comfort-1';
+import {Corridor} from './corridor.js?v=schoolgirl-attacker-1';
+import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=schoolgirl-attacker-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
@@ -20,7 +19,6 @@ const corridor=new Corridor($('corridor'),({player,scene})=>{
  $('position').dataset.scene=scene;for(const key of ['x','z','angle','pitch'])$('position').dataset[key]=(player[key]||0).toFixed(3);
  updateUI();
 },()=>audio.footstep(corridor.scene==='corridor'?'corridor':'classroom'));
-for(const element of document.querySelectorAll('.poster-rabbit img, #jumpscare img'))decorateRabbitElement(element,corridor.mascotOpen);
 corridor.onCatCue=variant=>audio.catMeow(variant);
 corridor.manualLook=true;
 const canPlay=()=>!$('game').hidden&&Boolean(state)&&!state.ended&&!paused;
@@ -82,7 +80,7 @@ audio.onEffect=(kind,details)=>{
 corridor.onTick=dt=>{
  if(!state)return;
  if(state.ended){updateArrival();return;}
- state=advanceExploration(state,dt,corridor.scene,corridor.player);
+ state=advanceExploration(state,dt,corridor.scene,corridor.player,corridor.attackerImagesReady());
  corridor.exploration=state;updateUI();if(state.ended)finish();else{
   const stair=advanceStairHaunt(stairHaunt,dt,corridor.scene,corridor.player);stairHaunt=stair.state;
   $('corridor').dataset.stairHaunt=stairHaunt.triggered?'spent':stairHaunt.elapsed?'waiting':'idle';
@@ -98,23 +96,23 @@ function updateUI(){
  $('inspect').hidden=true;$('classroom-tools').hidden=!inside||state.ended;$('door-toggle').hidden=true;
  $('room-return').disabled=false;
  $('survival-time').textContent=`둘러본 교실 ${state.visited.length} / ${ROOMS.length}`;
- const message=state.ended?'뒤늦게 눈이 마주쳤다.':inside?'조용한 교실. 안쪽을 살펴보자.':'아직 누군가 학교에 남아 있다.';
+ const message=state.ended?'뒤늦게 눈이 마주쳤다.':corridor.canvas.dataset.attackerStatus==='unavailable'?'귀신 이미지를 불러오지 못했어요. 다시 시작하면 재시도합니다.':inside?'조용한 교실. 안쪽을 살펴보자.':'아직 누군가 학교에 남아 있다.';
  if($('threat-status').textContent!==message)$('threat-status').textContent=message;
  $('survival-hud').dataset.phase=state.ended?'warning':'exploring';
  $('corridor').dataset.survivalPhase=state.ended?'caught':'exploring';
- $('corridor').dataset.rabbitVisible=String(state.ended);
+ $('corridor').dataset.rabbitVisible='false';$('corridor').dataset.attackerVisible=String(state.ended);
  $('corridor').dataset.visited=state.visited.join(',');
  corridor.exploration=state;
 }
 async function start(){
- clearTimeout(endingTimer);closePause();mouse.release();audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.reset(null);corridor.screamTriggered=false;
+ clearTimeout(endingTimer);closePause();mouse.release();audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=newExploration();corridor.survival=null;corridor.exploration=state;corridor.tutorial=false;corridor.loadAttackerImages();corridor.reset(null);corridor.screamTriggered=false;
  $('jumpscare').hidden=true;for(const key of ['stairEventCount','stairSoundCount','soundCount','babyCryCount','doorSlideCount','ghostLaughCount','roarCount','catMeowCount'])$('corridor').dataset[key]='0';for(const key of ['stairSoundSource','stairSoundPan','soundEffect','soundSource','babyCrySource','doorSlideSource','ghostLaughSource','roarSource','catMeowSource'])$('corridor').dataset[key]='';$('corridor').dataset.stairHaunt='idle';$('feedback').textContent='';show('game');corridor.setActive(true);updateUI();$('corridor').focus();mouse.requestLock();await enableAudio();
 }
 function updateArrival(){
- const arrival=rabbitArrival((performance.now()-corridor.caughtAt)/1000);
- corridor.mouthOpen=arrival.teeth;
- $('corridor').dataset.mascotMouth=arrival.teeth?'open':'closed';
- if(arrival.teeth&&!corridor.screamTriggered){corridor.screamTriggered=true;audio.jumpscare();}
+ const arrival=attackerArrival((performance.now()-corridor.caughtAt)/1000);
+ corridor.mouthOpen=arrival.attack;
+ $('corridor').dataset.attackerExpression=arrival.attack?'attack':'normal';
+ if(arrival.attack&&!corridor.screamTriggered){corridor.screamTriggered=true;audio.jumpscare();}
 }
 function finish(){
  audio.clearEffects();hauntingAudio=newHauntingAudio();
@@ -129,7 +127,7 @@ function interact(){
 }
 function leaveRoom(){if(!state||state.ended||paused)return;audio.clearEffects();hauntingAudio=newHauntingAudio();stairHaunt={...stairHaunt,elapsed:0};corridor.leaveClassroom();updateUI();$('corridor').focus();}
 $('room-action').onclick=interact;$('room-return').onclick=leaveRoom;
-function restart(){closePause();mouse.release();clearTimeout(endingTimer);hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
+function restart(){closePause();mouse.release();clearTimeout(endingTimer);hauntingAudio=newHauntingAudio();stairHaunt=newStairHaunt();state=null;corridor.exploration=null;corridor.survival=null;corridor.caughtAt=null;corridor.screamTriggered=false;corridor.mouthOpen=false;corridor.setActive(false);corridor.view3D?.resetHauntings();Object.assign($('corridor').dataset,{attackerVisible:'false',attackerExpression:'normal',rabbitVisible:'false'});$('jumpscare').hidden=true;show('intro');audio.stop();$('start').focus();}
 function refreshKeys(){corridor.keys.clear();for(const action of heldKeys.values())corridor.keys.add(action);}
 document.addEventListener('keydown',e=>{
  const command=captureCommand(e,{canCapture:!$('game').hidden&&Boolean(state)&&!state.ended,capturing});

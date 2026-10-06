@@ -5,7 +5,7 @@
 - 기능 개발은 `codex/<작업명>` 별도 브랜치에서 진행한다. 테스트·플레이 확인 → 커밋·Push·PR → 리뷰 후 `main` 병합 → 통합 검증 순서로 작업한다. 배포는 요청된 경우에 진행한다.
 - 병렬로 코드를 수정할 때는 작업자별 별도 워크트리를 사용하고 담당 파일·범위를 정한다.
 - 게임 로직 변경 후 관련 테스트와 시작 → 플레이 → 종료(게임 오버 또는 탈출) → 재시작 흐름을 확인한다. UI·음향 변경은 실제 브라우저에서도 확인한다.
-- 현재 탐색 플레이의 공격자는 토끼다. 학생 인형은 정적인 장식이며 창밖 귀신은 근접 미소를 보이는 분위기 요소다. 교실 연출·음향은 [specs/classroom-hauntings.md](specs/classroom-hauntings.md)를 따른다. 이전 학생 인형의 기립 조건은 [specs/classroom-doll.md](specs/classroom-doll.md)를 따른다. 음향은 음소거 상태에서도 판정할 수 있게 유지한다.
+- 현재 탐색 플레이의 공격자는 [specs/schoolgirl-attacker.md](specs/schoolgirl-attacker.md)의 교복 여고생 귀신이다. 2026-10-06 사용자 요청으로 신규 디자인·두 표정 이미지 제작/적용이 승인되었고 토끼는 과거 비교 자산으로 보존한다. 최신 명세가 이전 토끼 공격자/신규 이미지 금지 규칙을 이 새 공격자에 한해 대체한다. 학생 인형은 정적인 장식이며 창밖 귀신은 근접 미소를 보이는 분위기 요소다. 교실 연출·음향은 [specs/classroom-hauntings.md](specs/classroom-hauntings.md)를 따른다. 이전 학생 인형의 기립 조건은 [specs/classroom-doll.md](specs/classroom-doll.md)를 따른다. 음향은 음소거 상태에서도 판정할 수 있게 유지한다.
 - 완료 보고에는 변경 내용, 실행한 검증, 결과, 미확인 사항을 포함한다. 테스트 통과와 실제 플레이 확인을 구분한다.
 - 작업 후 [docs/progress.md](docs/progress.md)에 완료한 일, 검증 결과, 미확인 사항과 다음 작은 작업을 기록한다.
 - 종료 화면은 [specs/game-over-screen.md](specs/game-over-screen.md)의 `GAME OVER`와 `다시 하기`를 따른다. 기존 토끼 발견/돌진 시간·음향·재시작 판정은 유지한다.
@@ -13,7 +13,7 @@
 - 음악실 의자는 [specs/piano-boy-ghost.md](specs/piano-boy-ghost.md)의 정적인 어린 남자아이 귀신이다. 신규 이미지 제작은 사용자 요청으로 승인되었으며 공격/게임 오버 판정을 추가하지 않는다.
 - 음악실 남자아이의 최신 몸통은 [specs/piano-boy-free-body.md](specs/piano-boy-free-body.md)를 따른다. 사용자가 무료 인체 활용을 채택했다. Quaternius Standard CC0의 실제 몸통/사지를 어린아이 비율·앉은 자세로 변형하고 원본 사진의 얼굴·머리·앞면 의상 느낌을 보존한다. 팔/다리 비율과 무릎 위 손·맨발 접촉을 유지하고 상의/소매·반바지는 별도 입체 의상으로 표현한다. 원본 손 사진을 바지에 중복하지 않는다. 얼굴은 사진 기반이며 완전한 얼굴 조형으로 보고하지 않는다. 출처/라이선스/변환 스크립트를 보관하고 로딩 실패 때 기존 외형을 유지한다. 다른 캐릭터와 공격·카메라·음향 규칙은 변경하지 않는다.
 - 3-3 칠판 옆 얼굴 없는 학생은 [specs/faceless-student-upgrade.md](specs/faceless-student-upgrade.md)를 따른다. 사용자가 이번 신규 캐릭터의 디자인/제작/배치를 위임했으며 기존 캐릭터 이미지 제작 중단은 유지한다. 첫 화면에는 다섯 귀신을 포함한다.
-- 남자아이·얼굴 없는 학생의 입체 외형, 3-2 의자의 뒷모습 여학생, 칠판/당번/분필·지우개의 최신 규칙은 [specs/classroom-character-depth.md](specs/classroom-character-depth.md)를 따른다. 남학생의 기존 PNG는 보존하고 앞면 사진을 닫힌 3D 인체 메시로 연결한다. 모두 정적 분위기 요소이며 토끼만 공격한다. 금발 학생 인형의 원본 외형 규칙은 유지한다.
+- 남자아이·얼굴 없는 학생의 입체 외형, 3-2 의자의 뒷모습 여학생, 칠판/당번/분필·지우개의 최신 규칙은 [specs/classroom-character-depth.md](specs/classroom-character-depth.md)를 따른다. 남학생의 기존 PNG는 보존하고 앞면 사진을 닫힌 3D 인체 메시로 연결한다. 모두 정적 분위기 요소이며 새 교복 여고생만 공격한다. 금발 학생 인형의 원본 외형 규칙은 유지한다.
 - 칠판 글씨의 최신 외형은 [specs/chalkboard-writing.md](specs/chalkboard-writing.md)를 따른다. 로컬 한글 손글씨·분필 질감을 두 렌더에서 공유하며 게임 난수는 사용하지 않는다.
 - 게시판 사진의 최신 일반 탐색 외형은 [specs/aged-erased-photo.md](specs/aged-erased-photo.md)를 따른다. 검게 지운 기존 초안에 코드 기반 낡은 인화지 질감을 더하며 PNG·크기/위치·이전 관찰 모드의 정상/이상 구분을 보존한다.
 - 학생 인형 측면·이미지 로딩의 최신 규칙은 [specs/student-doll-sides.md](specs/student-doll-sides.md)를 따른다. 과거의 완전 평면 앞면 규칙은 최신 완만한 곡면 연결로 대체한다.

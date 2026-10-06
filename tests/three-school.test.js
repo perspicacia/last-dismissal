@@ -5,9 +5,27 @@ import {ThreeSchoolView} from '../three-school.js';
 import {buildOutdoors} from '../three-outdoors.js';
 import {ROOM_AMBIENCE} from '../exploration.js';
 import {pianoBoyLayout} from '../piano-boy.js';
+import {attackerSize} from '../schoolgirl-attacker.js';
 import {pngPixels,resizePixels} from './png-pixels.js';
 function mockCanvas(){const gradient={addColorStop(){}};const ctx=new Proxy({}, {get:(_,k)=>()=>String(k).startsWith('create')?gradient:undefined,set:()=>true});return {width:512,height:512,getContext:()=>ctx};}
 function buildView(){const old=globalThis.document;globalThis.document={createElement:mockCanvas};try{const v=Object.create(ThreeSchoolView.prototype);v.scenes={};v.refs={};v.textures=[];v.build('corridor');v.build('classroom');return v;}finally{globalThis.document=old;}}
+test('새 여고생 공격자는 한 방에서만 나타나고 사람 PNG에 토끼 팔·피 마스크를 적용하지 않는다',()=>{
+ const v=buildView(),oldDocument=globalThis.document,oldWindow=globalThis.window;
+ globalThis.document={createElement:mockCanvas};globalThis.window={matchMedia:()=>({matches:false})};
+ v.camera=new THREE.PerspectiveCamera();v.renderer={render(){}};
+ const normal=mockCanvas(),attack=mockCanvas();normal.width=attack.width=1024;normal.height=attack.height=1536;
+ const source={attackerKind:'schoolgirl',schoolgirl:normal,schoolgirlAttack:attack,scene:'classroom',player:{x:0,z:4,angle:0,manualLook:true,pitch:0},keys:new Set(),canvas:{dataset:{}},exploration:{ended:false},caughtAt:0};v.source=source;
+ try{
+  v.build('music');v.draw(source,0);assert.equal(v.refs.rabbit.visible,false);assert.ok(Object.values(v.refs.roomAttackers).every(r=>!r.visible));
+  source.exploration.ended=true;v.draw(source,0);const ghost=v.refs.roomAttackers.classroom;
+  assert.equal(ghost.visible,true);assert.equal(v.refs.roomAttackers.music.visible,false);assert.ok(Object.values(v.refs.roomRabbits).every(r=>!r.visible));
+  assert.equal(ghost.material.map.image,normal);assert.equal(ghost.children.length,0);const far=ghost.position.z;
+  source.mouthOpen=true;v.draw(source,1100);assert.equal(ghost.material.map.image,attack);assert.ok(ghost.position.z<far);assert.ok(Math.abs(ghost.position.z-source.player.z-.80)<1e-10);
+  assert.equal(ghost.scale.y,attackerSize(attack,1.08).height);assert.ok(Math.abs(ghost.scale.x/ghost.scale.y-2/3)<1e-12);
+  source.schoolgirlAttack={complete:true,naturalWidth:0};v.draw(source,1200);assert.equal(ghost.visible,false);
+  source.exploration.ended=false;v.resetHauntings();assert.ok(Object.values(v.refs.roomAttackers).every(r=>!r.visible));
+ }finally{globalThis.document=oldDocument;globalThis.window=oldWindow;}
+});
 test('다섯 교실의 목재창과 장면별 한 마리 고양이는 재방문/종료 때 중복·잔상 없이 갱신한다',()=>{
  const v=buildView(),oldDocument=globalThis.document,oldWindow=globalThis.window;
  globalThis.document={createElement:mockCanvas};try{for(const id of ['classroom31','classroom33','music','dance'])v.build(id);}finally{globalThis.document=oldDocument;}

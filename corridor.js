@@ -4,8 +4,9 @@ import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
+import {attackerImagesReady,attackerImage,attackerArrival,attackerProjection} from './schoolgirl-attacker.js?v=schoolgirl-attacker-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=free-body-fit-14';
+import { ThreeSchoolView } from './three-school.js?v=schoolgirl-attacker-1';
 import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
@@ -24,6 +25,7 @@ export class Corridor {
   constructor(canvas, onPosition, onStep, onReveal = () => {}) {
     this.canvas=canvas;this.use3D=canvas.dataset.renderer==='three'; this.ctx=this.use3D?null:canvas.getContext('2d'); this.onPosition=onPosition;this.onStep=onStep;
     this.scene="corridor";this.corridorPlayer=null;this.keys=new Set();this.player={...SPAWN};this.active=false;this.anomaly=null;this.steps=0;
+    this.attackerKind='schoolgirl';this.loadAttackerImages();
     this.windowGhost = new Image();
     this.windowGhost.onload = () => this.buildTextures();
     this.windowGhost.src = new URL('./assets/window-ghost.png', import.meta.url).href;
@@ -66,10 +68,20 @@ export class Corridor {
     this.last=0;requestAnimationFrame(t=>this.frame(t));
   }
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
+  attackerImagesReady(){return attackerImagesReady(this);}
+  loadAttackerImages(){
+    for(const [key,path] of [['schoolgirl','./assets/schoolgirl-ghost.png'],['schoolgirlAttack','./assets/schoolgirl-ghost-attack.png']]){
+      const previous=this[key];if(previous&&(!previous.complete||previous.naturalWidth))continue;
+      const image=new Image();this[key]=image;
+      const update=()=>{this.canvas.dataset.attackerStatus=this.attackerImagesReady()?'ready':Object.values({normal:this.schoolgirl,attack:this.schoolgirlAttack}).some(img=>img?.complete&&!img.naturalWidth)?'unavailable':'loading';this.view3D?.syncTextures(this);this.notify?.();};
+      image.onload=update;image.onerror=update;image.src=new URL(path,import.meta.url).href;
+    }
+    this.canvas.dataset.attackerKind=this.attackerKind;this.canvas.dataset.attackerStatus=this.attackerImagesReady()?'ready':'loading';
+  }
   enterClassroom(room='classroom') {if(this.scene!=='corridor')return;this.corridorPlayer={...this.player};this.scene=room;this.player={...CLASSROOM_SPAWN,...(this.manualLook?{manualLook:true,pitch:0}:{})};this.keys.clear();this.resetCat();this.notify();}
   leaveClassroom() {if(this.scene==='corridor')return;this.scene='corridor';this.player={...(this.corridorPlayer||SPAWN)};this.keys.clear();this.resetCat();this.notify();}
   move(keys,dt) {const blocker=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);return this.scene!=='corridor'?moveClassroomPlayer(this.player,keys,dt,ROOM_BLOCKERS[this.scene],blocker?[blocker]:[]):movePlayer(this.player,keys,dt);}
-  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)this.canvas.dataset.rabbitArms='0';this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN,...(this.manualLook?{manualLook:true,pitch:0}:{})};this.keys.clear();this.steps=0;this.catCount=0;this.resetCat();this.buildTextures();this.notify();}
+  reset(anomaly) {this.hauntState=null;this.hauntTime=0;this.lighting?.reset();if(this.canvas)recordLighting(this.canvas,[1,1,1,1,1]);this.view3D?.resetHauntings();this.caughtAt=null;if(this.canvas)Object.assign(this.canvas.dataset,{rabbitArms:'0',attackerVisible:'false',attackerExpression:'normal'});this.scene='corridor';this.corridorPlayer=null;this.anomaly=anomaly;this.mouthOpen=false;this.dollState=newDollState();this.player={...SPAWN,...(this.manualLook?{manualLook:true,pitch:0}:{})};this.keys.clear();this.steps=0;this.catCount=0;this.resetCat();this.buildTextures();this.notify();}
   setActive(value,{preserveCat=false}={}) {this.active=value;this.keys.clear();if(!value&&!preserveCat)this.resetCat();}
   resetCat(){this.catEvent=newCatEvent();if(this.canvas)Object.assign(this.canvas.dataset,{catVisible:'false',catCount:String(this.catCount||0),catHeight:'0'});for(const cat of Object.values(this.view3D?.refs.cats||{}))cat.visible=false;}
   catBlockers(){
@@ -197,6 +209,13 @@ export class Corridor {
   }
   drawCatch(time){
     const c=this.ctx,w=this.canvas.width,h=this.canvas.height,p=this.player;
+    if(this.attackerKind==='schoolgirl'){
+      if(!this.attackerImagesReady())return;
+      const arrival=attackerArrival((time-this.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches),image=attackerImage(this,arrival.attack);
+      const pose=attackerProjection(p,arrival,image,w,h);
+      c.drawImage(image,pose.x-pose.width/2,pose.y-pose.height/2,pose.width,pose.height);
+      Object.assign(this.canvas.dataset,{attackerVisible:'true',attackerExpression:arrival.attack?'attack':'normal'});return;
+    }
     const arrival=rabbitArrival((time-this.caughtAt)/1000,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     const original=arrival.teeth?this.mascotOpen:this.mascot;if(!rabbitImageSize(original))return;
     const img=bloodiedRabbit(original);this.canvas.dataset.rabbitAppearance='bloodied';
@@ -270,7 +289,7 @@ export class Corridor {
     const figure=project(1.6,0,this.rabbitZ??(this.anomaly==='figure'?16:22));
     const original=this.mouthOpen && this.mascotOpen.complete && this.mascotOpen.naturalWidth ? this.mascotOpen : this.mascot;
     const sprite=bloodiedRabbit(original),size=rabbitImageSize(sprite);
-    if(!this.exploration && figure && size){
+    if(this.attackerKind!=='schoolgirl' && !this.exploration && figure && size){
       const height=2.1*lens/figure.d, width=height*size.width/size.height;
       const left=figure.x-width/2,top=figure.y-height;
       c.save();
