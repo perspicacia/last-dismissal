@@ -1,17 +1,18 @@
+import {SCHOOL_TONE,applySchoolTone,paintDampWall} from './school-tone.js?v=shadow-tone-1';
 import {bloodiedRabbit,rabbitImageSize} from './rabbit-appearance.js?v=dark-blood-1';
 import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=dark-blood-1';
-import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=dark-blood-1';
+import { ThreeSchoolView } from './three-school.js?v=shadow-tone-1';
+import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
-import { drawSceneDepth } from './scene-depth.js?v=character-depth-6';
+import { drawSceneDepth } from './scene-depth.js?v=shadow-tone-1';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=cat-polish-2';
+import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=shadow-tone-1';
 import {ROOM_BLOCKERS} from './room-props.js';
 import {newCatEvent,advanceCatEvent,catPose} from './cat-event.js?v=cat-polish-2';
 import {drawBlackCat} from './black-cat.js?v=character-original-1';
@@ -56,7 +57,7 @@ export class Corridor {
         const intro=document.getElementById('intro');if(intro){const notice=document.createElement('p');notice.className='compat-notice';notice.textContent='호환 화면으로 실행합니다.';(intro.querySelector('.intro-content')||intro).append(notice);}
       }
     }
-    this.resize();
+    applySchoolTone(this.canvas);this.resize();
     new ResizeObserver(()=>this.resize()).observe(canvas);
     window.addEventListener('blur',()=>this.keys.clear());
     document.addEventListener('visibilitychange',()=>this.keys.clear());
@@ -90,16 +91,16 @@ export class Corridor {
   texture(draw) {
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
     const c=canvas.getContext('2d');
-    c.fillStyle='#a1aaa2';c.fillRect(0,0,512,256);
+    c.fillStyle=SCHOOL_TONE.plaster;c.fillRect(0,0,512,256);
     // Deterministic plaster mottling, damp corners and school wall mouldings.
     for(let i=0;i<420;i++){const x=(i*83)%512,y=(i*47)%256;c.fillStyle=i%3?'#314e4912':'#f6eadb12';c.fillRect(x,y,6+i%17,1+i%4);}
-    c.fillStyle='#365c5d';c.fillRect(0,145,512,111);
+    c.fillStyle=SCHOOL_TONE.panel;c.fillRect(0,145,512,111);
     for(let i=0;i<160;i++){c.fillStyle='#101e2911';c.fillRect((i*61)%512,149+(i*17)%105,8+i%24,2+i%8);}
     c.fillStyle='#c7c4ad';c.fillRect(0,141,512,3);c.fillStyle='#263d3c';c.fillRect(0,145,512,3);
     c.fillStyle='#1f302e';c.fillRect(0,247,512,9);c.fillStyle='#75867b';c.fillRect(0,245,512,2);
     c.fillStyle='#929f95';c.fillRect(0,0,512,8);c.fillStyle='#dee0c52a';c.fillRect(0,8,512,2);
     c.strokeStyle='#183a321c';c.lineWidth=1;for(let i=0;i<6;i++){c.beginPath();c.moveTo(i*89+12,8);c.lineTo(i*89+15,28);c.lineTo(i*89+7,43);c.stroke();}
-    draw(c);return canvas;
+    paintDampWall(c,512,141);draw(c);return canvas;
   }
   buildTextures() {
     this.wall=this.texture(()=>{});
@@ -219,7 +220,7 @@ export class Corridor {
     if(this.scene!=='corridor'){drawClassroom(c,w,h,p,time,this.exterior,{state:this.dollState,image:this.dollImage,scary:this.dollScary,ghost:this.windowGhost,boy:this.pianoBoy,faceless:this.facelessStudent,cat,haunting:this.hauntState??=( {scene:this.scene,ballTime:0,smile:0,last:time}),ended:this.exploration?.ended},this.scene);shadeCanvasSchool(c,w,h);if(this.caughtAt!=null)this.drawCatch(time);return;}
     const bob=!p.manualLook&&(this.keys.has('forward')||this.keys.has('back'))&&!reduce?Math.sin(time/130)*2:0;
     const lens=w*.68,horizon=h*.48+bob+(p.manualLook?Math.tan(p.pitch||0)*lens:0);
-    const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,'#293b3e');ceiling.addColorStop(1,'#65716b');c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
+    const ceiling=c.createLinearGradient(0,0,0,horizon);ceiling.addColorStop(0,SCHOOL_TONE.canvasCeilingTop);ceiling.addColorStop(1,SCHOOL_TONE.canvasCeilingBottom);c.fillStyle=ceiling;c.fillRect(0,0,w,horizon);
     const floor=c.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#252d2b');floor.addColorStop(1,'#584b3e');c.fillStyle=floor;c.fillRect(0,horizon,w,h);
     for(let y=Math.max(0,Math.ceil(horizon)+1);y<h;y+=4){
       const d=1.5*lens/(y-horizon);if(d>40)continue;

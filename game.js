@@ -4,7 +4,7 @@ import {MouseLookController,lookPlayer,inputAction,DEFAULT_SENSITIVITY} from './
 import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-controls.js';
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js?v=dark-blood-1';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
-import {Corridor} from './corridor.js?v=dark-blood-1';
+import {Corridor} from './corridor.js?v=shadow-tone-1';
 import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=mouse-comfort-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';

@@ -1,3 +1,4 @@
+import {SCHOOL_TONE} from './school-tone.js?v=shadow-tone-1';
 import * as THREE from './vendor/three.module.js';
 
 // Distances are world metres: the foreground path, yard and woodland occupy
@@ -82,8 +83,8 @@ export function buildOutdoors({ side = 'corridor' } = {}) {
     box(x, -.2, z, .24, .18, .24, '#6e7675');
     const fixture = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8), mat('#b2b7ad', { metalness: .45, roughness: .35 }));
     fixture.position.set(x + direction * 1.15, 4.03, z); fixture.scale.set(.43, .075, .19); group.add(fixture);
-    box(x + direction * 1.15, 3.98, z, .53, .02, .19, '#ffe6b8', { emissive: '#ffc989', emissiveIntensity: 1.3 });
-    const light = new THREE.SpotLight('#ffd9a0', 26, 17, .72, .7, 1.4);
+    box(x + direction * 1.15, 3.98, z, .53, .02, .19, '#ffe6b8', { emissive: SCHOOL_TONE.lampEmission, emissiveIntensity: 1.3 });
+    const light = new THREE.SpotLight(SCHOOL_TONE.lamp, 26, 17, .72, .7, 1.4);
     light.position.set(x + direction * 1.15, 3.9, z);
     light.target.position.set(x + direction * .75, -.25, z); group.add(light, light.target);
     // Lighting remains visible, but avoids allocating another shadow map per pole.
