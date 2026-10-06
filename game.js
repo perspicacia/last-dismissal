@@ -5,7 +5,7 @@ import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-cont
 import {ARRIVAL,attackerArrival} from './schoolgirl-attacker.js?v=rabbit-presence-1';
 import {decorateRabbitElement} from './rabbit-appearance.js?v=dark-blood-1';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
-import {Corridor} from './corridor.js?v=rabbit-presence-1';
+import {Corridor} from './corridor.js?v=quality-2';
 import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=rabbit-presence-1';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';

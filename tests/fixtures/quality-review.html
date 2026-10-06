@@ -1,0 +1,21 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>학교 3D 품질 검토</title>
+<style>body{margin:0;background:#10191e;color:#e7e5db;font:15px system-ui}nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px}button{background:#223139;color:#eee;border:1px solid #687779;border-radius:4px;padding:10px;cursor:pointer}button:focus-visible{outline:3px solid #e3cb8c}output{display:block;padding:0 12px 10px;font-variant-numeric:tabular-nums}canvas{display:block;width:100vw;height:calc(100vh - 145px)}p{margin:0 12px 10px;color:#bfc8c9}</style>
+<nav><button data-view="corridor">복도</button><button data-view="desk">복도 책상 근접</button><button data-view="floor">바닥 근접</button><button data-view="wall">벽 근접</button><button data-view="classroom31">3-1 교실</button><button data-view="music">음악실</button><button data-view="dance">무용실</button><button id="outage" aria-pressed="false">첫 전등 소등</button><button id="surface" aria-pressed="true">표면 노멀·거칠기 켜짐</button></nav>
+<output id="status" aria-live="off">준비 중</output><p>개발용 비교 · CPU 제출 시간은 GPU 시간이 아닙니다. 숨겨진 탭의 FPS는 실제 전경 플레이와 다릅니다.</p><canvas data-renderer="three" data-profile="true" aria-label="학교 3D 품질 검토 장면"></canvas>
+<script type="module">
+import {Corridor} from '../../corridor.js?v=quality-2';
+import {RenderMetrics} from '../../render-metrics.js?v=quality-2';
+const canvas=document.querySelector('canvas');canvas.dataset.furnitureInstances=String(!new URLSearchParams(location.search).has('legacyFurniture'));
+const comparison=document.createElement('a');comparison.textContent=canvas.dataset.furnitureInstances==='true'?'개별 가구 렌더와 비교':'인스턴싱 렌더로 돌아가기';comparison.href=canvas.dataset.furnitureInstances==='true'?'?legacyFurniture':'?';comparison.style.color='#dfc989';document.querySelector('p').append(' · ',comparison);
+const c=new Corridor(canvas,()=>{},()=>{});c.exploration={ended:false};c.tutorial=false;c.player={x:0,z:1.8,angle:0,manualLook:true,pitch:0};
+let outage=false,surfaces=true;const saved=[];
+for(const scene of Object.values(c.view3D?.scenes||{}))scene.traverse(o=>{if(o.isMesh)for(const m of Array.isArray(o.material)?o.material:[o.material])if(m.normalMap&&!saved.some(r=>r.m===m))saved.push({m,normal:m.normalMap,rough:m.roughnessMap});});
+function view(id){c.reset(null);c.exploration={ended:false};if(['music','dance','classroom31'].includes(id))c.enterClassroom(id);c.player={x:0,z:id==='classroom31'?4.2:id==='music'?7.35:1.8,angle:id==='music'?Math.PI/2:0,manualLook:true,pitch:0};if(id==='desk')c.player={x:.95,z:2.7,angle:Math.PI/2-.3,manualLook:true,pitch:-.42};if(id==='floor')c.player={x:0,z:6,angle:0,manualLook:true,pitch:-.66};if(id==='wall')c.player={x:-1.9,z:12.6,angle:-Math.PI/2,manualLook:true,pitch:.1};c.canvas.dataset.reviewView=id;c.view3D.metrics=new RenderMetrics();}
+for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>view(b.dataset.view);
+document.querySelector('#surface').onclick=e=>{surfaces=!surfaces;for(const {m,normal,rough} of saved){m.normalMap=surfaces?normal:null;m.roughnessMap=surfaces?rough:null;m.needsUpdate=true;}e.currentTarget.setAttribute('aria-pressed',String(surfaces));e.currentTarget.textContent='표면 노멀·거칠기 '+(surfaces?'켜짐':'꺼짐');};
+document.querySelector('#outage').onclick=e=>{outage=!outage;e.currentTarget.setAttribute('aria-pressed',String(outage));};
+// Apply outage inside the ordinary draw; never render a second unmeasured pass.
+c.view3D.updateLighting=()=>c.view3D.applyCorridorLighting(outage?[0,1,1,1,1]:[1,1,1,1,1]);
+function frame(t){c.draw(t);const d=c.canvas.dataset;document.querySelector('#status').textContent=`${d.reviewView||'corridor'} · ${d.rendererReady} · CPU 중앙 ${d.cpuMedian}ms / p95 ${d.cpuP95}ms · 간격 ${d.frameMedian}ms (${d.measuredFps} FPS) · calls ${d.drawCalls} / triangles ${d.triangles} · textures ${d.textures} / geometry ${d.geometries} · ${d.profileSamples} samples`;requestAnimationFrame(frame);}
+view('corridor');requestAnimationFrame(frame);
+</script></html>

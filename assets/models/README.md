@@ -1,5 +1,14 @@
 # 3D 모델 자산
 
+## 원본 기준 리깅 인형 검토 후보
+
+`student-reference-rig.glb`는 보존한 원본 사진과 별도 닫힌 머리/의상/사지·골격을 연결한 개발용 후보다. 일반 게임 기본 외형은 바꾸지 않는다. 17개 뼈와 웨이트, `GentleIdle`/`JointInspection` 두 검토용 동작이 있다. 전 방향 얼굴·머리카락 복원은 아니며 옆/뒤·의상은 근사다. 밝은 원본 비교를 먼저 확인한다.
+
+- 생성: `npm run model:reference-student` (기존 Node/Three.js 의존성 사용).
+- 확인: `tests/fixtures/reference-character-review.html`, `node --test tests/character-assets.test.js`.
+- 출처·해시·범위: [student-reference-rig.md](student-reference-rig.md).
+- 원본 PNG와 기존 정적 `student-doll.glb`/`piano-boy-body.glb`는 보존한다.
+
 ## 음악실 남자아이 몸통
 
 `piano-boy-body.glb`는 Quaternius의 무료 CC0 인체를 어린아이 비율과 앉은 자세로 변형한 정적 몸통/사지다. 일반 Three.js 게임의 음악실에 적용한다. 원작 모델의 얼굴/눈/헤어 재질을 제외하고 두개골–턱–목은 어린아이로 변형해 기존 `piano-boy-ghost.png`의 얼굴/머리와 앞면 의상 질감을 연결한다. 인체와 분리한 헐렁한 상의/소매·반바지와 실제 손/발가락 표면을 포함한다. 내려오는 어깨·둥근 목선·소매는 연속 의상 표면이다. 옆/뒤 옷과 사진을 적용한 머리의 측면은 근사이며 완전한 원본 얼굴 복원은 아니다.

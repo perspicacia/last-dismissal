@@ -11,7 +11,7 @@ import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,windowPanes} from './school-windows.js';
 import {drawBlackCat} from './black-cat.js?v=cat-boy-likeness-1';
 import {buildSeatedGirl,seatedGirlLook,drawFigureVolume} from './ghost-figures.js?v=cat-boy-likeness-1';
 import {boardCanvas,drawClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
-import {movementDelta} from './movement.js?v=mouse-comfort-1';
+import {movementDelta} from './movement.js?v=quality-2';
 import {drawRabbitPresence} from './rabbit-presence.js?v=rabbit-presence-1';
 const boards=new Map(),figures=new Map();
 function seatedGirl(){if(!figures.has('girl'))figures.set('girl',buildSeatedGirl());return figures.get('girl');}

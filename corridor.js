@@ -7,7 +7,7 @@ import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import {ATTACKER_ASSETS,attackerImagesReady,attackerImage,attackerArrival,attackerProjection} from './schoolgirl-attacker.js?v=rabbit-presence-1';
 import {rabbitPresence,recordRabbitPresence} from './rabbit-presence.js?v=rabbit-presence-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=rabbit-presence-1';
+import { ThreeSchoolView } from './three-school.js?v=quality-2';
 import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
@@ -15,11 +15,12 @@ import { drawSceneDepth } from './scene-depth.js?v=shadow-tone-1';
 import { drawStairs } from './stairs.js';
 import { drawCampusView, CAMPUS_WIDTH } from './campus-view.js';
 import { drawWindowView } from './window-view.js';
-import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=rabbit-presence-1';
+import { CLASSROOM_SPAWN, CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK, moveClassroomPlayer, drawClassroom } from './classroom.js?v=quality-2';
 import {ROOM_BLOCKERS} from './room-props.js';
 import {newCatEvent,advanceCatEvent,catPose} from './cat-event.js?v=cat-polish-2';
 import {drawBlackCat} from './black-cat.js?v=cat-boy-likeness-1';
-import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js?v=mouse-comfort-1';
+import { SPAWN, movePlayer, nearbyItem, revealsTeeth } from './movement.js?v=quality-2';
+import {CORRIDOR_BLOCKERS} from './school-colliders.js?v=quality-2';
 
 const names = {door:'교실',board:'게시판',window:'창문',clock:'시계',figure:'토끼 마스코트',doll:'학생 인형'};
 export class Corridor {
@@ -87,7 +88,7 @@ export class Corridor {
   setActive(value,{preserveCat=false}={}) {this.active=value;this.keys.clear();if(!value&&!preserveCat)this.resetCat();}
   resetCat(){this.catEvent=newCatEvent();if(this.canvas)Object.assign(this.canvas.dataset,{catVisible:'false',catCount:String(this.catCount||0),catHeight:'0'});for(const cat of Object.values(this.view3D?.refs.cats||{}))cat.visible=false;}
   catBlockers(){
-    if(this.scene==='corridor')return [{x:2,z:3.2,width:1.1,depth:.7}];
+    if(this.scene==='corridor')return CORRIDOR_BLOCKERS;
     const props=ROOM_BLOCKERS[this.scene]||[...CLASSROOM_DESKS,CLASSROOM_TEACHER_DESK,...CLASSROOM_DESKS.map(d=>({x:d.x,z:d.z-.72,width:.55,depth:.5}))];
     const extra=facelessStudentBlocker(ROOM_AMBIENCE[this.scene]?.faceless);
     return [...props,...(extra?[extra]:[]),...(this.scene==='classroom'?[{x:DOLL.x,z:DOLL.z-.75,width:.85,depth:1.6},{x:3.72,z:1.05,width:.65,depth:.6}]:[])];

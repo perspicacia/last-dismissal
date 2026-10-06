@@ -37,6 +37,10 @@ last-dismissal/
 ├── three-school.js            # 학교 실내 3D 화면
 ├── three-outdoors.js          # 창밖 풍경 3D 화면
 ├── school-tone.js             # 학교 색감·벽 얼룩·공유 화면 채도
+├── school-surfaces.js         # 공유 색·노멀·거칠기 맵과 반사 환경
+├── school-colliders.js        # 복도 책상 렌더·이동의 공유 치수
+├── static-furniture.js        # 반복 책상·의자 인스턴싱
+├── render-metrics.js          # 개발용 CPU 제출·프레임 간격 측정
 ├── board-photo.js             # 얼굴을 지운 게시판 사진·낡은 인화지 질감
 ├── camera-preferences.js      # 축별 감도·상하 고정 설정과 로컬 저장
 ├── audio.js                   # 음량·음소거와 효과음 재생
@@ -73,7 +77,7 @@ last-dismissal/
 | 캐릭터 외형 | [schoolgirl-attacker.js](schoolgirl-attacker.js), [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [piano-boy-body.js](piano-boy-body.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 무료 인체 기반 남자아이 몸통, 곡면 인물·고양이, 여고생 공격 표정·원본 비율과 고양이 접지 보행·토끼 원본 외형 보존 |
 | 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [schoolgirl-attacker.js](schoolgirl-attacker.js), [rabbit-arrival.js](rabbit-arrival.js), [rabbit-presence.js](rabbit-presence.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 여고생 돌진, 3-1 토끼의 비공격 등장·근접 표정, 무작위 고양이와 계단 접근 이벤트 |
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
-| 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
+| 개발용 모델 | [student-model.js](student-model.js), [character-assets.js](character-assets.js), [modeling/](modeling/) | 정적 시안·원본 기준 리깅 후보 제작, 전체 GLB 계층/스킨/클립 로딩과 독립 인스턴스. 일반 게임은 원본 PNG 기반 외형 사용 |
 | 이전 규칙 | [survival.js](survival.js), [logic.js](logic.js) | 이전 생존·관찰 버전의 회귀 검증용 보존 모듈 |
 
 복도 게시판은 얼굴을 검게 지운 기존 단체사진 초안을 사용한다. [board-photo.js](board-photo.js)는 바랜 누런 색, 모서리 얼룩·긁힘과 닳은 인화지 테두리를 한 번 생성해 Three.js/Canvas에서 공유한다. 원본 PNG·사진 크기/위치는 보존하며 이전 관찰 모드의 정상/이상 사진은 별도로 유지한다. [명세](specs/aged-erased-photo.md), [브라우저 비교 화면](tests/fixtures/board-photo-review.html).
@@ -119,6 +123,10 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 일반 게
 - 3D 정상/이상 비교: `http://127.0.0.1:8080/tests/fixtures/three-review.html`. 이 개발용 화면의 버튼은 일반 게임에 표시되지 않는다.
 - 실제 탐색 UI/컨트롤러 검증: `http://127.0.0.1:8080/tests/fixtures/three-flow.html`. `?compat`를 붙이면 WebGL 실패를 강제해 Canvas 호환을 확인한다.
 
+학교의 벽·목재·금속은 공유 색/노멀/거칠기 맵을 사용한다. 주요 천장등 한 개씩 실내 그림자를 계산하고 복도 소등 신호를 함께 따른다. 문·바닥·책상/의자의 마모와 재질 차이를 표현하며, 반사 환경은 작은 절차적 조명 근사다. 반복 교실 가구는 치수·회전을 유지하는 인스턴싱으로 그린다. 복도 책상은 보이는 치수와 같은 이동 충돌을 사용하고 표정 텍스처는 재사용한다. 재시작 때 교체되는 시계 맵은 해제한다. [명세](specs/3d-quality-upgrade.md), [검증 결과와 남은 외형 과제](docs/3d-quality-review.md).
+
+재질·그림자·성능 비교: `http://127.0.0.1:8080/tests/fixtures/quality-review.html`. 표면 노멀/거칠기와 첫 전등 소등을 비교하고, `?legacyFurniture`로 같은 가구의 개별 렌더와 인스턴싱을 비교한다. CPU 제출 시간은 GPU 시간이 아니며 textures/geometries는 바이트가 아닌 개수다. 처음 장면의 준비 비용이 지난 뒤 120 samples에서 비교한다. 실제 컨트롤러의 개발용 경로는 `three-flow.html?safe&silent&activeClock&quality`다. 공격자 방을 무용실로 고정하고 소리 출력을 차단하며 포커스 우회 시계·위치 버튼을 제공한다. 일반 `/`에는 이 설정/버튼이 적용되지 않는다.
+
 3-3 칠판 옆 오른쪽 구석에는 얼굴 없는 교복 학생이 정적으로 서 있다. 기존 인형과 같은 실사풍 재질의 새 투명 PNG를 사용하고 원본 비율/발 접촉을 유지한다. 해당 위치만 관통을 막으며 중앙 통로·책상/의자 충돌과 여고생 귀신 발견 규칙은 유지한다. 첫 화면에도 함께 등장한다. [추가·점검 명세](specs/faceless-student-upgrade.md), [자산/생성 프롬프트](assets/faceless-student.md). 현재 Three.js에서는 정면 사진을 닫힌 3D 인체 메시와 연결하며 Canvas는 기존 사진 투영을 유지한다. 한 장의 사진 기반 근사 모델이므로 측면 디테일의 한계는 남는다. [최신 입체 외형 명세](specs/classroom-character-depth.md).
 
 교실 금발 인형: 현재 탐색 플레이에서는 바닥에 누워 있는 장식이다. 이전 이상현상 기립 연출은 개발용 비교 화면에서 보존한다. [상세 조건](specs/classroom-doll.md).
@@ -132,6 +140,8 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 일반 게
 개발용 GLB 비교는 `http://127.0.0.1:8080/tests/fixtures/room-review.html?model=glb`에서 명시적으로 선택한다. 일반 실행에서는 GLB를 자동 로딩/대체하지 않는다. `student-model.js`는 이 비교에서 로컬 `GLTFLoader`로 `assets/models/student-doll.glb`를 읽는다. 1.55m 정적 모델이며 실제 누운 경계로 바닥 높이를 계산한다. 원본보다 단순한 시안으로 리깅/새 표정은 없다. 자산에는 메시·PBR 재질·절차적 천/머리 무늬가 포함되며 추가 캐릭터 이미지는 생성하지 않았다.
 
 모델 재생성은 `npm ci` 후 `npm run model:student`다. `modeling/student-doll.js`가 조형/재질 소스이고 `modeling/build-student-doll.mjs`가 Three.js GLTFExporter로 내보낸다. 일반 플레이에는 Node 또는 모델링 도구가 필요 없다. [자산 정보](assets/models/README.md). 개발용 정면/양옆/후면/누운 자세 확인: `http://127.0.0.1:8080/tests/fixtures/student-model-review.html`.
+
+새 원본 기준 리깅 후보는 `http://127.0.0.1:8080/tests/fixtures/reference-character-review.html`에서 비교한다. 원본 사진을 보존한 닫힌 머리와 별도 의상/사지, 17개 뼈·웨이트, 두 관절 확인 동작을 포함한다. 밝은 정면/사선/측면/후면/얼굴/누운 자세와 학교 조명을 제공한다. 머리 앞면은 사진 기반이며 보이지 않는 옆/뒤·몸/의상은 근사다. 전 방향 얼굴/머리카락 복원이나 일반 게임의 캐릭터 교체 완료로 보지 않는다. 생성은 기존 Node 의존성이 준비된 환경에서 `npm run model:reference-student`, 검증은 `node --test tests/character-assets.test.js tests/3d-quality.test.js`다. [출처·재생성·한계](assets/models/student-reference-rig.md).
 
 교실 공포 연출: [명세](specs/classroom-hauntings.md). 3-1 창밖 공은 창을 바라볼 때만 튀며, 3-2 뒤 오른쪽 구석에 웅크린 그림자가 있다. 3-3·무용실 귀신은 창가 2.2m 이내에서 응시하면 미소와 고개 기울임을 보인다. 공격자는 새 교복 여고생 귀신 하나이며 귀신 연출은 패배를 일으키지 않는다. 동작 줄이기에서는 공은 정지하고 미소만 표시한다.
 

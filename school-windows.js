@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {surfaceMaterial} from './school-surfaces.js?v=quality-2';
 
 // Reference: warm wooden sliding sashes with a small transom above a tall pane.
 export const SCHOOL_WINDOW=Object.freeze({sill:.82,top:2.83,transom:2.34,rail:.075,wallX:-4.4});
@@ -12,10 +13,7 @@ export function windowPanes({start,end}){
 }
 export function lowerPaneCenter(index,side=1){const panes=windowPanes(CLASSROOM_WINDOWS[index]);const pane=panes[side?2:0];return (pane.start+pane.end)/2;}
 export function windowWood(){
- const c=document.createElement('canvas');c.width=c.height=256;const ctx=c.getContext('2d');ctx.fillStyle='#b68855';ctx.fillRect(0,0,256,256);
- for(let i=0;i<125;i++){ctx.strokeStyle=i%4?'#4b2d131c':'#f5d79b35';ctx.beginPath();ctx.moveTo(i*2.1,0);ctx.bezierCurveTo(i*2.1+Math.sin(i)*3,85,i*2.1-2,180,i*2.1,256);ctx.stroke();}
- const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;
- return new THREE.MeshStandardMaterial({color:'#d8ae76',map,bumpMap:map,bumpScale:.006,roughness:.58});
+ return surfaceMaterial('wood',{color:'#d8ae76'});
 }
 function block(g,name,x,y,z,w,h,d,material){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.name=name;m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
 export function buildSchoolWindow(parent,{x=SCHOOL_WINDOW.wallX,start,end,wood=windowWood()}={}){
