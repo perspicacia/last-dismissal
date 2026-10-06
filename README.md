@@ -67,7 +67,7 @@ last-dismissal/
 | 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 마우스 시점과 잠금, 영역 캡처 조작 |
 | 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-tone.js](school-tone.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸·색감, 창문과 계단 |
 | 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
-| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 연속 곡면 인물·고양이, 토끼 피 얼룩·팔 자세와 접지 보행 |
+| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 연속 곡면 인물·고양이, 토끼 피 얼룩·팔 자세와 접지 보행 |
 | 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 토끼 돌진, 무작위 고양이와 계단 접근 이벤트 |
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
 | 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
@@ -77,7 +77,7 @@ last-dismissal/
 
 ## 음향 기획
 
-고양이 외형은 `black-cat.js`, 무작위 등장/이동은 `cat-event.js`, 발 접지와 두 관절 보행은 `cat-gait.js`, 하악질/울음 파형은 `cat-voice.js`가 담당한다. `tests/fixtures/cat-review.html`에서 정면/측면·복도/교실의 연속 보행과 동작 줄이기를 비교할 수 있다.
+고양이 외형은 `black-cat.js`에서 참고 모델의 둥근 가슴/몸·작은 금빛 눈·넓은 삼각 귀·위로 선 꼬리를 코드로 표현한다. 목과 몸을 하나의 곡면으로 연결하고 다리 표면은 공유 관절을 따라 연속적으로 변형한다. [최신 외형 명세](specs/cat-boy-likeness.md). 무작위 등장/이동은 `cat-event.js`, 발 접지와 두 관절 보행은 `cat-gait.js`, 하악질/울음 파형은 `cat-voice.js`가 담당한다. `tests/fixtures/cat-review.html`에서 정면/측면·복도/교실의 연속 보행과 동작 줄이기를 비교할 수 있다.
 
 교실 창문은 작은 위 유리칸과 큰 아래 유리칸이 있는 목재 미닫이창이다. 3-3·무용실 귀신은 창살 대신 유리 중앙에 얼굴이 보이도록 정렬한다. `school-windows.js`는 두 렌더 방식이 공유하는 치수/창틀, `cat-event.js`는 안전 경로·무작위 시간, `black-cat.js`는 입체 고양이/Canvas 실루엣을 맡는다. 고양이는 10~22초 간격으로 약 3초간 등장하며 안전한 통로가 없으면 기다린다. 동작 줄이기에서는 이동 없이 나타났다 사라진다. [창문·고양이 명세](specs/windows-black-cat.md), [최신 외형·보행 명세](specs/black-cat-polish.md).
 
@@ -122,7 +122,7 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 학생 인형의 기본 2.5D 화면은 `doll-volume.js`에서 기존 사진의 XY·UV 비율을 보존하는 닫힌 메시로 만든다. 머리·몸·팔다리의 깊이를 구분하고 머리 앞뒤를 둥글게 연결한다. 일반 게임과 기본 교실 비교에 사용하고, Canvas 호환은 기존 이미지를 렌더한다. 최신 [원본 입체 보완 명세](specs/character-original-depth.md)는 이전 14cm 균일 깊이와 평면 얼굴 기준을 대체한다. 낮은 측면·후면을 사진과 동일한 실제 인체로 복원한 것은 아니다.
 
-남자 마네킹(얼굴 없는 학생)은 턱·어깨·소매·바지를 연속 곡면으로 연결하고 원본 사진을 앞에 유지한다. 앉은 여학생은 긴 검은 머리·교복·흰 양말을 유지하며 얇은 머리카락 결·접힌 치마와 좌석 접촉을 갖는다. 검은 고양이는 연결된 몸·머리·좁은 코·작은 금빛 눈을 사용하며 기존 두 관절 보행은 유지한다. `tests/fixtures/character-review.html`에서 네 외형의 정면/사선/측면·낮은 시점과 고양이 보행을 비교한다. 이 화면의 밝은 비교 조명과 버튼은 일반 게임에 적용하지 않는다.
+남자 마네킹(얼굴 없는 학생)은 턱·어깨·소매·바지를 연속 곡면으로 연결하고 원본 사진을 앞에 유지한다. 앉은 여학생은 긴 검은 머리·교복·흰 양말을 유지하며 얇은 머리카락 결·접힌 치마와 좌석 접촉을 갖는다. 검은 고양이는 연결된 몸·머리·좁은 코·작은 금빛 눈을 사용하며 기존 두 관절 보행은 유지한다. `tests/fixtures/character-review.html`에서 음악실 남자아이를 포함한 다섯 외형의 정면/사선/측면·낮은 시점과 고양이 보행을 비교한다. 이 화면의 밝은 비교 조명과 버튼은 일반 게임에 적용하지 않는다.
 
 개발용 GLB 비교는 `http://127.0.0.1:8080/tests/fixtures/room-review.html?model=glb`에서 명시적으로 선택한다. 일반 실행에서는 GLB를 자동 로딩/대체하지 않는다. `student-model.js`는 이 비교에서 로컬 `GLTFLoader`로 `assets/models/student-doll.glb`를 읽는다. 1.55m 정적 모델이며 실제 누운 경계로 바닥 높이를 계산한다. 원본보다 단순한 시안으로 리깅/새 표정은 없다. 자산에는 메시·PBR 재질·절차적 천/머리 무늬가 포함되며 추가 캐릭터 이미지는 생성하지 않았다.
 
@@ -136,6 +136,6 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 녹음 효과음의 개발용 확인 화면은 `http://127.0.0.1:8080/tests/fixtures/reference-audio-review.html`이다. 검증 버튼은 장치 출력을 차단한 그래프에서 디코딩·호출·음소거·종료를 확인하며 실제 청감 확인은 파일 플레이어로 한다. 실제 게임 컨트롤러 검증은 `tests/fixtures/three-flow.html?safe&silent`에서 토끼를 무용실에 고정하고 소리 출력 없이 할 수 있다. 일반 플레이에는 이 검증 버튼/설정이 없다.
 
-음악실 의자의 새 귀신은 [명세](specs/piano-boy-ghost.md)에 따라 짧은 검은 머리·낡은 밝은 옷·맨발의 어린 남자아이로 교체했다. 내장 image_gen으로 만든 [투명 PNG와 프롬프트](assets/piano-boy-ghost.md)를 균일 크기로 좌석/발 높이에 정렬한다. 정적인 분위기 요소이며 별도 공격·소리·표정 변화는 없다. 현재 Three.js는 원본 정면 사진을 둥근 머리·몸통·팔·굽힌 다리의 닫힌 3D 메시로 연결한다. 얼굴 없는 학생도 같은 방식으로 보완했다. 사진 한 장을 기준으로 한 근사 외형이며 Canvas는 기존 사진 투영을 유지한다. [최신 명세](specs/classroom-character-depth.md).
+음악실 의자의 새 귀신은 [명세](specs/piano-boy-ghost.md)에 따라 짧은 검은 머리·낡은 밝은 옷·맨발의 어린 남자아이로 교체했다. 내장 image_gen으로 만든 [투명 PNG와 프롬프트](assets/piano-boy-ghost.md)를 균일 크기로 좌석/발 높이에 정렬한다. 정적인 분위기 요소이며 별도 공격·소리·표정 변화는 없다. 현재 Three.js는 `piano-boy-volume.js`에서 첫 화면과 같은 원본 PNG의 XY/UV·얼굴/옷 윤곽을 보존하는 얕은 앞면에 닫힌 머리/몸/다리 뒤 볼륨을 연결한다. 사진을 여러 구형 부품으로 분할하던 방식에서 생긴 얼굴 비율 변화·옷 누락을 줄였다. 측면/뒷면은 사진에 없는 형태의 근사이며, 전 방향에서 같은 외형에는 원본 기준 조형·UV/재질·측면/후면 자료를 갖춘 별도 GLB가 필요하다. Canvas는 기존 사진 투영이다. [최신 명세](specs/cat-boy-likeness.md).
 
 3-2 가운데 오른쪽 의자에는 칠판을 바라보는 긴 머리 여학생의 입체 뒷모습을 추가했다. 일반 교실 세 곳은 높이 1.55m의 칠판과 금속 프레임/받침, 분필·지우개, ‘오늘의 당번’ 글씨를 사용한다. 새 여학생도 공격하지 않는 정적인 분위기 요소다.

@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.js';
-import {pianoBoyLayout} from './piano-boy.js';
 import {facelessStudentLayout} from './faceless-student.js';
 import {loftGeometry,clothMaterial} from './character-shape.js';
+import {buildPianoBoyFigure,setPianoBoyTexture} from './piano-boy-volume.js?v=cat-boy-likeness-1';
 
 const portrait={naturalWidth:1024,naturalHeight:1536,complete:true};
 const material=(color,roughness=.9)=>new THREE.MeshStandardMaterial({color,roughness});
@@ -31,45 +31,34 @@ function limb(root,name,a,b,radius,mat,pose=null){
  return oval(root,name,center,[radius,direction.length()/2+radius*.65,radius],mat,pose,new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize()));
 }
 export function buildPortraitGhost(kind,config){
- const root=new THREE.Group();root.name=kind==='boy'?'piano-boy-ghost':'faceless-student';root.visible=false;
+ if(kind==='boy')return buildPianoBoyFigure(config);
+ const root=new THREE.Group();root.name='faceless-student';root.visible=false;
  root.userData.photoMeshes=[];root.userData.kind=kind;
- const boy=kind==='boy',pose=boy?pianoBoyLayout(portrait,config):facelessStudentLayout(portrait,config);
- root.userData.pose=pose;root.position.set(config.x,0,config.z);root.rotation.y=boy?Math.PI/2:config.angle;
- const skin=material(boy?'#b8b7aa':'#b9b8ac'),cloth=boy?material('#aaa99b'):clothMaterial('#35363a'),hair=material('#111718',.73),shoe=material('#171b1d',.45);
+ const pose=facelessStudentLayout(portrait,config);
+ root.userData.pose=pose;root.position.set(config.x,0,config.z);root.rotation.y=config.angle;
+ const skin=material('#b9b8ac'),cloth=clothMaterial('#35363a'),hair=material('#111718',.73),shoe=material('#171b1d',.45);
  const xy=(u,v,z=0)=>[(u-.5)*pose.width,pose.top-v*pose.height,z];
- const head=xy(.5,boy?.132:.075);
- const skullRadii=[pose.width*(boy?.132:.081),pose.height*(boy?.119:.075),boy?.119:.113];
- const skull=boy?oval(root,'ghost-head',head,skullRadii,skin.clone(),pose):volume(root,'ghost-head',loftGeometry([
+ const head=xy(.5,.075);
+ const skullRadii=[pose.width*.081,pose.height*.075,.113];
+ const skull=volume(root,'ghost-head',loftGeometry([
   [pose.top-pose.height*.151,0,0,.005],[pose.top-pose.height*.133,.047,.063,.003],
   [pose.top-pose.height*.103,.079,.093,0],[pose.top-pose.height*.072,.093,.113,.006],
   [pose.top-pose.height*.039,.083,.103,.012],[pose.top-pose.height*.009,0,0,.015]
  ]),head,skullRadii,skin.clone(),pose),colors=[];
  const positions=skull.geometry.attributes.position;
- for(let i=0;i<positions.count;i++){const y=positions.getY(i),z=positions.getZ(i),threshold=pose.top-pose.height*(boy?.143:.090);const amount=Math.max(0,Math.min(1,(y-threshold+(z>0?.045:0))/.022));const color=skin.color.clone().lerp(hair.color,amount);colors.push(color.r,color.g,color.b);}
+ for(let i=0;i<positions.count;i++){const y=positions.getY(i),z=positions.getZ(i),threshold=pose.top-pose.height*.090;const amount=Math.max(0,Math.min(1,(y-threshold+(z>0?.045:0))/.022));const color=skin.color.clone().lerp(hair.color,amount);colors.push(color.r,color.g,color.b);}
  skull.geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));skull.material.color.set('#fff');skull.material.vertexColors=true;
- for(const side of [-1,1])oval(root,'ghost-ear',[side*pose.width*(boy?.132:.081),head[1]-.045,0],[.014,.028,.018],skin,pose);
- oval(root,'ghost-neck',xy(.5,boy?.254:.16,.03),[boy?.058:.049,boy?.075:.09,.058],skin,pose);
- if(boy)oval(root,'ghost-torso',xy(.5,.386,.045),[pose.width*.176,pose.height*.137,.112],cloth,pose);
- else volume(root,'ghost-torso',loftGeometry([
+ for(const side of [-1,1])oval(root,'ghost-ear',[side*pose.width*.081,head[1]-.045,0],[.014,.028,.018],skin,pose);
+ oval(root,'ghost-neck',xy(.5,.16,.03),[.049,.09,.058],skin,pose);
+ volume(root,'ghost-torso',loftGeometry([
   [pose.top-pose.height*.53,0,0,.025],[pose.top-pose.height*.50,.142,.102,.025],
   [pose.top-pose.height*.42,.133,.112,.025],[pose.top-pose.height*.32,.145,.125,.028],
   [pose.top-pose.height*.232,.163,.114,.028],[pose.top-pose.height*.205,.137,.085,.02],
   [pose.top-pose.height*.180,.050,.061,.019],[pose.top-pose.height*.167,0,0,.02]
  ]),xy(.5,.34,.025),[.163,.30,.128],cloth,pose);
- oval(root,'ghost-hips',boy?[0,config.y+.105,.055]:xy(.5,.497,.025),[pose.width*(boy?.182:.117),boy?.105:.14,.115],cloth,pose);
+ oval(root,'ghost-hips',xy(.5,.497,.025),[pose.width*.117,.14,.115],cloth,pose);
  for(const side of [-1,1]){
   const u=value=>.5+side*value;
-  if(boy){
-   const shoulder=xy(u(.207),.33,.015),elbow=xy(u(.185),.459,-.025),wrist=xy(u(.100),.553,-.139);
-   limb(root,'ghost-sleeve',shoulder,xy(u(.2),.415,.01),.049,cloth,pose);
-   limb(root,'ghost-upper-arm',xy(u(.2),.401,.01),elbow,.037,skin,pose);limb(root,'ghost-forearm',elbow,wrist,.035,skin,pose);
-   oval(root,'ghost-hand',wrist,[.041,.052,.028],skin,pose);
-   const knee=[side*.114,config.y+.050,-.055];
-   limb(root,'ghost-thigh',[side*.11,config.y+.090,.16],knee,.074,cloth,pose);
-   oval(root,'ghost-knee',knee,[.064,.073,.075],skin,pose);
-   limb(root,'ghost-shin',[side*.114,.493,-.055],[side*.082,.092,-.027],.045,skin,pose);
-   oval(root,'ghost-foot',[side*.083,.055,-.086],[.052,.030,.106],skin,pose);
-  }else{
    const shoulder=xy(u(.122),.209,.02),wrist=xy(u(.157),.482,-.018);
    const direction=new THREE.Vector3(...shoulder).sub(new THREE.Vector3(...wrist)),length=direction.length();
    const sleeve=loftGeometry([[0,0,0,0],[.02,.044,.046,0],[length*.35,.048,.050,0],[length*.74,.052,.056,0],[length-.02,.055,.057,0],[length+.018,0,0,0]],{steps:32});
@@ -79,11 +68,11 @@ export function buildPortraitGhost(kind,config){
    const trouser=loftGeometry([[.095,0,0,0],[.126,.055,.060,0],[.28,.058,.060,0],[.48,.065,.070,0],[.69,.068,.075,0],[.84,.073,.080,.012],[.93,0,0,.015]],{steps:48});trouser.translate(side*.085,0,0);
    volume(root,'ghost-trouser',trouser,[side*.085,.51,.008],[.073,.415,.080],cloth,pose);
    oval(root,'ghost-shoe',[side*.090,.061,-.047],[.064,.036,.12],shoe,pose);
-  }
  }
  return root;
 }
 export function setPortraitTexture(root,image,texture){
+ if(root.userData.kind==='boy')return setPianoBoyTexture(root,image,texture);
  const ready=image?.complete!==false&&image?.naturalWidth>0&&image?.naturalHeight>0;root.visible=Boolean(ready);
  if(!ready)return false;
  for(const mesh of root.userData.photoMeshes){mesh.material.map=texture;mesh.material.needsUpdate=true;}return true;

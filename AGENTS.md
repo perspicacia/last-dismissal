@@ -21,6 +21,8 @@
 - 교실 목재 창문·검은 고양이의 무작위 등장/울음은 [specs/windows-black-cat.md](specs/windows-black-cat.md)를 따른다. 고양이는 코드 기반 입체 분위기 요소로 공격/방문 판정을 바꾸지 않으며 방 이동/종료/재시작에서 정리한다.
 - 검은 고양이 외형·보행·울음의 최신 기준은 [specs/black-cat-polish.md](specs/black-cat-polish.md)다. 검은 털/금빛 눈·접지하는 두 관절 보행·3초 등장·앙칼스러운 하악질/울음이 이전 큰 도약·1.6초 등장·낮은 울음을 대체한다.
 
+- 검은 고양이의 참고 모델 비율·올라간 꼬리·연속 다리 표면과 음악실 남자아이의 원본 앞면/뒤 볼륨은 [specs/cat-boy-likeness.md](specs/cat-boy-likeness.md)를 따른다. 남자아이를 여러 구형 사진 부품으로 되돌리지 않는다. 같은 원본 XY/UV를 보존하며 옆/뒤는 근사다. 기존 위치·좌석·발 접촉·비공격·고양이 보행/정리 규칙은 유지한다.
+
 - 현재 일반 게임의 조작/카메라/Esc 규칙은 [specs/mouse-look-comfort.md](specs/mouse-look-comfort.md)를 따른다. WASD 옆걸음·수동 마우스 시점·고정 카메라·일시정지가 이전 A/D 회전·자동 시점·Esc 초기화 규칙을 대체한다.
 - 영역 캡처는 [specs/capture-cursor-release.md](specs/capture-cursor-release.md)를 따른다. P/일시정지 메뉴로 장면을 고정하고 커서·드래그를 해제한다. OS 캡처 단축키를 막지 않으며 캡처 중 포커스 이탈은 고정을 유지한다. 재개/처음 화면에서 상태를 정리한다.
 
