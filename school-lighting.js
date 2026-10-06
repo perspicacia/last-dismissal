@@ -1,7 +1,7 @@
 // Seconds of corridor play, independent of audio and exploration judgments.
 export const CORRIDOR_LAMPS = Object.freeze([3,8,13,18,23]);
 // Keep light beneath each fixture, with deeper shadows between them.
-export const SCHOOL_DARKNESS = Object.freeze({exposure:.70,ambient:.22,deepAmbient:.17,moon:.35,lampPower:5.2,lampGlow:.64,canvasBase:.38,canvasOutage:.12});
+export const SCHOOL_DARKNESS = Object.freeze({exposure:.76,ambient:.28,deepAmbient:.22,moon:.35,lampPower:6.0,lampGlow:.64,canvasBase:.38,canvasOutage:.12});
 const OUTAGES = [[2.6,1.5],[9.1,1.8],[5.8,1.4],[14.8,2.0],[11.9,1.3]];
 const PERIOD = 18.5;
 const smooth = x => x*x*(3-2*x);

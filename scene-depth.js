@@ -1,3 +1,4 @@
+import {canvasLampColor} from './school-tone.js?v=shadow-tone-1';
 import {CORRIDOR_LAMPS} from './school-lighting.js';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS} from './school-windows.js';
 export function drawSceneDepth(c,project,player,{classroom=false,lampLevels=null}={}) {
@@ -41,7 +42,7 @@ export function drawSceneDepth(c,project,player,{classroom=false,lampLevels=null
     box(0,2.83,z+.2,1.25,.13,.48,['#85978c','#3f5550','#667c70']);
     // Light diffuser is a luminous bottom face of the metal fixture.
     const level=lampLevels?.[i]??1;
-    polygon([[-.54,2.825,z+.035],[.54,2.825,z+.035],[.54,2.825,z+.365],[-.54,2.825,z+.365]],`rgb(${Math.round(53+160*level)},${Math.round(66+162*level)},${Math.round(60+150*level)})`);
+    polygon([[-.54,2.825,z+.035],[.54,2.825,z+.035],[.54,2.825,z+.365],[-.54,2.825,z+.365]],canvasLampColor(level));
     for(const x of [-.44,.44])box(x,2.95,z+.2,.025,.05,.025,['#8caaa0','#536b61','#536b61']);
   }
   faces.sort((a,b)=>b.d-a.d);

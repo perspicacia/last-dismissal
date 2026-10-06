@@ -6,8 +6,8 @@
 const params=new URLSearchParams(location.search);
 if(params.has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 let reduced=false;const match=window.matchMedia.bind(window);window.matchMedia=query=>query==='(prefers-reduced-motion: reduce)'?{matches:reduced}:match(query);
-const {Corridor}=await import('../../corridor.js?v=dark-blood-1');
-const {SchoolLighting}=await import('../../school-lighting.js?v=dark-blood-1');
+const {Corridor}=await import('../../corridor.js?v=shadow-tone-1');
+const {SchoolLighting}=await import('../../school-lighting.js?v=shadow-tone-1');
 const c=new Corridor(document.querySelector('canvas'),()=>{},()=>{}),canvas=c.canvas;c.exploration={ended:false};c.tutorial=false;
 let live=false;
 function lighting(){return c.view3D?(c.view3D.lighting??=new SchoolLighting()):(c.lighting??=new SchoolLighting());}

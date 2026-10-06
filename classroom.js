@@ -1,9 +1,10 @@
+import {SCHOOL_TONE} from './school-tone.js?v=shadow-tone-1';
 import {regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {ROOM_HAUNTINGS,windowGaze,bouncePose,ghostSmileAmount} from './room-hauntings.js';
 import {drawGhostSmile} from './ghost-smile-shape.js';
 import {DOLL, dollRise} from './doll-event.js';
 import { classroomWindowColumn } from './campus-view.js';
-import { drawSceneDepth } from './scene-depth.js?v=character-depth-6';
+import { drawSceneDepth } from './scene-depth.js?v=shadow-tone-1';
 import {pianoBoyQuad,drawPianoBoy,pianoBoyLook} from './piano-boy.js';
 import {facelessStudentQuad,drawFacelessStudent} from './faceless-student.js';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,windowPanes} from './school-windows.js';
@@ -31,13 +32,13 @@ export function moveClassroomPlayer(player, keys, dt, blockers=null, extraBlocke
 export function drawClassroom(c,w,h,p,time,exterior=null,doll=null,kind='classroom') {
   const lens=w*.68,horizon=h*.48+(p.manualLook?Math.tan(p.pitch||0):kind==='classroom'?seatedGirlLook(p):pianoBoyLook(p,doll?.boy,ROOM_AMBIENCE[kind]?.boy))*lens;
   const project=(x,y,z)=>{const dx=x-p.x,dz=z-p.z,d=dx*Math.sin(p.angle)+dz*Math.cos(p.angle);return d>.08?{x:w/2+(dx*Math.cos(p.angle)-dz*Math.sin(p.angle))*lens/d,y:horizon+(1.5-y)*lens/d,d}:null;};
-  c.fillStyle='#172a35';c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
+  c.fillStyle=SCHOOL_TONE.canvasCeilingTop;c.fillRect(0,0,w,horizon);c.fillStyle='#3b322e';c.fillRect(0,horizon,w,h);
   // Perspective wooden boards, knots and faint cold window reflections.
   for(let y=Math.max(0,Math.ceil(horizon)+1);y<h;y+=4){const d=1.5*lens/(y-horizon);if(d>30)continue;for(let x=0;x<w;x+=4){const a=(x-w/2)*d/lens,wx=p.x+Math.sin(p.angle)*d+Math.cos(p.angle)*a,wz=p.z+Math.cos(p.angle)*d-Math.sin(p.angle)*a;const row=Math.floor(wx/.24),seam=((wz+((row%3)*.63))%1.9+1.9)%1.9;const grain=Math.sin(wz*10+row*8)*3;const v=45+(Math.sin(row*19)*9)+grain;c.fillStyle=`rgb(${v+18},${v+8},${v+4})`;if(d<8&&((((wx%.24)+.24)%.24)<.012||seam<.022))c.fillStyle=`rgb(${v+10},${v},${v-4})`;c.fillRect(x,y,4,4);}}
 
   for(let sx=0;sx<w;sx+=3){const offset=Math.atan((sx-w/2)/lens),a=p.angle+offset,dx=Math.sin(a),dz=Math.cos(a),tx=Math.abs(dx)<1e-9?Infinity:((dx>0?4.4:-4.4)-p.x)/dx,tz=Math.abs(dz)<1e-9?Infinity:((dz>0?9.8:0)-p.z)/dz,side=tx<tz,dist=side?tx:tz,depth=dist*Math.cos(offset),wx=p.x+dx*dist,wz=p.z+dz*dist;const height=3*lens/depth,top=horizon-height*.5;
     const drawBand=(from,to,color)=>{c.fillStyle=color;c.fillRect(sx,top+from*height,3,(to-from)*height+1);};
-    drawBand(0,.57,'#738e90');drawBand(.57,.97,'#234650');drawBand(.56,.58,'#adb3a1');drawBand(.97,1,'#14262b');
+    drawBand(0,.57,SCHOOL_TONE.plaster);drawBand(.57,.97,SCHOOL_TONE.panel);drawBand(.56,.58,SCHOOL_TONE.trim);drawBand(.97,1,'#14262b');
     if(side&&dx<0&&wz>1.8&&wz<8.9){const {sill,top:wt,transom,rail}=SCHOOL_WINDOW,from=(3-wt)/3,to=(3-sill)/3,bay=CLASSROOM_WINDOWS.find(b=>wz>=b.start&&wz<=b.end);
       drawBand(from,to,'#091d2a');if(exterior)c.drawImage(exterior,classroomWindowColumn(wz,exterior.width),0,1,exterior.height,sx,top+from*height,3,(to-from)*height);
       if([bay.start,bay.end,(bay.start+bay.end)/2].some(z=>Math.abs(wz-z)<rail/2))drawBand(from,to,'#91663d');
