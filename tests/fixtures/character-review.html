@@ -5,11 +5,13 @@
 <main><aside><div id="reference-wrap"><img id="reference" alt="원본 외형 기준"></div><p id="note"></p></aside><canvas id="view" aria-label="캐릭터 입체 외형"></canvas></main>
 <script type="module">
 import * as THREE from '../../vendor/three.module.js';
-import {buildPortraitGhost,buildSeatedGirl,setPortraitTexture} from '../../ghost-figures.js?v=piano-boy-face-4';
+import {buildPortraitGhost,buildSeatedGirl,setPortraitTexture} from '../../ghost-figures.js?v=free-body-5';
 import {buildBlackCat,updateBlackCat} from '../../black-cat.js?v=cat-boy-likeness-1';
 import {volumeFromImage} from '../../doll-volume.js?v=character-original-1';
 import {ROOM_AMBIENCE} from '../../exploration.js';
 import {catPose} from '../../cat-event.js';
+import {loadPianoBoyBody} from '../../piano-boy-body.js?v=free-body-5';
+import {attachPianoBoyBody} from '../../piano-boy-volume.js?v=free-body-5';
 const canvas=document.querySelector('canvas'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1a2228');const camera=new THREE.PerspectiveCamera(36,1,.01,30);
 scene.add(new THREE.HemisphereLight('#ccd8df','#363027',1.35));
@@ -23,6 +25,7 @@ const mannequin=buildPortraitGhost('faceless',{...ROOM_AMBIENCE.classroom33.face
 const girl=buildSeatedGirl({x:0,z:0,angle:0,seat:.448});
 const cat=buildBlackCat();updateBlackCat(cat,{x:0,y:0,z:0,yaw:0,cycle:0,motion:0,opacity:1});
 const boy=buildPortraitGhost('boy',{...ROOM_AMBIENCE.music.boy,x:0,z:0});setPortraitTexture(boy,boyImage,texture(boyImage));boy.rotation.y=0;
+attachPianoBoyBody(boy,await loadPianoBoyBody());
 const bench=new THREE.Mesh(new THREE.BoxGeometry(.65,.05,.42),new THREE.MeshStandardMaterial({color:'#463c32',roughness:.8}));bench.position.set(0,.500,.25);bench.castShadow=bench.receiveShadow=true;boy.add(bench);
 for(const x of [-.26,.26])for(const z of [.09,.41]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.028,.475,.028),bench.material);leg.position.set(x,.2375,z);leg.castShadow=leg.receiveShadow=true;boy.add(leg);}
 const doll=new THREE.Group(),dollMesh=new THREE.Mesh(volumeFromImage(dollImage),[new THREE.MeshStandardMaterial({map:texture(dollImage),transparent:true,alphaTest:.35,roughness:.8,side:THREE.DoubleSide}),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide})]);dollMesh.castShadow=dollMesh.receiveShadow=true;doll.add(dollMesh);doll.rotation.x=Math.PI/2;doll.position.y=.003;
@@ -31,7 +34,7 @@ const chair=new THREE.Group(),wood=new THREE.MeshStandardMaterial({color:'#75604
 for(const [x,y,z,w,h,d,mat] of [[0,.424,0,.44,.048,.42,wood],[0,.74,.21,.44,.19,.035,wood],[-.17,.22,-.15,.027,.44,.027,metal],[.17,.22,-.15,.027,.44,.027,metal],[-.17,.4,.18,.027,.8,.027,metal],[.17,.4,.18,.027,.8,.027,metal]]){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);mesh.castShadow=mesh.receiveShadow=true;chair.add(mesh);}girl.add(chair);
 const models={doll,mannequin,girl,cat,boy};for(const model of Object.values(models))scene.add(model);
 const descriptions={doll:['누운 금발 인형','../../assets/doll-student-concept.png','원본의 얼굴·금발·리본·남색 의상을 그대로 투영하고 머리와 몸의 깊이를 구분했습니다. 사진에 없는 옆·뒷모습은 근사입니다.'],mannequin:['얼굴 없는 남학생','../../assets/faceless-student.png','원본 사진을 앞면에 유지하면서 턱·어깨·등의 연결을 조형했습니다. 뒷면에는 얼굴을 반복하지 않습니다.'],girl:['앉은 여학생',null,'긴 검은 머리·어두운 교복·흰 양말을 유지했습니다. 머리카락 덩어리와 접힌 치마를 곡면으로 연결한 코드 기반 모델입니다.'],cat:['검은 고양이',null,'참고 모델에 맞춰 둥근 가슴·작은 금빛 눈·넓은 귀·위로 선 꼬리와 연결된 다리 표면을 다듬었습니다. 기존 접지 보행을 사용하는 코드 기반 모델이며 실제 털 스캔은 아닙니다.']};
-descriptions.boy=['음악실 남자아이','../../assets/piano-boy-ghost.png','원본의 얼굴·옷 비율을 유지하면서 얼굴과 흉곽의 앞뒤 곡면, 팔·앉은 허벅지·종아리 깊이를 함께 조형했습니다. 후면에는 얼굴 사진을 반복하지 않습니다. 측면·뒷면은 근사입니다.'];
+descriptions.boy=['음악실 남자아이','../../assets/piano-boy-ghost.png','원본 얼굴·머리는 사진 기반으로 보존했습니다. 몸통·팔·다리는 Quaternius 무료 CC0 인체를 어린아이 비율의 앉은 자세로 변형한 실제 메시입니다. 원본 의상 질감을 앞면에 연결했으며 옆/뒤 의상은 근사입니다.'];
 descriptions.all=['전체 비교',null,'다섯 캐릭터의 원본 특징과 입체 보완을 함께 확인합니다. 사진 기반 인형·남학생의 옆/뒷면과 코드 기반 여학생·고양이는 정밀 조형 자산을 대신하는 근사입니다.'];
 const homes=Object.fromEntries(Object.entries(models).map(([id,m])=>[id,{position:m.position.clone(),rotation:m.rotation.clone()}]));
 let selected='all',view='angle',walking=false,start=0;

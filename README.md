@@ -44,7 +44,7 @@ last-dismissal/
 │   ├── *.png                  # 캐릭터와 사진 이미지
 │   ├── audio/                 # 문·토끼 비명의 WAV와 출처
 │   ├── fonts/                 # 제목·칠판 서체와 라이선스
-│   └── models/                # 개발용 학생 인형 GLB 시안
+│   └── models/                # 음악실 남자아이 몸통 GLB·개발용 인형 시안
 ├── vendor/                    # 로컬 Three.js 모듈·로더와 라이선스
 ├── tests/
 │   ├── *.test.js              # 판정·이동·연출·음향 등의 자동 테스트
@@ -54,7 +54,7 @@ last-dismissal/
 │   ├── progress.md            # 완료 작업, 검증 결과와 남은 과제
 │   └── worklogs/              # 역할별 작업·검토 기록
 ├── specs/                     # 기능별 요구사항과 완료 조건
-├── modeling/                  # 학생 인형 3D 시안 제작·GLB 내보내기
+├── modeling/                  # 무료 인체 원본·앉은 자세 변환·GLB 제작 도구
 ├── scripts/                   # 레퍼런스 효과음 편집 도구
 ├── package.json               # 실행·테스트·모델 생성 명령과 의존성
 ├── package-lock.json          # npm 의존성 버전 고정
@@ -69,7 +69,7 @@ last-dismissal/
 | 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [camera-preferences.js](camera-preferences.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 축별 마우스 감도·상하 고정·키보드 시점/저장, 영역 캡처 조작 |
 | 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-tone.js](school-tone.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸·색감, 창문과 계단 |
 | 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
-| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 연속 곡면 인물·고양이, 토끼 피 얼룩·팔 자세와 접지 보행 |
+| 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [piano-boy-body.js](piano-boy-body.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 무료 인체 기반 남자아이 몸통, 곡면 인물·고양이, 토끼 피 얼룩·팔 자세와 접지 보행 |
 | 공포 이벤트 | [room-hauntings.js](room-hauntings.js), [rabbit-arrival.js](rabbit-arrival.js), [cat-event.js](cat-event.js), [stair-haunt.js](stair-haunt.js) | 교실 분위기 연출, 토끼 돌진, 무작위 고양이와 계단 접근 이벤트 |
 | 음향 | [audio.js](audio.js), [sound-effects.js](sound-effects.js), [recorded-effects.js](recorded-effects.js), [cat-voice.js](cat-voice.js), [stair-haunt-sound.js](stair-haunt-sound.js) | 공통 음량·음소거, 합성음과 로컬 녹음, 고양이·계단 효과음 |
 | 개발용 모델 | [student-model.js](student-model.js), [modeling/](modeling/) | 학생 인형 GLB 시안 로딩·제작. 일반 게임은 원본 PNG 기반 외형 사용 |
@@ -140,6 +140,6 @@ Three.js로 학교 실내와 거리별 창밖 공간을 표현한다. 토끼는 
 
 녹음 효과음의 개발용 확인 화면은 `http://127.0.0.1:8080/tests/fixtures/reference-audio-review.html`이다. 검증 버튼은 장치 출력을 차단한 그래프에서 디코딩·호출·음소거·종료를 확인하며 실제 청감 확인은 파일 플레이어로 한다. 실제 게임 컨트롤러 검증은 `tests/fixtures/three-flow.html?safe&silent`에서 토끼를 무용실에 고정하고 소리 출력 없이 할 수 있다. 일반 플레이에는 이 검증 버튼/설정이 없다.
 
-음악실 의자의 새 귀신은 [명세](specs/piano-boy-ghost.md)에 따라 짧은 검은 머리·낡은 밝은 옷·맨발의 어린 남자아이로 교체했다. 내장 image_gen으로 만든 [투명 PNG와 프롬프트](assets/piano-boy-ghost.md)를 균일 크기로 좌석/발 높이에 정렬한다. 정적인 분위기 요소이며 별도 공격·소리·표정 변화는 없다. 현재 Three.js는 `piano-boy-volume.js`에서 첫 화면과 같은 원본 PNG의 XY/UV·얼굴/옷 윤곽을 보존하면서 머리·얼굴·흉곽·팔의 앞뒤 곡면과 앉은 허벅지·종아리를 함께 조형한다. 원본의 머리·옷·피부 색을 측면과 연결하고, 사진이 옆면 재질로 완만하게 전환되도록 한다. 엉덩이는 좌석 위에, 맨발은 바닥 높이에 맞춘다. 사진을 여러 구형 부품으로 분할하던 방식에서 생긴 얼굴 비율 변화·옷 누락을 줄였다. 측면/뒷면은 사진에 없는 형태의 근사이며, 전 방향에서 같은 외형에는 원본 기준 조형·UV/재질·측면/후면 자료를 갖춘 별도 GLB가 필요하다. Canvas는 기존 사진 투영이다. [앞뒤 곡면 명세](specs/piano-boy-depth-repair.md). 근접 얼굴은 눈·입·턱의 깊이 차이를 줄이고 사진 특징을 유지한다. 밝은 얼굴 확대/실제 음악실 정면·양쪽 사선에서 확인한다. [최신 얼굴 명세](specs/piano-boy-face-repair.md).
+음악실 의자의 새 귀신은 [명세](specs/piano-boy-ghost.md)에 따라 짧은 검은 머리·낡은 밝은 옷·맨발의 어린 남자아이로 교체했다. [원본 투명 PNG와 프롬프트](assets/piano-boy-ghost.md)는 보존한다. 정적인 분위기 요소이며 별도 공격·소리·표정 변화는 없다. 현재 Three.js는 Quaternius Standard의 무료 CC0 인체에서 원작 머리를 제외한 로컬 `piano-boy-body.glb`를 불러온다. 어린아이 비율과 무릎 위 손·앉은 허벅지·종아리로 변형해 엉덩이는 의자 위, 맨발은 바닥에 맞췄다. 얼굴의 눈·코·입·턱 사진 비율을 보존한 앞면과 둥근 뒷머리를 실제 몸통에 연결하고, 원본 의상은 앞면에만 투영한다. 사진의 알파를 늘려 만든 몸통은 대체했다. 옆/뒤 의상은 원본 색을 참고한 근사이며 머리도 사진 기반이므로 정확한 옆얼굴 조형은 아니다. 로딩 실패 때 이전 외형으로 플레이를 계속하고 다음 음악실 입장에 다시 시도한다. Canvas는 원본 사진 투영이다. 실행 중 외부 모델 서비스나 계정이 필요 없다. [최신 명세](specs/piano-boy-free-body.md), [모델 출처·CC0·재현 방법](assets/models/piano-boy-body.md).
 
 3-2 가운데 오른쪽 의자에는 칠판을 바라보는 긴 머리 여학생의 입체 뒷모습을 추가했다. 일반 교실 세 곳은 높이 1.55m의 칠판과 금속 프레임/받침, 분필·지우개, ‘오늘의 당번’ 글씨를 사용한다. 새 여학생도 공격하지 않는 정적인 분위기 요소다.

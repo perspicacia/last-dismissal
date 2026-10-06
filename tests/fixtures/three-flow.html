@@ -13,6 +13,7 @@ if(new URLSearchParams(location.search).has('activeClock')){
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 // A failed optional character asset must never prevent entering/restarting.
 if(new URLSearchParams(location.search).has('modelFail')){const fetchAsset=window.fetch;window.fetch=(url,...args)=>String(url instanceof Request?url.url:url).includes('student-doll.glb')?Promise.reject(new Error('Intentional model failure')):fetchAsset(url,...args);}
+if(new URLSearchParams(location.search).has('bodyFailOnce')){const fetchAsset=window.fetch;let failed=false;window.fetch=(url,...args)=>{if(!failed&&String(url instanceof Request?url.url:url).includes('piano-boy-body.glb')){failed=true;return Promise.reject(new Error('Intentional first body load failure'));}return fetchAsset(url,...args);};}
 if(new URLSearchParams(location.search).get('model')==='glb'||new URLSearchParams(location.search).has('modelFail'))document.querySelector('#corridor').dataset.studentModelPreview='true';
 // Exercise the real controller/audio graph without emitting sound on the user's
 // device. The analyser remains upstream so PCM activity is still measurable.
@@ -27,7 +28,7 @@ if(new URLSearchParams(location.search).has('facelessFail')){
  const src=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');
  Object.defineProperty(HTMLImageElement.prototype,'src',{...src,set(value){src.set.call(this,String(value).includes('faceless-student.png')?'/assets/intentional-missing-student.png':value);}});
 }
-await import('../../game.js?v=piano-boy-face-4');
+await import('../../game.js?v=free-body-5');
 // Preserve the first sound-clock draw and force the following exploration draw.
 // Then restore random before Three.js creates UUIDs or audio creates noise.
 // Capturing the real start/retry click runs before the ordinary game handler.

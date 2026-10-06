@@ -1,4 +1,16 @@
-# 학생 인형 GLB
+# 3D 모델 자산
+
+## 음악실 남자아이 몸통
+
+`piano-boy-body.glb`는 Quaternius의 무료 CC0 인체를 어린아이 비율과 앉은 자세로 변형한 정적 몸통/사지다. 일반 Three.js 게임의 음악실에 적용한다. 원작 모델의 머리·눈·재질을 제외하고 기존 `piano-boy-ghost.png`의 얼굴/머리와 앞면 의상 질감을 연결한다. 옆/뒤 옷과 사진 기반 머리 표면은 근사이며 완전한 얼굴 조형은 아니다.
+
+- glTF 2.0 binary, 174,896 bytes, 1 mesh, 4,820 vertices, 9,636 triangles. 스킨/애니메이션/외부 텍스처 없음.
+- 출처·CC0 문서·원본 SHA-256·변형 범위: [piano-boy-body.md](piano-boy-body.md).
+- 재현: `node modeling/build-piano-boy-body.mjs`. 원본 무료 `.gltf`/`.bin`과 라이선스는 `modeling/source/quaternius/`에 보관한다.
+- 로딩 실패에는 기존 사진 기반 외형으로 탐색을 계속하고 다음 음악실 입장에서 다시 시도한다. Canvas는 원본 사진을 유지한다.
+- 실제 GLB/원본 얼굴/로딩 검증: `node --test tests/piano-boy-body.test.js`. 첫 파일 로딩 실패→입장 재시도: `tests/fixtures/three-flow.html?safe&silent&activeClock&bodyFailOnce`.
+
+## 학생 인형 GLB 시안
 
 `student-doll.glb`는 이 프로젝트를 위해 코드로 조형한 정적 모델이다. 외부 모델/사진/악곡 자산을 포함하지 않는다. 기존 금발 학생 인형의 금발 단발, 호박색 유리 눈, 도자기 관절, 남색 세일러복, 크림 칼라/리본/양말, 메리 제인 신발을 참고한다. 원본 사진과 정확히 같은 외형은 아니며 첫 3D 조형은 더 단순하다.
 

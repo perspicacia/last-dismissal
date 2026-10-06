@@ -11,6 +11,7 @@
 - 종료 화면은 [specs/game-over-screen.md](specs/game-over-screen.md)의 `GAME OVER`와 `다시 하기`를 따른다. 기존 토끼 발견/돌진 시간·음향·재시작 판정은 유지한다.
 - 음악실 소품·악보 방향·귀신 미소/웃음은 [specs/music-ghost-polish.md](specs/music-ghost-polish.md), 첫 화면은 [specs/horror-title-screen.md](specs/horror-title-screen.md)를 따른다. 기존 캐릭터 PNG는 보존하고 코드 기반 도형·음향을 사용한다.
 - 음악실 의자는 [specs/piano-boy-ghost.md](specs/piano-boy-ghost.md)의 정적인 어린 남자아이 귀신이다. 신규 이미지 제작은 사용자 요청으로 승인되었으며 공격/게임 오버 판정을 추가하지 않는다.
+- 음악실 남자아이의 최신 몸통은 [specs/piano-boy-free-body.md](specs/piano-boy-free-body.md)를 따른다. 사용자가 무료 인체 활용을 채택했다. Quaternius Standard CC0의 실제 몸통/사지를 어린아이 비율·앉은 자세로 변형하고 원본 사진의 얼굴·머리·앞면 의상 느낌을 보존한다. 얼굴은 사진 기반이며 완전한 얼굴 조형으로 보고하지 않는다. 출처/라이선스/변환 스크립트를 보관하고 로딩 실패 때 기존 외형을 유지한다. 다른 캐릭터와 공격·카메라·음향 규칙은 변경하지 않는다.
 - 3-3 칠판 옆 얼굴 없는 학생은 [specs/faceless-student-upgrade.md](specs/faceless-student-upgrade.md)를 따른다. 사용자가 이번 신규 캐릭터의 디자인/제작/배치를 위임했으며 기존 캐릭터 이미지 제작 중단은 유지한다. 첫 화면에는 다섯 귀신을 포함한다.
 - 남자아이·얼굴 없는 학생의 입체 외형, 3-2 의자의 뒷모습 여학생, 칠판/당번/분필·지우개의 최신 규칙은 [specs/classroom-character-depth.md](specs/classroom-character-depth.md)를 따른다. 남학생의 기존 PNG는 보존하고 앞면 사진을 닫힌 3D 인체 메시로 연결한다. 모두 정적 분위기 요소이며 토끼만 공격한다. 금발 학생 인형의 원본 외형 규칙은 유지한다.
 - 칠판 글씨의 최신 외형은 [specs/chalkboard-writing.md](specs/chalkboard-writing.md)를 따른다. 로컬 한글 손글씨·분필 질감을 두 렌더에서 공유하며 게임 난수는 사용하지 않는다.

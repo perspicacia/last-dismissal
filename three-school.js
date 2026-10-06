@@ -4,7 +4,7 @@ import {manualCameraPose} from './mouse-controls.js?v=mouse-comfort-1';
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import {ROOMS,RABBIT_SPOT,regularClassroom,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
-import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=piano-boy-face-4';
+import {buildPortraitGhost,setPortraitTexture,buildSeatedGirl,seatedGirlLook} from './ghost-figures.js?v=free-body-5';
 import {buildClassroomBoard} from './classroom-board.js?v=chalk-writing-1';
 import {SCHOOL_WINDOW,CLASSROOM_WINDOWS,buildSchoolWindow,windowWood} from './school-windows.js';
 import {buildBlackCat,updateBlackCat} from './black-cat.js?v=cat-boy-likeness-1';
@@ -16,6 +16,8 @@ import {loadStudentModel,prepareStudentModel} from './student-model.js?v=student
 import {CORRIDOR_LAMPS,SCHOOL_DARKNESS,SchoolLighting,recordLighting} from './school-lighting.js?v=shadow-tone-1';
 import {bloodiedRabbit,rabbitImageSize} from './rabbit-appearance.js?v=dark-blood-1';
 import {pianoBoyLayout,pianoBoyLook} from './piano-boy.js';
+import {loadPianoBoyBody} from './piano-boy-body.js?v=free-body-5';
+import {attachPianoBoyBody} from './piano-boy-volume.js?v=free-body-5';
 import * as THREE from './vendor/three.module.js';
 import { buildOutdoors } from './three-outdoors.js?v=shadow-tone-1';
 import { CLASSROOM_DESKS, CLASSROOM_TEACHER_DESK } from './classroom.js?v=cat-boy-likeness-1';
@@ -42,6 +44,20 @@ export class ThreeSchoolView {
     this.previewStudentModel=canvas.dataset.studentModelPreview==='true';
     if(this.previewStudentModel)this.loadStudentModel();
     else canvas.dataset.studentModelStatus='original';
+    this.loadPianoBoyBody();
+  }
+  loadPianoBoyBody(load=loadPianoBoyBody){
+    if(!this.refs.pianoBoy||this.refs.pianoBoy.userData.bodySource)return Promise.resolve();
+    if(this.pianoBoyBodyLoading)return this.pianoBoyBodyLoading;
+    const data=this.source.canvas.dataset;data.pianoBoyBodyStatus='loading';
+    this.pianoBoyBodyLoading=Promise.resolve().then(load).then(geometry=>{
+      attachPianoBoyBody(this.refs.pianoBoy,geometry);data.pianoBoyBodyStatus='ready';this.lastState='';
+    }).catch(()=>{data.pianoBoyBodyStatus='fallback';}).finally(()=>{this.pianoBoyBodyLoading=null;});
+    return this.pianoBoyBodyLoading;
+  }
+  updatePianoBoyBodyLoading(source){
+    if(source.scene==='music'&&this.pianoBoyBodyScene!=='music'&&source.canvas?.dataset?.pianoBoyBodyStatus==='fallback')this.loadPianoBoyBody();
+    this.pianoBoyBodyScene=source.scene;
   }
   async loadStudentModel(load=loadStudentModel){
     this.previewStudentModel=true;
@@ -279,6 +295,7 @@ export class ThreeSchoolView {
     assign({material:face},scary?source.dollScary:source.dollImage);this.updateStudentModel(source);if(source.canvas)Object.assign(source.canvas.dataset,{dollImageSize:`${source.dollImage?.naturalWidth}x${source.dollImage?.naturalHeight}`,dollMesh:String(this.refs.doll.geometry.index?.count)});this.lastState='';
   }
   draw(source,time){
+    this.updatePianoBoyBodyLoading(source);
     const state=`${Boolean(source.exploration)}|${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
     this.refs.rabbit.visible=!source.exploration;
     for(const [room,rabbit] of Object.entries(this.refs.roomRabbits||{})){
