@@ -5,7 +5,7 @@ import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=piano-boy-face-4';
+import { ThreeSchoolView } from './three-school.js?v=free-body-fit-14';
 import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
