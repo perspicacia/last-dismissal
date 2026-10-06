@@ -2,6 +2,11 @@ import {rabbitImageSize} from './rabbit-appearance.js';
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js';
 export {ARRIVAL};
 
+export const ATTACKER_ASSETS=Object.freeze({
+  normal:'./assets/schoolgirl-mask-stained.png',
+  attack:'./assets/schoolgirl-mask-stained-attack.png'
+});
+
 // Photo cutouts stay at their original aspect ratio. No rabbit-specific masks,
 // blood paint or stretched body parts are applied to the human character.
 export function attackerImagesReady(source){

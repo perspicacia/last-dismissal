@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {newExploration,advanceExploration,ROOMS} from '../exploration.js';
-import {attackerImagesReady,attackerArrival,attackerSize,attackerProjection,ARRIVAL} from '../schoolgirl-attacker.js';
+import {ATTACKER_ASSETS,attackerImagesReady,attackerArrival,attackerSize,attackerProjection,ARRIVAL} from '../schoolgirl-attacker.js';
 import {pngPixels} from './png-pixels.js';
 import {Corridor} from '../corridor.js';
 
@@ -60,10 +60,18 @@ test('서로 다른 표정의 원본 비율과 Canvas 돌진 얼굴 높이를 �
   }
 });
 test('일반 게임용 귀신 두 PNG는 같은 프레이밍과 실제 투명 배경을 갖는다',()=>{
-  const a=pngPixels(new URL('../assets/schoolgirl-ghost.png',import.meta.url)),b=pngPixels(new URL('../assets/schoolgirl-ghost-attack.png',import.meta.url));
+  const a=pngPixels(new URL('../'+ATTACKER_ASSETS.normal,import.meta.url)),b=pngPixels(new URL('../'+ATTACKER_ASSETS.attack,import.meta.url));
   assert.equal(a.width,b.width);assert.equal(a.height,b.height);
   for(const png of [a,b]){
     let clear=0,visible=0;for(let i=3;i<png.pixels.length;i+=4){if(png.pixels[i]===0)clear++;if(png.pixels[i]>200)visible++;}
     assert.ok(clear>png.width*png.height*.4);assert.ok(visible>png.width*png.height*.1);
   }
+  // A generated expression variant must not shift the body during a texture
+  // swap. Ignore the changing face and compare the lower silhouette's alpha.
+  let intersection=0,union=0;
+  for(let i=a.width*Math.floor(a.height*.20)*4+3;i<a.pixels.length;i+=4){
+    const normal=a.pixels[i]>200,attack=b.pixels[i]>200;
+    intersection+=normal&&attack;union+=normal||attack;
+  }
+  assert.ok(intersection/union>.98,'both expressions keep aligned body/hand/foot silhouettes');
 });

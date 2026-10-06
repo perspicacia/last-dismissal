@@ -4,8 +4,8 @@
 <p id="status" role="status">사진 로딩 중 · 이 화면은 등장 연출 비교이며 실제 종료 판정은 게임에서 확인합니다.</p>
 <canvas id="view" data-renderer="three" aria-label="여고생 귀신 등장 연출"></canvas>
 <script type="module">
-import {Corridor} from '../../corridor.js?v=schoolgirl-attacker-1';
-import {attackerArrival} from '../../schoolgirl-attacker.js?v=schoolgirl-attacker-1';
+import {Corridor} from '../../corridor.js?v=masked-schoolgirl-2';
+import {attackerArrival} from '../../schoolgirl-attacker.js?v=masked-schoolgirl-2';
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 const canvas=document.querySelector('canvas'),status=document.querySelector('#status'),c=new Corridor(canvas,()=>{},()=>{});
 c.tutorial=false;c.exploration={ended:false};c.enterClassroom('music');c.player={x:0,z:3.93,angle:0,manualLook:true,pitch:0};let time=null;

@@ -2,10 +2,10 @@ import {newStairHaunt,advanceStairHaunt,stairSoundPan} from './stair-haunt.js?v=
 import {MouseLookController,lookPlayer,inputAction,lookKeyAction,keyboardLookPlayer} from './mouse-controls.js?v=accessible-camera-1';
 import {loadLookSettings,saveLookSettings,normalizeLookSettings} from './camera-preferences.js?v=accessible-camera-1';
 import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-controls.js';
-import {ARRIVAL,attackerArrival} from './schoolgirl-attacker.js?v=schoolgirl-attacker-1';
+import {ARRIVAL,attackerArrival} from './schoolgirl-attacker.js?v=masked-schoolgirl-2';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
-import {Corridor} from './corridor.js?v=schoolgirl-attacker-1';
-import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=schoolgirl-attacker-1';
+import {Corridor} from './corridor.js?v=masked-schoolgirl-2';
+import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from './exploration.js?v=masked-schoolgirl-2';
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();

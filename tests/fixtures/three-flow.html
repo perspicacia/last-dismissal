@@ -30,9 +30,9 @@ if(new URLSearchParams(location.search).has('facelessFail')){
 }
 if(new URLSearchParams(location.search).has('attackerFailOnce')){
  const src=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');let failed=false;
- Object.defineProperty(HTMLImageElement.prototype,'src',{...src,set(value){if(!failed&&String(value).includes('schoolgirl-ghost.png')){failed=true;src.set.call(this,'/assets/intentional-missing-attacker.png');}else src.set.call(this,value);}});
+ Object.defineProperty(HTMLImageElement.prototype,'src',{...src,set(value){if(!failed&&String(value).includes('schoolgirl-mask-stained.png')){failed=true;src.set.call(this,'/assets/intentional-missing-attacker.png');}else src.set.call(this,value);}});
 }
-await import('../../game.js?v=schoolgirl-attacker-1');
+await import('../../game.js?v=masked-schoolgirl-2');
 // Preserve the first sound-clock draw and force the following exploration draw.
 // Then restore random before Three.js creates UUIDs or audio creates noise.
 // Capturing the real start/retry click runs before the ordinary game handler.

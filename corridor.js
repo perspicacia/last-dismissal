@@ -4,9 +4,9 @@ import {ROOMS,ROOM_AMBIENCE} from './exploration.js?v=mouse-comfort-1';
 import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
-import {attackerImagesReady,attackerImage,attackerArrival,attackerProjection} from './schoolgirl-attacker.js?v=schoolgirl-attacker-1';
+import {ATTACKER_ASSETS,attackerImagesReady,attackerImage,attackerArrival,attackerProjection} from './schoolgirl-attacker.js?v=masked-schoolgirl-2';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=schoolgirl-attacker-1';
+import { ThreeSchoolView } from './three-school.js?v=masked-schoolgirl-2';
 import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
@@ -70,7 +70,7 @@ export class Corridor {
   resize() { if(this.view3D){this.view3D.resize();return;}this.canvas.width=Math.min(1100,Math.max(375,Math.round(this.canvas.clientWidth)));this.canvas.height=Math.round(this.canvas.width*(this.canvas.clientHeight/Math.max(1,this.canvas.clientWidth))); }
   attackerImagesReady(){return attackerImagesReady(this);}
   loadAttackerImages(){
-    for(const [key,path] of [['schoolgirl','./assets/schoolgirl-ghost.png'],['schoolgirlAttack','./assets/schoolgirl-ghost-attack.png']]){
+    for(const [key,path] of [['schoolgirl',ATTACKER_ASSETS.normal],['schoolgirlAttack',ATTACKER_ASSETS.attack]]){
       const previous=this[key];if(previous&&(!previous.complete||previous.naturalWidth))continue;
       const image=new Image();this[key]=image;
       const update=()=>{this.canvas.dataset.attackerStatus=this.attackerImagesReady()?'ready':Object.values({normal:this.schoolgirl,attack:this.schoolgirlAttack}).some(img=>img?.complete&&!img.naturalWidth)?'unavailable':'loading';this.view3D?.syncTextures(this);this.notify?.();};
