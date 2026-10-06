@@ -1,6 +1,7 @@
 import {decorateRabbitElement} from './rabbit-appearance.js?v=dark-blood-1';
 import {newStairHaunt,advanceStairHaunt,stairSoundPan} from './stair-haunt.js?v=stair-haunt-1';
-import {MouseLookController,lookPlayer,inputAction,DEFAULT_SENSITIVITY} from './mouse-controls.js?v=capture-cursor-1';
+import {MouseLookController,lookPlayer,inputAction,lookKeyAction,keyboardLookPlayer} from './mouse-controls.js?v=accessible-camera-1';
+import {loadLookSettings,saveLookSettings,normalizeLookSettings} from './camera-preferences.js?v=accessible-camera-1';
 import {captureCommand,hasSystemModifier,isCaptureShortcut} from './capture-controls.js';
 import {ARRIVAL,rabbitArrival} from './rabbit-arrival.js?v=dark-blood-1';
 import {SchoolAudio} from './audio.js?v=cat-polish-2';
@@ -9,7 +10,7 @@ import {ROOMS,ROOM_AMBIENCE,nearbyRoom,newExploration,advanceExploration} from '
 import {ghostSmileAmount} from './room-hauntings.js?v=music-ghost-polish-1';
 import {newHauntingAudio,advanceHauntingAudio} from './haunting-audio-state.js?v=music-ghost-polish-1';
 const $=id=>document.getElementById(id),audio=new SchoolAudio();
-let paused=false,capturing=false,sensitivity=DEFAULT_SENSITIVITY;const heldKeys=new Map();
+let paused=false,capturing=false,lookSettings=loadLookSettings();const heldKeys=new Map();
 let state=null,endingTimer,audioError='',hauntingAudio=newHauntingAudio(),stairHaunt=newStairHaunt();
 function show(id){if(id!=='game'){closePause();mouse.release();}document.body.dataset.screen=id;document.body.classList.toggle('playing',id==='game');for(const x of ['intro','game','ending','gameover'])$(x).hidden=x!==id;}
 function updateAudioStatus(){const status=$('audio-status'),message=audioError||(!audio.ctx?'BGM 대기':audio.muted||audio.volume===0?'BGM 음소거':audio.ctx.state==='running'?'BGM 재생 중':'BGM 일시 정지 · 소리 확인');if(status.textContent!==message)status.textContent=message;status.dataset.level=String(audio.level().toFixed(5));const needsHelp=Boolean(audioError)||Boolean(audio.ctx&&audio.ctx.state!=='running'&&!audio.muted&&state&&!state.ended&&!paused);status.classList.toggle('sr-only',!needsHelp);$('sound-test').hidden=!needsHelp;}
@@ -24,7 +25,7 @@ corridor.onCatCue=variant=>audio.catMeow(variant);
 corridor.manualLook=true;
 const canPlay=()=>!$('game').hidden&&Boolean(state)&&!state.ended&&!paused;
 const mouse=new MouseLookController($('corridor'),{
- canPlay,onLook:(dx,dy)=>{corridor.player=lookPlayer(corridor.player,dx,dy,sensitivity);corridor.notify();},
+ canPlay,onLook:(dx,dy)=>{corridor.player=lookPlayer(corridor.player,dx,dy,lookSettings);corridor.notify();},
  onInteract:()=>interact(),onUnlock:()=>pause(),onMode:mode=>{$('corridor').dataset.lookMode=mode;}
 });
 function closePause(){paused=false;capturing=false;heldKeys.clear();corridor.keys.clear();$('pause-menu').hidden=true;$('capture-controls').hidden=true;$('game').inert=false;document.body.dataset.paused='false';document.body.dataset.capturing='false';}
@@ -43,10 +44,27 @@ async function resume(){
 }
 $('pause-game').onclick=pause;$('resume-game').onclick=resume;$('pause-exit').onclick=restart;
 $('capture-game').onclick=captureFrame;$('capture-resume').onclick=resume;
-$('sensitivity').oninput=e=>{sensitivity=Number(e.target.value)/100;$('sensitivity-value').textContent=`${e.target.value}%`;};
+function syncLookSettings(){
+ const percent=value=>String(Math.round(value*1000)/10);
+ for(const [axis,id] of [['horizontal','sensitivity'],['vertical','vertical-sensitivity']]){
+  $(id).value=percent(lookSettings[axis]);$(`${id}-value`).textContent=`${percent(lookSettings[axis])}%`;
+ }
+ $('vertical-lock').checked=lookSettings.verticalLocked;$('vertical-sensitivity').disabled=lookSettings.verticalLocked;
+ $('vertical-help').textContent=lookSettings.verticalLocked?'정면 높이에 고정되어 좌우로만 둘러봅니다.':'상하 감도를 낮추면 작은 손 움직임에 화면이 덜 기울어집니다.';
+ Object.assign($('corridor').dataset,{lookHorizontal:percent(lookSettings.horizontal),lookVertical:percent(lookSettings.vertical),lookVerticalLocked:String(lookSettings.verticalLocked)});
+}
+function changeLookSettings(change){
+ lookSettings=normalizeLookSettings({...lookSettings,...change});
+ if(lookSettings.verticalLocked){corridor.player={...corridor.player,pitch:0};if(corridor.corridorPlayer)corridor.corridorPlayer={...corridor.corridorPlayer,pitch:0};corridor.notify();}
+ saveLookSettings(lookSettings);syncLookSettings();
+}
+$('sensitivity').oninput=e=>changeLookSettings({horizontal:Number(e.target.value)/100});
+$('vertical-sensitivity').oninput=e=>changeLookSettings({vertical:Number(e.target.value)/100});
+$('vertical-lock').onchange=e=>changeLookSettings({verticalLocked:e.target.checked});
+syncLookSettings();
 $('pause-menu').addEventListener('keydown',e=>{
  if(e.key!=='Tab')return;
- const controls=[...$('pause-menu').querySelectorAll('button,input')],first=controls[0],last=controls.at(-1);
+ const controls=[...$('pause-menu').querySelectorAll('button,input')].filter(el=>!el.disabled),first=controls[0],last=controls.at(-1);
  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
 });
@@ -119,6 +137,7 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape'){if(canPlay()||capturing){e.preventDefault();pause();}else if(!$('gameover').hidden){e.preventDefault();restart();}return;}
  if(hasSystemModifier(e)){heldKeys.clear();corridor.keys.clear();return;}
  if(['INPUT','BUTTON','A'].includes(e.target.tagName)||!canPlay())return;
+ const lookAction=lookKeyAction(e.key,e.code,e);if(lookAction){e.preventDefault();corridor.player=keyboardLookPlayer(corridor.player,lookAction,lookSettings);corridor.notify();return;}
  const action=inputAction(e.key,e.code,e);if(action){e.preventDefault();heldKeys.set(e.code||e.key.toLowerCase(),action);refreshKeys();if(!e.repeat)corridor.nudge(action);}
  if((e.code==='KeyE'||e.key.toLowerCase()==='e')&&!e.repeat){e.preventDefault();interact();heldKeys.clear();}
 });

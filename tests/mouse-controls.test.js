@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_SENSITIVITY,MAX_PITCH,inputAction,lookPlayer,manualCameraPose,MouseLookController} from '../mouse-controls.js';
+import {DEFAULT_SENSITIVITY,MAX_PITCH,inputAction,lookPlayer,lookKeyAction,keyboardLookPlayer,manualCameraPose,MouseLookController} from '../mouse-controls.js';
+import {DEFAULT_LOOK_SETTINGS,LOOK_STORAGE_KEY,normalizeLookSettings,loadLookSettings,saveLookSettings} from '../camera-preferences.js';
 import {movePlayer,movementDelta} from '../movement.js';
 import {moveClassroomPlayer} from '../classroom.js';
 import {ROOM_BLOCKERS} from '../room-props.js';
@@ -37,12 +38,49 @@ test('strafe keeps all room props and corridor walls solid',()=>{
  }
 });
 test('mouse movement is proportional, reversible, bounded and rejects bad device deltas',()=>{
- const p={...player,pitch:0},look=lookPlayer(p,100,80);close(look.angle,.13);close(look.pitch,-.104);
+ const p={...player,pitch:0},look=lookPlayer(p,100,80);close(look.angle,.13);close(look.pitch,-.052);
  assert.deepEqual(lookPlayer(look,-100,-80),p);
  close(lookPlayer(p,100,0,DEFAULT_SENSITIVITY/2).angle,look.angle/2);
  let result=p;for(let i=0;i<100;i++)result=lookPlayer(result,0,200);close(result.pitch,-MAX_PITCH);
  for(let i=0;i<100;i++)result=lookPlayer(result,0,-200);close(result.pitch,MAX_PITCH);
  assert.equal(lookPlayer(p,NaN,1),p);assert.equal(lookPlayer(p,1,Infinity),p);close(lookPlayer(p,10000,0).angle,.26);
+});
+test('horizontal and vertical sensitivity are independent, with a slower vertical default and optional level lock',()=>{
+ const p={...player,pitch:0};
+ const first=lookPlayer(p,100,100,{horizontal:.8,vertical:.25});close(first.angle,.16);close(first.pitch,-.05);
+ const slowerY=lookPlayer(p,100,100,{horizontal:.8,vertical:.125});close(slowerY.angle,first.angle);close(slowerY.pitch,first.pitch/2);
+ const slowerX=lookPlayer(p,100,100,{horizontal:.4,vertical:.25});close(slowerX.angle,first.angle/2);close(slowerX.pitch,first.pitch);
+ const locked={...DEFAULT_LOOK_SETTINGS,verticalLocked:true};
+ const level=lookPlayer({...p,pitch:-.6},100,-200,locked);close(level.pitch,0);close(level.angle,.13);
+ close(lookPlayer(level,0,200,locked).pitch,0);
+ close(lookPlayer(level,0,100,{...locked,verticalLocked:false}).pitch,-.065);
+ assert.equal(seesRabbit({x:0,z:4,angle:0,pitch:level.pitch,manualLook:true}),true);
+ close(lookPlayer(p,100,100,.4).pitch,-.08); // Preserve legacy shared-gain calls.
+});
+test('keyboard-only vertical viewing is bounded, reversible and ignores system shortcuts',()=>{
+ assert.equal(lookKeyAction('PageUp','PageUp'),'lookUp');assert.equal(lookKeyAction('PageDown'),'lookDown');assert.equal(lookKeyAction('Home'),'levelLook');assert.equal(lookKeyAction('ArrowUp'),null);
+ for(const modifier of ['metaKey','ctrlKey','altKey'])assert.equal(lookKeyAction('PageDown','PageDown',{[modifier]:true}),null);
+ const p={...player,pitch:0};let result=p;
+ for(let i=0;i<40;i++)result=keyboardLookPlayer(result,'lookUp');close(result.pitch,MAX_PITCH);close(result.angle,p.angle);close(result.x,p.x);close(result.z,p.z);
+ assert.equal(seesRabbit({...result,x:0,z:4}),false);
+ for(let i=0;i<80;i++)result=keyboardLookPlayer(result,'lookDown');close(result.pitch,-MAX_PITCH);
+ close(keyboardLookPlayer(result,'levelLook').pitch,0);close(keyboardLookPlayer(result,'lookUp',{verticalLocked:true}).pitch,0);
+ assert.equal(keyboardLookPlayer(p,'forward'),p);
+ assert.deepEqual(keyboardLookPlayer(keyboardLookPlayer(p,'lookUp'),'lookDown'),p);
+});
+test('camera preferences survive reload independently of game state and malformed or denied storage is safe',()=>{
+ const values=new Map(),storage={getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value)};
+ assert.deepEqual(loadLookSettings(storage),DEFAULT_LOOK_SETTINGS);
+ const selected={horizontal:.45,vertical:.175,verticalLocked:true};assert.equal(saveLookSettings(selected,storage),true);assert.deepEqual(loadLookSettings(storage),selected);
+ assert.deepEqual(Object.keys(JSON.parse(values.get(LOOK_STORAGE_KEY))).sort(),['horizontal','vertical','verticalLocked']);
+ for(const bad of ['{broken','null','"string"','[]']){values.set(LOOK_STORAGE_KEY,bad);assert.deepEqual(loadLookSettings(storage),DEFAULT_LOOK_SETTINGS);}
+ assert.deepEqual(normalizeLookSettings({horizontal:Infinity,vertical:'32.5',verticalLocked:'true'}),DEFAULT_LOOK_SETTINGS);
+ assert.deepEqual(normalizeLookSettings({horizontal:0,vertical:99,verticalLocked:true}),{horizontal:.2,vertical:1.8,verticalLocked:true});
+ const denied={getItem(){throw new Error('blocked');},setItem(){throw new Error('quota');}};
+ assert.deepEqual(loadLookSettings(denied),DEFAULT_LOOK_SETTINGS);assert.equal(saveLookSettings(selected,denied),false);
+ // Each axis can be reduced/increased by at least half its default value.
+ assert.ok(.2<=DEFAULT_LOOK_SETTINGS.horizontal/2&&1.8>=DEFAULT_LOOK_SETTINGS.horizontal*1.5);
+ assert.ok(.1<=DEFAULT_LOOK_SETTINGS.vertical/2&&1.8>=DEFAULT_LOOK_SETTINGS.vertical*1.5);
 });
 test('manual camera uses a fixed eye height and only explicit yaw/pitch',()=>{
  const pose=manualCameraPose({...player,x:1,z:23,angle:Math.PI/2,pitch:-.4});close(pose.y,1.5);close(pose.targetY,1.5+Math.tan(-.4));close(pose.targetX,2);close(pose.targetZ,-23);

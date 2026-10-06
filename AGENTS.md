@@ -25,6 +25,7 @@
 - 검은 고양이의 참고 모델 비율·올라간 꼬리·연속 다리 표면과 음악실 남자아이의 원본 앞면/뒤 볼륨은 [specs/cat-boy-likeness.md](specs/cat-boy-likeness.md)를 따른다. 남자아이를 여러 구형 사진 부품으로 되돌리지 않는다. 같은 원본 XY/UV를 보존하며 옆/뒤는 근사다. 기존 위치·좌석·발 접촉·비공격·고양이 보행/정리 규칙은 유지한다.
 
 - 현재 일반 게임의 조작/카메라/Esc 규칙은 [specs/mouse-look-comfort.md](specs/mouse-look-comfort.md)를 따른다. WASD 옆걸음·수동 마우스 시점·고정 카메라·일시정지가 이전 A/D 회전·자동 시점·Esc 초기화 규칙을 대체한다.
+- 시점 조작의 최신 감도/고정/대체 입력은 [specs/accessible-camera-controls.md](specs/accessible-camera-controls.md)를 따른다. 좌우/상하 65%/32.5% 독립 감도·정면 높이 고정·Page Up/Down/Home·설정 저장은 이전 단일 감도를 대체한다. 토끼 수직 시야·일시정지/캡처와 고정 카메라는 유지한다.
 - 영역 캡처는 [specs/capture-cursor-release.md](specs/capture-cursor-release.md)를 따른다. P/일시정지 메뉴로 장면을 고정하고 커서·드래그를 해제한다. OS 캡처 단축키를 막지 않으며 캡처 중 포커스 이탈은 고정을 유지한다. 재개/처음 화면에서 상태를 정리한다.
 
 - 계단 접근 공포음은 [specs/stair-haunt.md](specs/stair-haunt.md)를 따른다. 새 게임당 한 번이며 음소거 중 소비하고 방 이동/일시정지/종료에서 정리한다. 공격자·카메라 조작은 변경하지 않는다.
