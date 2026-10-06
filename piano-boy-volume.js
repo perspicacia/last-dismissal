@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {pianoBoyLayout} from './piano-boy.js';
-import {preparePianoBoyBody} from './piano-boy-body.js?v=free-body-fit-14';
+import {preparePianoBoyBody} from './piano-boy-body.js?v=human-shape-2';
 
 // Preserve photographed X/Y and UV positions while sculpting BOTH surfaces.
 // Facial landmarks need gentler depth than the surrounding skull silhouette:
@@ -57,7 +57,7 @@ export function buildPianoBoyVolume(pixels,width,height,pose,columns=256,rows=38
   if(faceShell>0)fields[0][i]=union(fields[0][i],.096*Math.sqrt(faceShell)*smooth((v-.120)/.022)*(1-smooth((v-.250)/.032)));
   // Features keep the source's alignment without a deep protruding nose.
   const bump=(cx,cy,rx,ry,d)=>d*Math.exp(-2*(((u-cx)/rx)**2+((v-cy)/ry)**2));
-  fields[0][i]+=bump(.501,.190,.028,.036,.012)+bump(.447,.177,.041,.043,.003)+bump(.551,.177,.041,.043,.003)+bump(.50,.230,.048,.025,.003);
+  fields[0][i]+=bump(.501,.190,.028,.036,.008)+bump(.447,.177,.041,.043,.003)+bump(.551,.177,.041,.043,.003)+bump(.50,.230,.048,.025,.003);
   fields[0][i]*=rim;fields[1][i]*=rim;
  }
  // Smooth joined anatomical regions without changing the photographed outline.
@@ -160,37 +160,52 @@ export function buildPianoBoyFigure(config){
  const mesh=new THREE.Mesh(new THREE.BufferGeometry(),[photo,back]);mesh.name='piano-boy-original-volume';mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);
  root.userData={kind:'boy',config,photoMeshes:[mesh],volume:mesh,sourceImage:null,pose:pianoBoyLayout({naturalWidth:1024,naturalHeight:1536},config),bodySource:null,bodyStatus:'original'};return root;
 }
-// Facial landmarks keep a flat original-photo patch. Hair and the outer rim
-// curve towards the rounded back, instead of creating a rectangular slab.
-// This is a photographic head, not a new character face.
-export function buildPianoBoyHead(pixels,width,height,pose){
- const original=buildPianoBoyVolume(pixels,width,height,pose,128,192),p=original.attributes.position,uv=original.attributes.uv;
- const points=[],coords=[],colours=[],blend=[],remap=new Map(),front=[],back=[],frontSet=new Set(original.index.array.slice(0,original.groups[0].count));
+// Adapt the free skull/jaw/neck while retaining the child's front photograph.
+// Gentle facial depth preserves its landmarks; the sides remain an approximation.
+export function buildPianoBoyHead(pixels,width,height,pose,source){
+ if(!source?.attributes.position)throw new Error('Piano boy human head is empty');
+ const g=source.clone(),p=g.attributes.position,n=g.attributes.normal,coords=[],colours=[],blend=[];
  const smooth=n=>{n=Math.max(0,Math.min(1,n));return n*n*(3-2*n);};
- const skinAt=4*(Math.round(.211*(height-1))*width+Math.round(.48*(width-1))),skin=new THREE.Color().setRGB(pixels[skinAt]/255,pixels[skinAt+1]/255,pixels[skinAt+2]/255,THREE.SRGBColorSpace);
- const vertex=id=>{
-  if(remap.has(id))return remap.get(id);
-  const i=points.length/3,isFront=frontSet.has(id),u=uv.getX(id),v=1-uv.getY(id);
-  const face=smooth((u-.397)/.020)*smooth((.603-u)/.020)*smooth((v-.125)/.025)*(1-smooth((v-.242)/.022));
-  const jaw=smooth((v-.21)/.030),z=isFront?p.getZ(id)*(1-face)-.095*face:p.getZ(id)*(1-.85*jaw);
-  points.push(p.getX(id),p.getY(id),z);coords.push(u,1-v);
-  const color=new THREE.Color(...[0,1,2].map(j=>original.attributes.color.getComponent(id,j)));
-  if(!isFront)color.lerp(skin,jaw);colours.push(color.r,color.g,color.b);
-  blend.push(isFront?1-smooth((v-.244)/.022):0);remap.set(id,i);return i;
- };
- const headPixel=id=>{const u=uv.getX(id),v=1-uv.getY(id);return v<=.245&&(v<.235||Math.abs(u-.5)<.085-.025*smooth((v-.235)/.045));};
- for(const [group,target] of [[original.groups[0],front],[original.groups[1],back]])for(let i=group.start;i<group.start+group.count;i+=3){const ids=[0,1,2].map(j=>original.index.getX(i+j));if(ids.every(headPixel))target.push(...ids.map(vertex));}
- const edges=new Map();for(const ids of [front,back])for(let i=0;i<ids.length;i+=3)for(let j=0;j<3;j++){const a=ids[i+j],b=ids[i+(j+1)%3],key=[a,b].sort((a,b)=>a-b).join(',');const edge=edges.get(key);if(edge)edge.count++;else edges.set(key,{a,b,count:1});}
- const open=[...edges.values()].filter(e=>e.count===1);if(open.length){const centre=new THREE.Vector3();const ring=new Set(open.flatMap(e=>[e.a,e.b]));for(const id of ring)centre.add(new THREE.Vector3(...points.slice(id*3,id*3+3)));centre.divideScalar(ring.size);const c=points.length/3;points.push(...centre.toArray());coords.push(.5,.6875);colours.push(skin.r,skin.g,skin.b);blend.push(0);for(const e of open)back.push(e.b,e.a,c);}
- const retainedFront=new Set(front);for(let i=0;i<blend.length;i++)if(!retainedFront.has(i))blend[i]=0;
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(coords,2));g.setAttribute('color',new THREE.Float32BufferAttribute(colours,3));g.setAttribute('photoBlend',new THREE.Float32BufferAttribute(blend,1));g.setIndex([...front,...back]);g.addGroup(0,front.length,0);g.addGroup(front.length,back.length,1);g.computeVertexNormals();g.computeBoundingBox();original.dispose();return g;
+ const sample=(u,v)=>4*(Math.max(0,Math.min(height-1,Math.round(v*(height-1))))*width+Math.max(0,Math.min(width-1,Math.round(u*(width-1)))));
+ // The adult source's cheeks cannot surround the narrow photographed jaw as
+ // a grey shelf. Fit only the outer front jaw, leaving the eyes and lips aligned.
+ const left=new Float32Array(height).fill(-pose.width/2),right=new Float32Array(height).fill(pose.width/2);
+ for(let row=Math.floor(height*.165);row<height*.24;row++){
+  let min=width,max=-1;for(let x=0;x<width;x++)if(pixels[4*(row*width+x)+3]>192){min=Math.min(min,x);max=Math.max(max,x);}
+  if(max>=min){left[row]=(min/(width-1)-.5)*pose.width;right[row]=(max/(width-1)-.5)*pose.width;}
+ }
+ const skinAt=sample(.48,.211),hairAt=sample(.48,.060);
+ const skin=new THREE.Color().setRGB(pixels[skinAt]/255,pixels[skinAt+1]/255,pixels[skinAt+2]/255,THREE.SRGBColorSpace);
+ const hair=new THREE.Color().setRGB(pixels[hairAt]/255,pixels[hairAt+1]/255,pixels[hairAt+2]/255,THREE.SRGBColorSpace);
+ for(let i=0;i<p.count;i++){
+  const v=(pose.top-p.getY(i))/pose.height,row=Math.max(0,Math.min(height-1,Math.round(v*(height-1)))),x=p.getX(i);
+  const limit=x<0?-left[row]:right[row],outer=Math.max(0,Math.abs(x)-limit*.65),narrowed=Math.sign(x)*(Math.abs(x)-outer*.60);
+  const jawWidth=smooth((v-.171)/.032)*(1-smooth((v-.230)/.016))*smooth((-p.getZ(i)+.01)/.07);
+  p.setX(i,THREE.MathUtils.lerp(x,narrowed,jawWidth));
+  const u=.5+p.getX(i)/pose.width;
+  const face=smooth((u-.394)/.031)*(1-smooth((u-.606)/.031))*smooth((v-.119)/.026)*(1-smooth((v-.254)/.028))*smooth((-p.getZ(i)-.007)/.047);
+  // The source nose/eye sockets must not emboss a second adult face beneath
+  // the child's photograph. A gentle child surface keeps the original eyes,
+  // mouth and nose registered; the free jaw, ears and neck form the profile.
+  const bump=(cx,cy,rx,ry,depth)=>depth*Math.exp(-2*(((u-cx)/rx)**2+((v-cy)/ry)**2));
+  const relief=bump(.501,.190,.028,.036,.008)+bump(.45,.181,.05,.045,.002)+bump(.55,.181,.05,.045,.002);
+  const jaw=.003*smooth((v-.219)/.025);
+  p.setZ(i,THREE.MathUtils.lerp(p.getZ(i),-.095-relief+jaw,face));
+  coords.push(u,1-v);
+  const faceSide=1-smooth((p.getZ(i)+.010)/.09),hairEnd=THREE.MathUtils.lerp(.191,.139,faceSide),hairWeight=1-smooth((v-hairEnd)/.035);
+  const tint=skin.clone().lerp(hair,hairWeight).multiplyScalar(.99+.015*Math.sin(p.getX(i)*413+p.getY(i)*731));colours.push(tint.r,tint.g,tint.b);
+  blend.push(0);
+ }
+ g.computeVertexNormals();
+ for(let i=0;i<p.count;i++){const u=coords[i*2],v=1-coords[i*2+1],front=smooth((-n.getZ(i)-.05)/.65);blend[i]=front*smooth((pixels[sample(u,v)+3]/255-.25)/.65)*(1-smooth((v-.246)/.022));}
+ g.setAttribute('uv',new THREE.Float32BufferAttribute(coords,2));g.setAttribute('color',new THREE.Float32BufferAttribute(colours,3));g.setAttribute('photoBlend',new THREE.Float32BufferAttribute(blend,1));g.clearGroups();g.addGroup(0,g.index.count,0);g.computeBoundingBox();return g;
 }
 export function attachPianoBoyBody(root,source){
  if(root.userData.bodySource===source)return;
  if(root.userData.body){const previous=root.userData.body;root.remove(previous);previous.geometry.dispose();previous.material.dispose();}
  root.userData.bodySource=source;root.userData.bodyStatus='ready';
- // The photograph already contains the chin/hair's shadows. Casting its flat
- // face patch again leaves a square dark band on the new body's neckline.
+ // The portrait already carries facial shadows. Avoid projecting those
+ // baked shadows a second time onto the collar.
  root.userData.volume.castShadow=root.userData.volume.receiveShadow=false;
  const body=new THREE.Mesh(source.clone(),root.userData.volume.material[0].clone());body.name='piano-boy-free-body';body.castShadow=body.receiveShadow=true;
  // Material.clone does not retain custom shader callbacks.
@@ -205,7 +220,9 @@ export function setPianoBoyTexture(root,image,texture){
   const canvas=document.createElement('canvas');canvas.width=384;canvas.height=Math.round(384*image.naturalHeight/image.naturalWidth);
   const ctx=canvas.getContext('2d');if(!ctx)return false;ctx.drawImage(image,0,0,canvas.width,canvas.height);
   const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-  const geometry=(root.userData.bodySource?buildPianoBoyHead:buildPianoBoyVolume)(pixels,canvas.width,canvas.height,pose);
+  let opaque=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i]>96&&++opaque>=32)break;
+  if(opaque<32)return false;
+  const geometry=root.userData.bodySource?buildPianoBoyHead(pixels,canvas.width,canvas.height,pose,root.userData.bodySource.pianoBoyHead):buildPianoBoyVolume(pixels,canvas.width,canvas.height,pose);
   if(!geometry.index.count){geometry.dispose();return false;}
   root.userData.volume.geometry.dispose();root.userData.volume.geometry=geometry;root.userData.sourceImage=image;root.userData.pose=pose;
   if(root.userData.bodySource){const body=root.userData.body;body.geometry.dispose();body.geometry=preparePianoBoyBody(root.userData.bodySource,pose,pixels,canvas.width,canvas.height);}

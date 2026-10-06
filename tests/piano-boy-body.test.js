@@ -13,6 +13,7 @@ import {pngPixels,resizePixels} from './png-pixels.js';
 const file=await readFile(new URL('../assets/models/piano-boy-body.glb',import.meta.url));
 const asset=await new GLTFLoader().parseAsync(file.buffer.slice(file.byteOffset,file.byteOffset+file.byteLength),'');
 const body=asset.scene.getObjectByName('piano-boy-free-body').geometry;
+body.pianoBoyHead=asset.scene.getObjectByName('piano-boy-human-head').geometry;
 const art=pngPixels(new URL('../assets/piano-boy-ghost.png',import.meta.url));
 const image={complete:true,naturalWidth:art.width,naturalHeight:art.height},config=ROOM_AMBIENCE.music.boy,pose=pianoBoyLayout(image,config);
 function closed(g){
@@ -26,8 +27,9 @@ function closed(g){
 
 test('로컬 무료 인체 GLB는 얼굴 없는 닫힌 앉은 몸통이며 좌석·맨발이 접지한다',()=>{
  closed(body);body.computeBoundingBox();const p=body.attributes.position;
- assert.ok(p.count>3000&&p.count<9000,'anatomy, separate garments and toes remain a small authored mesh');
- assert.ok(body.boundingBox.max.y<1.10,'source model head is excluded');
+ assert.ok(p.count>3000&&p.count<12000,'anatomy, separate garments and toes remain a small authored mesh');
+ assert.ok(body.boundingBox.max.y<1.10,'body mesh excludes the head');
+ closed(body.pianoBoyHead);assert.ok(file.byteLength<600*1024,'one local anatomy asset stays below 600 KiB');
  assert.ok(body.boundingBox.max.z-body.boundingBox.min.z>.45,'seated knees have an L profile');
  let seat=0,chest=[],back=[],knees=0;
  for(let i=0;i<p.count;i++){
@@ -50,8 +52,8 @@ test('로컬 무료 인체 GLB는 얼굴 없는 닫힌 앉은 몸통이며 좌�
 });
 
 test('원본 얼굴의 눈·코·입·턱 비율은 보존하고 머리 둘레와 뒷면만 둥글게 연결한다',()=>{
- const head=buildPianoBoyHead(art.pixels,art.width,art.height,pose);closed(head);
- const p=head.attributes.position,uv=head.attributes.uv,front=new Set(head.index.array.slice(0,head.groups[0].count));
+ const head=buildPianoBoyHead(art.pixels,art.width,art.height,pose,body.pianoBoyHead);closed(head);
+ const p=head.attributes.position,uv=head.attributes.uv,front=new Set(Array.from({length:p.count},(_,i)=>i).filter(i=>head.attributes.normal.getZ(i)<-.35&&head.attributes.photoBlend.getX(i)>.50));
  for(const i of front){assert.ok(Math.abs(p.getX(i)-(uv.getX(i)-.5)*pose.width)<1e-6);assert.ok(Math.abs(p.getY(i)-(pose.top-(1-uv.getY(i))*pose.height))<1e-6);}
  const at=(u,v)=>{let nearest=Infinity,point;for(const i of front){const d=(uv.getX(i)-u)**2+(1-uv.getY(i)-v)**2;if(d<nearest){nearest=d;point=new THREE.Vector3().fromBufferAttribute(p,i);}}return point;};
  const landmarks=[at(.457,.160),at(.548,.160),at(.501,.190),at(.501,.218),at(.501,.242)];
@@ -62,26 +64,30 @@ test('원본 얼굴의 눈·코·입·턱 비율은 보존하고 머리 둘레�
   const ratio=p=>p[0].clone().add(p[1]).multiplyScalar(.5).distanceTo(p[4])/p[0].distanceTo(p[1]);
   assert.ok(Math.abs(ratio(projected)/ratio(reference)-1)<.03,`${distance}m / ${yaw}° preserves eye-to-chin ratio`);
  }
- const back=new Set([...head.index.array.slice(head.groups[0].count)].filter(i=>!front.has(i)));
+ const back=new Set(Array.from({length:p.count},(_,i)=>i).filter(i=>head.attributes.normal.getZ(i)>.2));
+ assert.ok(back.size>100,'actual rear head vertices are tested');
  assert.ok([...back].every(i=>head.attributes.photoBlend.getX(i)===0),'eyes are never painted on back of head');
  assert.ok(head.boundingBox.max.z-head.boundingBox.min.z>.17);
 });
 
-test('실제 목은 턱 아래까지 이어져 사진 머리 하단의 긴 판을 줄인다',()=>{
- const head=buildPianoBoyHead(art.pixels,art.width,art.height,pose),p=body.attributes.position;
- const bottom=head.boundingBox.min.y,underChin=[];
- for(let i=0;i<p.count;i++)if(Math.abs(p.getX(i))<.03&&Math.abs(p.getY(i)-bottom)<.014)underChin.push(p.getZ(i));
- assert.ok(underChin.length>5,'neck surface reaches the retained head');
- const neckFront=Math.min(...underChin),neckBack=Math.max(...underChin);
- assert.ok(neckFront-head.boundingBox.min.z<.012,'no long unsupported photographic chin shelf');
- assert.ok(neckBack>-.02&&neckFront<-.06,'the neck supports both sides of the head bottom');
- assert.ok(body.boundingBox.max.y>bottom+.010,'head and neck overlap vertically');
- const cap=head.attributes.color.count-1;
- assert.equal(head.attributes.photoBlend.getX(cap),0,'bottom cap has no stretched face photo');
- const clothed=preparePianoBoyBody(body,pose,art.pixels,art.width,art.height);
- let neckVertex=-1;for(let i=0;i<p.count;i++)if(Math.abs(p.getX(i))<.03&&p.getY(i)>1.05){neckVertex=i;break;}
- for(let c=0;c<3;c++)assert.ok(Math.abs(head.attributes.color.getComponent(cap,c)-clothed.attributes.color.getComponent(neckVertex,c))<.008,'head closure and actual neck share skin colour');
- clothed.dispose();head.dispose();
+test('실제 머리–턱–목의 연결과 둥근 옷깃이 끊어진 사진 판을 대체한다',()=>{
+ const head=buildPianoBoyHead(art.pixels,art.width,art.height,pose,body.pianoBoyHead),p=head.attributes.position,shirt=body.attributes.position,tag=body.attributes._garment;
+ const neck=[],collar=[];
+ for(let i=0;i<p.count;i++)if(p.getY(i)<1.028&&Math.abs(p.getX(i))<.08)neck.push(new THREE.Vector3().fromBufferAttribute(p,i));
+ for(let i=0;i<shirt.count;i++)if(tag.getX(i)===1&&shirt.getY(i)>.97&&Math.abs(shirt.getX(i))<.085)collar.push(new THREE.Vector3().fromBufferAttribute(shirt,i));
+ assert.ok(neck.length>30&&collar.length>20,'neck is a surface, rather than a separate pole');
+ assert.ok(Math.min(...neck.flatMap(p=>collar.map(q=>p.distanceTo(q))))<.018,'neck and collar overlap closely');
+ assert.ok(head.boundingBox.min.y<1.0&&head.boundingBox.max.y>1.36,'original head continues down to collar');
+ const xs=neck.map(p=>p.x);assert.ok(Math.max(...xs)-Math.min(...xs)<.16,'child neck is narrower than shoulders');
+ let nose=0,face=0;
+ for(let i=0;i<p.count;i++){
+  const u=head.attributes.uv.getX(i),v=1-head.attributes.uv.getY(i);
+  if(Math.abs(u-.501)<.010&&Math.abs(v-.190)<.012&&p.getZ(i)<-.09)nose++;
+  const at=4*(Math.round(v*(art.height-1))*art.width+Math.round(u*(art.width-1)));
+  if(Math.abs(u-.5)<.10&&v>.145&&v<.230&&p.getZ(i)<-.04&&head.attributes.normal.getZ(i)<-.65&&art.pixels[at+3]>240){face++;assert.ok(head.attributes.photoBlend.getX(i)>.45,'a second source face cannot show through the child photo');}
+ }
+ assert.ok(nose>0&&face>100,'nose and broad photo face remain on actual head anatomy');
+ assert.equal(body.pianoBoyHead.attributes.uv,undefined,'shared anatomical source is unchanged');head.dispose();
 });
 
 test('인체의 앞면만 원본 의상을 연결하고 옆·등은 원본 색으로 채운다',()=>{
@@ -118,6 +124,14 @@ test('소매와 반바지는 원본 폭을 유지하는 별도 입체 표면이�
  }
 });
 
+test('투명 PNG 바깥의 배경색은 실제 피부·옷 색에 섞이지 않는다',()=>{
+ const changed=art.pixels.slice();
+ for(let i=0;i<changed.length;i+=4)if(changed[i+3]<=192){changed[i]=255;changed[i+1]=0;changed[i+2]=255;}
+ const original=preparePianoBoyBody(body,pose,art.pixels,art.width,art.height),poisoned=preparePianoBoyBody(body,pose,changed,art.width,art.height);
+ assert.deepEqual([...poisoned.attributes.color.array],[...original.attributes.color.array],'hidden magenta background cannot stain the ankle or garment');
+ original.dispose();poisoned.dispose();
+});
+
 test('모델 손·발에 사진 손가락을 중복하지 않고 바지 위의 원본 손 사진도 제외한다',()=>{
  const g=preparePianoBoyBody(body,pose,art.pixels,art.width,art.height),p=g.attributes.position,tag=g.attributes._garment,detail=g.attributes._skindetail;
  let bare=0,shorts=0,toes=0;
@@ -149,7 +163,9 @@ test('무료 모델 로더는 동시에 한 번 읽고 실패 후 다시 불러�
  let calls=0,fail=true;
  const load=createPianoBoyBodyLoader({async loadAsync(){calls++;if(fail)throw new Error('offline');return asset;}});
  const one=load(),two=load();assert.equal(one,two);await assert.rejects(one,/offline/);assert.equal(calls,1);
- fail=false;assert.equal(await load(),body);assert.equal(await load(),body);assert.equal(calls,2);
+ fail=false;assert.equal(await load(),body);assert.equal(await load(),body);assert.equal(calls,2);assert.equal(body.pianoBoyHead,asset.scene.getObjectByName('piano-boy-human-head').geometry);
+ const headlessScene=new THREE.Group();const headlessMesh=new THREE.Mesh(body.clone());headlessMesh.name='piano-boy-free-body';headlessScene.add(headlessMesh);
+ const headless=createPianoBoyBodyLoader({async loadAsync(){return {scene:headlessScene};}});await assert.rejects(headless(),/empty/,'incomplete anatomy must use the old fallback');
  const empty=createPianoBoyBodyLoader({async loadAsync(){return {scene:new THREE.Group()};}});await assert.rejects(empty(),/empty/);
 });
 
@@ -167,7 +183,7 @@ test('원본 이미지와 몸통은 로딩 순서·재방문·재연결 때 중�
    const before=reads,built=root.userData.body.geometry;attachPianoBoyBody(root,body);setPianoBoyTexture(root,image,texture);
    assert.equal(root.userData.body.geometry,built);assert.equal(reads,before);
    const shader={vertexShader:'#include <begin_vertex>',fragmentShader:'#include <map_fragment>\n#include <color_fragment>\n#include <emissivemap_fragment>'};root.userData.body.material.onBeforeCompile(shader);assert.ok(shader.fragmentShader.includes('diffuseColor.a=1.0;'),'image transparency cannot punch holes in anatomical body');
-   let disposed=0;root.userData.body.geometry.addEventListener('dispose',()=>disposed++);attachPianoBoyBody(root,body.clone());assert.equal(root.children.length,2);assert.equal(disposed,1);
+   let disposed=0;root.userData.body.geometry.addEventListener('dispose',()=>disposed++);const replacement=body.clone();replacement.pianoBoyHead=body.pianoBoyHead;attachPianoBoyBody(root,replacement);assert.equal(root.children.length,2);assert.equal(disposed,1);
   }
   const root=buildPianoBoyFigure(config);attachPianoBoyBody(root,body);empty=true;
   assert.equal(setPianoBoyTexture(root,image,new THREE.Texture(image)),false);assert.equal(root.userData.sourceImage,null);assert.equal(root.visible,false);
