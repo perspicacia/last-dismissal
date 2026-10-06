@@ -11,8 +11,8 @@
 이 주소는 로컬 서버가 실행 중일 때만 열린다. `ERR_CONNECTION_REFUSED`(연결 거부)가 표시되면 프로젝트 폴더에서 `npm start`를 다시 실행하고 웹 화면을 새로고침한다. 플레이하는 동안 서버를 실행한 터미널/프로세스를 유지한다.
 
 - 일반 플레이: 3-1·3-2·3-3 교실·음악실·무용실을 둘러본다. 토끼는 매번 무작위 방에 숨어 있고 시작 시 보이지 않는다.
-- WASD 이동(W/S 전후, A/D 옆걸음), 마우스 상하/좌우 시점. 시작/계속 클릭으로 마우스 잠금을 요청하고, 제한된 브라우저에서는 화면 드래그를 사용한다. ↑↓ 이동·←→ 느린 회전도 유지한다. 가까운 문에서 E/클릭/입장 버튼, 안에서는 E/복귀 버튼으로 돌아간다.
-- 걷는 중 카메라 높이를 고정하고 소품/계단 자동 시점과 흔들림을 없앴다. Esc 또는 일시정지 버튼으로 탐색/음향을 멈추고 커서를 해제한다. 일시정지 창에서 마우스 감도(기본 65%)를 조절하고 계속하거나 처음 화면으로 돌아간다. 포커스 이탈/잠금 해제도 일시정지하며 기존 위치/방문/토끼 배치를 유지한다. [조작 명세](specs/mouse-look-comfort.md).
+- WASD 이동(W/S 전후, A/D 옆걸음), 마우스 상하/좌우 시점. 시작/계속 클릭으로 마우스 잠금을 요청하고, 제한된 브라우저에서는 화면 드래그를 사용한다. ↑↓ 이동·←→ 느린 회전, Page Up/Down 위아래 보기·Home 정면 복귀도 지원한다. 가까운 문에서 E/클릭/입장 버튼, 안에서는 E/복귀 버튼으로 돌아간다.
+- 걷는 중 카메라 높이를 고정하고 소품/계단 자동 시점과 흔들림을 없앴다. Esc 또는 일시정지 버튼으로 탐색/음향을 멈추고 커서를 해제한다. 일시정지 창에서 좌우/상하 감도(기본 65%/32.5%)를 따로 조절하거나 ‘상하 시점 고정’으로 정면 높이에서 좌우만 둘러볼 수 있다. 설정은 재시작과 새로고침에서도 유지하며 저장이 차단되면 기본값으로 진행한다. 포커스 이탈/잠금 해제도 일시정지하며 기존 위치/방문/토끼 배치를 유지한다. [최신 접근성 명세](specs/accessible-camera-controls.md), [기존 조작 명세](specs/mouse-look-comfort.md).
 - 영역 캡처가 필요하면 **P → Mac ⌘⇧4 / Windows Win+Shift+S → 영역 선택** 순서로 사용한다. P 또는 Esc 메뉴의 ‘화면 캡처’는 장면·이벤트·소리를 고정하고 커서 잠금/드래그를 해제한다. 캡처 도구로 포커스가 바뀌어도 유지하며 P/계속하기로 재개한다. OS 단축키가 브라우저에 전달되면 자동 고정하지만 환경에 따라 P를 먼저 누르는 편이 확실하다. [캡처 명세](specs/capture-cursor-release.md).
 - 방 안쪽에 3m 이내로 접근해 수평/수직으로 바라보면 패배가 확정되고 토끼가 기본 표정으로 나타난 뒤 다가오면서 이빨을 드러낸다. 1.5초 연출 후 게임 오버가 된다. 토끼를 만나기 전 시간만으로 패배하지 않는다.
 - 모든 방이 탐색 대상이다. 먼저 토끼를 만나면 탐색이 끝나며 현재 버전에는 탈출 승리가 없다.
@@ -37,6 +37,7 @@ last-dismissal/
 ├── three-outdoors.js          # 창밖 풍경 3D 화면
 ├── school-tone.js             # 학교 색감·벽 얼룩·공유 화면 채도
 ├── board-photo.js             # 얼굴을 지운 게시판 사진·낡은 인화지 질감
+├── camera-preferences.js      # 축별 감도·상하 고정 설정과 로컬 저장
 ├── audio.js                   # 음량·음소거와 효과음 재생
 ├── …                          # 입력·캐릭터·소품·공포 연출의 JS 모듈
 ├── assets/                    # 게임 자산과 출처 문서
@@ -65,7 +66,7 @@ last-dismissal/
 | 역할 | 주요 파일 | 담당 내용 |
 | --- | --- | --- |
 | 게임 진행 | [game.js](game.js), [exploration.js](exploration.js) | 시작·일시정지·게임 오버·재시작, 방별 토끼 배치와 발견 판정 |
-| 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 마우스 시점과 잠금, 영역 캡처 조작 |
+| 이동·조작 | [movement.js](movement.js), [mouse-controls.js](mouse-controls.js), [camera-preferences.js](camera-preferences.js), [capture-controls.js](capture-controls.js) | 이동·충돌, 축별 마우스 감도·상하 고정·키보드 시점/저장, 영역 캡처 조작 |
 | 공간·조명 | [three-school.js](three-school.js), [three-outdoors.js](three-outdoors.js), [school-lighting.js](school-lighting.js), [school-tone.js](school-tone.js), [school-windows.js](school-windows.js), [stairs.js](stairs.js) | 실내·창밖 3D 공간, 조명 점멸·색감, 창문과 계단 |
 | 교실 소품 | [room-props.js](room-props.js), [classroom-board.js](classroom-board.js), [music-instruments.js](music-instruments.js), [music-sheet.js](music-sheet.js) | 방별 소품과 충돌 범위, 칠판·분필, 악기·악보 |
 | 캐릭터 외형 | [doll-volume.js](doll-volume.js), [ghost-figures.js](ghost-figures.js), [piano-boy-volume.js](piano-boy-volume.js), [character-shape.js](character-shape.js), [rabbit-pose.js](rabbit-pose.js), [rabbit-appearance.js](rabbit-appearance.js), [black-cat.js](black-cat.js), [cat-gait.js](cat-gait.js) | 원본 이미지 기반 인형의 두께, 연속 곡면 인물·고양이, 토끼 피 얼룩·팔 자세와 접지 보행 |
