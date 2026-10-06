@@ -23,6 +23,7 @@
 - 검은 고양이 외형·보행·울음의 최신 기준은 [specs/black-cat-polish.md](specs/black-cat-polish.md)다. 검은 털/금빛 눈·접지하는 두 관절 보행·3초 등장·앙칼스러운 하악질/울음이 이전 큰 도약·1.6초 등장·낮은 울음을 대체한다.
 
 - 음악실 남자아이의 앞뒤 곡면·원본 색 연결·좌석 접촉의 최신 규칙은 [specs/piano-boy-depth-repair.md](specs/piano-boy-depth-repair.md)를 따른다. 원본 XY/UV를 보존하면서 앞면도 조형하고, 후면에 얼굴 사진을 반복하지 않는다.
+- 남자아이의 근접 얼굴은 [specs/piano-boy-face-repair.md](specs/piano-boy-face-repair.md)를 따른다. 얼굴 특징의 과도한 깊이 차이를 줄이고 밝은 확대/실제 음악실 정면·양쪽 사선에서 원본 비율을 확인한다.
 - 검은 고양이의 참고 모델 비율·올라간 꼬리·연속 다리 표면과 음악실 남자아이의 원본 앞면/뒤 볼륨은 [specs/cat-boy-likeness.md](specs/cat-boy-likeness.md)를 따른다. 남자아이를 여러 구형 사진 부품으로 되돌리지 않는다. 같은 원본 XY/UV를 보존하며 옆/뒤는 근사다. 기존 위치·좌석·발 접촉·비공격·고양이 보행/정리 규칙은 유지한다.
 
 - 현재 일반 게임의 조작/카메라/Esc 규칙은 [specs/mouse-look-comfort.md](specs/mouse-look-comfort.md)를 따른다. WASD 옆걸음·수동 마우스 시점·고정 카메라·일시정지가 이전 A/D 회전·자동 시점·Esc 초기화 규칙을 대체한다.
