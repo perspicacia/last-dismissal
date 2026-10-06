@@ -1,4 +1,5 @@
 import {SCHOOL_TONE,paintDampWall} from './school-tone.js?v=shadow-tone-1';
+import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {manualCameraPose} from './mouse-controls.js?v=mouse-comfort-1';
 import {LEFT_ARM,RIGHT_ARM,raisedArms,rabbitParts} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
@@ -108,6 +109,7 @@ export class ThreeSchoolView {
       }
       box(g,-2.81,1.61,9,.16,1.1,1.9,material('#65513a'));box(g,-2.7,1.61,9,.08,.98,1.78,material('#97865d'));
       this.refs.photo=this.picture(g,null,1.05,.70,[-2.646,1.61,9],Math.PI/2);
+      this.refs.photo.material.transparent=true;this.refs.photo.material.alphaTest=.4;
       const clockFrame=new THREE.Mesh(new THREE.CylinderGeometry(.405,.405,.13,64),material('#38251d',{roughness:.4}));clockFrame.rotation.z=Math.PI/2;clockFrame.position.set(2.83,2.08,19);clockFrame.castShadow=true;g.add(clockFrame);
       this.refs.clock=this.picture(g,null,.79,.79,[2.755,2.08,19],-Math.PI/2);this.refs.clock.material.transparent=true;this.refs.clock.material.alphaTest=.05;
       this.refs.rabbit=this.sprite(g,2.1,1.05,[1.6,1.05,22]);this.refs.ghost=this.sprite(g,2.35,1.175,[7, .875,6.5]);
@@ -259,7 +261,8 @@ export class ThreeSchoolView {
     const assign=(mesh,image)=>{if(!image||image.complete===false||(!image.getContext&&!image.naturalWidth))return;let t=textureCache.get(image);if(!t){t=canvasTexture(image);textureCache.set(image,t);this.textures.push(t);}mesh.material.map=t;mesh.material.needsUpdate=true;};
     for(const d of this.refs.doors)assign(d,this.doorLabels[source.anomaly==='door'?'404':d.userData.label]);
     assign(this.refs.clock,source.clockFace);
-    assign(this.refs.photo,source.anomaly==='board'?source.boardPhotoErased:source.boardPhoto);
+    const boardPhoto=boardPhotoFor(source);this.refs.photo.visible=Boolean(boardPhoto);
+    assign(this.refs.photo,boardPhoto);
     const originalRabbit=source.mouthOpen?source.mascotOpen:source.mascot;const rabbitSkin=originalRabbit?.naturalWidth?bloodiedRabbit(originalRabbit):originalRabbit;
     if(source.canvas)source.canvas.dataset.rabbitAppearance=rabbitSkin&&rabbitSkin!==originalRabbit?'bloodied':'loading';
     assign(this.refs.rabbit,rabbitSkin);for(const rabbit of Object.values(this.refs.roomRabbits||{})){const parts=this.partsFor(rabbitSkin);if(parts){assign(rabbit.userData.body,parts.body);assign(rabbit.userData.arms[0],parts.left);assign(rabbit.userData.arms[1],parts.right);}}
@@ -276,7 +279,7 @@ export class ThreeSchoolView {
     assign({material:face},scary?source.dollScary:source.dollImage);this.updateStudentModel(source);if(source.canvas)Object.assign(source.canvas.dataset,{dollImageSize:`${source.dollImage?.naturalWidth}x${source.dollImage?.naturalHeight}`,dollMesh:String(this.refs.doll.geometry.index?.count)});this.lastState='';
   }
   draw(source,time){
-    const state=`${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
+    const state=`${Boolean(source.exploration)}|${source.anomaly}|${source.mouthOpen}|${dollRise(source.dollState)>.25}`;if(state!==this.lastState){this.syncTextures(source);this.lastState=state;}
     this.refs.rabbit.visible=!source.exploration;
     for(const [room,rabbit] of Object.entries(this.refs.roomRabbits||{})){
       rabbit.visible=Boolean(source.exploration?.ended&&source.scene===room);

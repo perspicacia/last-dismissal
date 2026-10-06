@@ -5,7 +5,8 @@ import {facelessStudentBlocker} from './faceless-student.js';
 import {raisedArms,rabbitParts,drawRabbitPose} from './rabbit-pose.js?v=dark-blood-1';
 import {rabbitArrival,rabbitSize} from './rabbit-arrival.js?v=dark-blood-1';
 import { newDollState, advanceDoll, facingDoll, DOLL, dollRise } from './doll-event.js';
-import { ThreeSchoolView } from './three-school.js?v=cat-boy-likeness-1';
+import { ThreeSchoolView } from './three-school.js?v=aged-photo-1';
+import {boardPhotoFor} from './board-photo.js?v=aged-photo-1';
 import {SchoolLighting,recordLighting,shadeCanvasSchool} from './school-lighting.js?v=shadow-tone-1';
 import { drawClockFace, drawWallClock } from './clock.js';
 import { drawSceneDepth } from './scene-depth.js?v=shadow-tone-1';
@@ -125,10 +126,10 @@ export class Corridor {
       c.fillStyle='#171e15';c.fillRect(45,38,422,168);c.fillStyle='#7b7150';c.fillRect(52,44,408,155);
       // A side wall maps 512px to 2m horizontally, 256px to 3m vertically.
       // Compensate for that mapping so the 3:2 photograph keeps its proportions.
-      c.fillStyle='#ded3ab';c.fillRect(73,65,366,86);
-      const photo=this.anomaly==='board'?this.boardPhotoErased:this.boardPhoto;
-      if(photo.complete && photo.naturalWidth) c.drawImage(photo,76,68,360,80);
-      else {c.fillStyle='#697363';c.fillRect(76,68,360,80);}
+      c.fillStyle=this.exploration?'#897651':'#ded3ab';c.fillRect(73,65,366,86);
+      const photo=boardPhotoFor(this);
+      if(photo) c.drawImage(photo,76,68,360,80);
+      else {c.fillStyle='#9a8764';c.fillRect(76,68,360,80);}
       c.fillStyle='#ded3ab';c.fillRect(285,158,145,36);
       c.fillStyle='#73715c';for(let line=0;line<4;line++)c.fillRect(298,165+line*6,line===3?65:112,1);
     });
