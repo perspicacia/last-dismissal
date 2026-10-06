@@ -1,6 +1,6 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><title>교실 외형·돌진 검증</title><style>body{margin:0;background:#132127;color:white;font-family:sans-serif;height:100vh;display:flex;flex-direction:column}nav{padding:12px;flex-shrink:0}button{padding:10px;margin-right:8px}canvas{width:100vw;flex:1;min-height:0;display:block}</style><nav><button data-room="classroom31">3-1 교실</button><button data-room="classroom33">3-3 교실</button><button data-room="classroom">3-2 교실</button><button data-room="music">음악실</button><button data-room="dance">무용실</button><button id="ball-view">창밖 공</button><button id="ghost-close">귀신 가까이</button><button id="ghost-far">귀신 멀리</button><button id="corner-view">구석 그림자</button><button id="doll-side">누운 인형 옆모습</button><button id="neutral">등장 기본 표정</button><button id="teeth">여고생 공격 표정</button><button id="arms">여고생 전체 외형</button><button id="catch">돌진 마지막 시점</button><button id="corridor-view">복도 이름표</button></nav><canvas id="view" data-renderer="three" tabindex="0" aria-label="교실 외형 검증"></canvas><script type="module">
-import {Corridor} from '../../corridor.js?v=masked-schoolgirl-1';
-import {attackerArrival} from '../../schoolgirl-attacker.js?v=masked-schoolgirl-1';
+import {Corridor} from '../../corridor.js?v=masked-schoolgirl-2';
+import {attackerArrival} from '../../schoolgirl-attacker.js?v=masked-schoolgirl-2';
 import {ROOM_AMBIENCE} from '../../exploration.js?v=mouse-comfort-1';
 import {newCatEvent} from '../../cat-event.js?v=cat-polish-2';
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
