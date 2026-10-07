@@ -4,7 +4,7 @@
 <canvas id="view" data-renderer="three" tabindex="0" aria-label="고양이 외형과 보행"></canvas>
 <script type="module">
 import {Corridor} from '../../corridor.js?v=cat-boy-likeness-1';
-import {CAT_DURATION,newCatEvent} from '../../cat-event.js?v=cat-polish-2';
+import {CAT_DURATION,newCatEvent,catPose} from '../../cat-event.js?v=cat-polish-2';
 if(new URLSearchParams(location.search).has('compat')){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};}
 let reduced=false;const match=window.matchMedia.bind(window);window.matchMedia=query=>query==='(prefers-reduced-motion: reduce)'?{matches:reduced}:match(query);
 const c=new Corridor(document.querySelector('canvas'),()=>{},()=>{});c.manualLook=true;c.tutorial=false;c.exploration={ended:false};
@@ -26,8 +26,18 @@ document.querySelector('#contact').onclick=()=>pose('side',1.31);
 document.querySelector('#swing').onclick=()=>pose('side',1.41);
 document.querySelector('#reduced').onclick=()=>{reduced=true;pose('side',.7);};
 function frame(time){
- if(playing){c.catEvent.cat.elapsed+=(time-last)/1000;if(c.catEvent.cat.elapsed>=CAT_DURATION)c.catEvent.cat.elapsed=.01;document.querySelector('#status').textContent='연속 보행 '+c.catEvent.cat.elapsed.toFixed(2)+'s';}
+ if(playing){c.catEvent.cat.elapsed+=Math.min(.1,Math.max(0,(time-last)/1000));if(c.catEvent.cat.elapsed>=CAT_DURATION)c.catEvent.cat.elapsed=.01+(c.catEvent.cat.elapsed-.01)%(CAT_DURATION-.01);document.querySelector('#status').textContent='연속 보행 '+c.catEvent.cat.elapsed.toFixed(2)+'s';}
  last=time;if(time-lastDraw>(playing?33:400)){c.draw(time);lastDraw=time;}requestAnimationFrame(frame);
 }
 pose('front');requestAnimationFrame(frame);
+// Test-only observation/control of this fixture, never imported by the game.
+window.catReview={
+ c,pose,
+ time:elapsed=>{playing=false;c.catEvent.cat.elapsed=elapsed;c.draw(performance.now());},
+ state:()=>({scene:c.scene,elapsed:c.catEvent.cat?.elapsed,reduced,playing,
+  visible:c.view3D?Boolean(c.view3D.refs.cats[c.scene]?.visible):Boolean(catPose(c.catEvent,reduced)),
+  opacity:catPose(c.catEvent,reduced)?.opacity,
+  paws:c.view3D?.refs.cats[c.scene]?.userData.legs.map(r=>({...r.userData.joints.paw,
+   worldY:r.userData.joints.paw.y+c.view3D.refs.cats[c.scene].position.y,contact:r.userData.joints.contact}))})
+};
 </script></html>

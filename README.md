@@ -106,6 +106,8 @@ last-dismissal/
 
 ## 음향 기획
 
+검은 고양이의 최신 체형은 [표면 연결 보완 명세](specs/cat-shape-polish.md)를 따른다. [밝은 정면·45도·측면·후면 비교](tests/fixtures/character-review.html?character=cat&view=angle)와 [실제 복도/교실 보행](tests/fixtures/cat-review.html)에서 확인한다. 다리 시작점을 몸 안으로 연결하고 귀의 두께·가슴/주둥이 표면과 Canvas 실루엣을 보완했다. 기존 검은 털·금빛 눈·접지 보행·3초 등장·음향·비공격 역할을 유지한다. [검증 근거와 한계](docs/cat-shape-review.md).
+
 고양이 외형은 `black-cat.js`에서 참고 모델의 둥근 가슴/몸·작은 금빛 눈·넓은 삼각 귀·위로 선 꼬리를 코드로 표현한다. 목과 몸을 하나의 곡면으로 연결하고 다리 표면은 공유 관절을 따라 연속적으로 변형한다. [최신 외형 명세](specs/cat-boy-likeness.md). 무작위 등장/이동은 `cat-event.js`, 발 접지와 두 관절 보행은 `cat-gait.js`, 하악질/울음 파형은 `cat-voice.js`가 담당한다. `tests/fixtures/cat-review.html`에서 정면/측면·복도/교실의 연속 보행과 동작 줄이기를 비교할 수 있다.
 
 교실 창문은 작은 위 유리칸과 큰 아래 유리칸이 있는 목재 미닫이창이다. 3-3·무용실 귀신은 창살 대신 유리 중앙에 얼굴이 보이도록 정렬한다. `school-windows.js`는 두 렌더 방식이 공유하는 치수/창틀, `cat-event.js`는 안전 경로·무작위 시간, `black-cat.js`는 입체 고양이/Canvas 실루엣을 맡는다. 고양이는 10~22초 간격으로 약 3초간 등장하며 안전한 통로가 없으면 기다린다. 동작 줄이기에서는 이동 없이 나타났다 사라진다. [창문·고양이 명세](specs/windows-black-cat.md), [최신 외형·보행 명세](specs/black-cat-polish.md).
