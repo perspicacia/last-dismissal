@@ -37,7 +37,8 @@ const descriptions={doll:['누운 금발 인형','../../assets/doll-student-conc
 descriptions.boy=['음악실 남자아이','../../assets/piano-boy-ghost.png','원본 얼굴·머리와 앞면 의상 이미지를 보존했습니다. 무료 CC0 인체의 두개골·턱·목·몸통·사지를 어린아이 비율로 조정하고 원작 성인 얼굴의 굴곡을 완화했습니다. 둥근 옷깃·내려오는 어깨·소매는 연속된 의상 표면입니다. 손은 무릎 위, 맨발은 바닥에 두었습니다. 옆얼굴·옆/뒤 의상은 원본 복원이 아닌 근사입니다.'];
 descriptions.all=['전체 비교',null,'다섯 캐릭터의 원본 특징과 입체 보완을 함께 확인합니다. 사진 기반 인형·남학생의 옆/뒷면과 코드 기반 여학생·고양이는 정밀 조형 자산을 대신하는 근사입니다.'];
 const homes=Object.fromEntries(Object.entries(models).map(([id,m])=>[id,{position:m.position.clone(),rotation:m.rotation.clone()}]));
-let selected='all',view='angle',walking=false,start=0;
+const reviewParams=new URLSearchParams(location.search),requested=reviewParams.get('character');
+let selected=Object.hasOwn(models,requested)?requested:'all',view=['front','angle','side','back','low'].includes(reviewParams.get('view'))?reviewParams.get('view'):'angle',walking=false,start=0;
 for(const [id,label] of [['face','얼굴 정면 확대'],['face-left','얼굴 왼쪽 사선'],['face-right','얼굴 오른쪽 사선'],['hands','팔·손 확대'],['legs','다리·발 확대']]){const button=document.createElement('button');button.textContent=label;button.dataset.view=id;document.querySelector('#views').append(button);}
 for(const [id,[name]] of Object.entries(descriptions)){const button=document.createElement('button');button.textContent=name;button.dataset.character=id;button.onclick=()=>{selected=id;if(view==='back'||view.startsWith('face')||view==='hands'||view==='legs')view='angle';walking=false;update();};document.querySelector('#characters').append(button);}
 for(const button of document.querySelectorAll('button[data-view]'))button.onclick=()=>{view=button.dataset.view;walking=false;update();};
@@ -46,11 +47,12 @@ function update(){
  for(const [id,model] of Object.entries(models)){model.visible=selected==='all'||id===selected;model.position.copy(homes[id].position);model.rotation.copy(homes[id].rotation);}
  if(selected==='all'){mannequin.position.set(-.65,0,-.85);mannequin.rotation.y=Math.PI;girl.position.set(.9,0,-.85);cat.position.set(.45,0,.7);boy.position.set(1.55,0,.70);doll.position.set(-1.45,.003,.7);}
  const [name,src,note]=descriptions[selected];document.querySelector('#reference').hidden=!src;if(src)document.querySelector('#reference').src=src;document.querySelector('#note').textContent=note;
- document.querySelector('#walk').hidden=selected!=='cat';document.querySelector('[data-view=back]').hidden=selected!=='boy';
+ document.querySelector('#walk').hidden=selected!=='cat';document.querySelector('[data-view=back]').hidden=selected!=='boy'&&selected!=='cat';
  const faceView=selected==='boy'&&view.startsWith('face');document.querySelector('aside').dataset.face=String(faceView);for(const button of document.querySelectorAll('[data-view^=face],[data-view=hands],[data-view=legs]'))button.hidden=selected!=='boy';
  for(const button of document.querySelectorAll('button[data-character]'))button.setAttribute('aria-pressed',String(button.dataset.character===selected));for(const button of document.querySelectorAll('button[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
  const targets={all:[0,.70,0],doll:[0,.10,0],mannequin:[0,.90,0],girl:[0,.72,0],cat:[0,.29,0],boy:[0,.71,0]},distances={all:5.7,doll:2.8,mannequin:3.9,girl:2.9,cat:1.55,boy:3.05},d=distances[selected],front=selected==='mannequin'||selected==='boy'?-1:1;
  let direction=view==='front'?[0,.22,front]:view==='side'?[1,.12,.02]:view==='back'?[.18,.22,-front]:view==='low'?[.75,.06,front*.85]:[.63,.34,front*.9];if(selected==='all')direction=view==='front'?[0,.22,1]:view==='side'?[1,.22,.1]:view==='low'?[.16,.08,1]:[.16,.36,1];if(selected==='doll')direction=view==='front'?[0,1.2,.05]:view==='low'?[1,.05,.22]:view==='side'?[1,.16,0]:[.7,.9,.7];
+ if(selected==='cat'&&view==='angle')direction=[1,.34,1];
  const target=new THREE.Vector3(...targets[selected]);camera.position.copy(target).add(new THREE.Vector3(...direction).normalize().multiplyScalar(d));camera.lookAt(target);
  if(faceView){target.set(0,boy.userData.pose.eyeY-.035,-.075);direction=view==='face'?[0,.40,-1]:[view==='face-left'?-.58:.58,.40,-.82];camera.position.copy(target).add(new THREE.Vector3(...direction).normalize().multiplyScalar(.85));camera.lookAt(target);}
  if(selected==='boy'&&(view==='hands'||view==='legs')){target.set(0,view==='hands'?.76:.28,-.16);direction=[.33,.18,-1];camera.position.copy(target).add(new THREE.Vector3(...direction).normalize().multiplyScalar(view==='hands'?1.45:1.6));camera.lookAt(target);}

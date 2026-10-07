@@ -15,11 +15,19 @@ function coatTexture(){
  furMap=new THREE.DataTexture(data,size,size);furMap.wrapS=furMap.wrapT=THREE.RepeatWrapping;furMap.repeat.set(3,2);furMap.needsUpdate=true;return furMap;
 }
 function ear(g,side,fur,inner){
- const shape=new THREE.Shape();shape.moveTo(-.041,0);shape.quadraticCurveTo(-.037,.046,-.016,.100);shape.quadraticCurveTo(-.010,.104,-.006,.098);shape.quadraticCurveTo(.021,.055,.040,0);shape.closePath();
- const mesh=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.010,bevelEnabled:true,bevelThickness:.003,bevelSize:.003,bevelSegments:3,steps:1,curveSegments:10}),fur);
- mesh.name='cat-pointed-ear';mesh.position.set(side*.052,.489,.273);mesh.scale.y=.92;mesh.rotation.z=-side*.18;mesh.castShadow=true;g.add(mesh);
- const inset=new THREE.Shape();inset.moveTo(-.023,.018);inset.quadraticCurveTo(-.020,.055,-.006,.085);inset.quadraticCurveTo(.010,.06,.024,.018);inset.closePath();
- const lining=new THREE.Mesh(new THREE.ShapeGeometry(inset,10),inner);lining.position.z=.014;lining.name='cat-inner-ear';mesh.add(lining);
+ // Closed tapered cross-sections give the triangular ear an actual curved cup.
+ // Interior colour is painted on that same surface, avoiding intersecting
+ // planar front/lining triangles when viewed at 45 degrees.
+ const geometry=loftGeometry([[-.008,0,0,0],[.004,.041,.018,0],[.028,.035,.015,-.003],[.055,.025,.012,-.008],[.078,.015,.008,-.015],[.096,.006,.004,-.020],[.104,0,0,-.021]],{steps:32,radial:24}),p=geometry.attributes.position,colors=[];
+ for(let i=0;i<p.count;i++){
+  const row=Math.floor(i/25),angle=(i%25)/24*Math.PI*2,t=row/32;
+  const front=THREE.MathUtils.smoothstep(Math.sin(angle),.35,.90),rim=1-THREE.MathUtils.smoothstep(Math.abs(Math.cos(angle)),.50,.82),height=THREE.MathUtils.smoothstep(t,.12,.22)*(1-THREE.MathUtils.smoothstep(t,.80,.91));
+  p.setX(i,p.getX(i)-.014*THREE.MathUtils.clamp(p.getY(i)/.104,0,1));
+  const c=fur.color.clone().lerp(inner.color,front*rim*height);colors.push(c.r,c.g,c.b);
+ }
+ geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.computeVertexNormals();geometry.computeBoundingBox();
+ const material=fur.clone();material.color.set('#fff');material.vertexColors=true;
+ const mesh=new THREE.Mesh(geometry,material);mesh.name='cat-pointed-ear';mesh.position.set(side*.052,.481,.274);mesh.scale.set(side,.92,1);mesh.rotation.z=-side*.10;mesh.castShadow=mesh.receiveShadow=true;g.add(mesh);
 }
 function almond(g,side,lid,iris,black){
  const shape=new THREE.Shape();shape.moveTo(-.0185,0);shape.quadraticCurveTo(0,.0125,.0185,0);shape.quadraticCurveTo(0,-.0105,-.0185,0);
@@ -41,12 +49,13 @@ function legSurface(root,material){
 }
 function fitLeg(mesh,{hip,knee,paw},front){
  const {steps,radial}=mesh.userData,p=mesh.geometry.attributes.position;
- const path=new THREE.CatmullRomCurve3([new THREE.Vector3(hip.x,hip.y+.057,hip.z),new THREE.Vector3(hip.x,hip.y,hip.z),new THREE.Vector3(knee.x,knee.y,knee.z),new THREE.Vector3(paw.x,paw.y,paw.z)]);
- const rings=[[0,0],[.10,front?.039:.052],[.30,front?.037:.047],[.56,front?.028:.035],[.76,front?.023:.027],[.92,.020],[1,0]];
+ const ankle=new THREE.Vector3(knee.x,knee.y,knee.z).lerp(new THREE.Vector3(paw.x,paw.y,paw.z),.78);if(!front)ankle.z-=.012;
+ const path=new THREE.CatmullRomCurve3([new THREE.Vector3(hip.x*.65,hip.y+.100,hip.z),new THREE.Vector3(hip.x,hip.y,hip.z),new THREE.Vector3(knee.x,knee.y,knee.z),ankle,new THREE.Vector3(paw.x,paw.y,paw.z)],false,'centripetal');
+ const rings=[[0,0],[.12,front?.032:.043],[.30,front?.034:.046],[.52,front?.024:.030],[.74,front?.018:.021],[.94,.017],[1,0]],point=new THREE.Vector3();
  for(let j=0;j<=steps;j++){
-  const t=j/steps,center=path.getPoint(t),tangent=path.getTangent(t).normalize(),cross=new THREE.Vector3(0,tangent.z,-tangent.y);let k=0;while(k<rings.length-2&&t>rings[k+1][0])k++;
-  const u=(t-rings[k][0])/(rings[k+1][0]-rings[k][0]),r=THREE.MathUtils.lerp(rings[k][1],rings[k+1][1],u);
-  for(let i=0;i<=radial;i++){const a=i/radial*Math.PI*2;p.setXYZ(j*(radial+1)+i,center.x+r*Math.cos(a),center.y+r*Math.sin(a)*cross.y,center.z+r*Math.sin(a)*cross.z);}
+  const t=j/steps,center=path.getPoint(t),tangent=path.getTangent(t).normalize(),across=new THREE.Vector3(1,0,0).addScaledVector(tangent,-tangent.x).normalize(),cross=new THREE.Vector3().crossVectors(tangent,across).normalize();let k=0;while(k<rings.length-2&&t>rings[k+1][0])k++;
+  const u=(t-rings[k][0])/(rings[k+1][0]-rings[k][0]),ease=u*u*(3-2*u),r=THREE.MathUtils.lerp(rings[k][1],rings[k+1][1],ease);
+  for(let i=0;i<=radial;i++){const a=i/radial*Math.PI*2;point.copy(center).addScaledVector(across,r*Math.cos(a)).addScaledVector(cross,r*Math.sin(a));p.setXYZ(j*(radial+1)+i,point.x,point.y,point.z);}
  }
  p.needsUpdate=true;mesh.geometry.computeVertexNormals();mesh.geometry.computeBoundingBox();mesh.geometry.computeBoundingSphere();
 }
@@ -77,18 +86,18 @@ export function buildBlackCat(){
  const iris=new THREE.MeshStandardMaterial({color:'#bd9e35',emissive:'#9c751d',emissiveIntensity:.10,roughness:.26});
  const torso=new THREE.Group();torso.name='cat-torso';root.add(torso);
  // The breast rises into the neck in one surface, without a separate collar.
- const bodyGeometry=loftGeometry([[-.308,0,0,-.300],[-.258,.088,.106,-.307],[-.170,.114,.128,-.311],[-.020,.102,.109,-.310],[.100,.091,.120,-.320],[.200,.083,.138,-.341],[.270,.075,.140,-.365],[.330,.063,.091,-.407],[.370,0,0,-.430]],{steps:64});bodyGeometry.rotateX(Math.PI/2);
+ const bodyGeometry=loftGeometry([[-.314,0,0,-.297],[-.282,.052,.075,-.301],[-.230,.102,.110,-.302],[-.140,.109,.123,-.310],[0,.103,.105,-.312],[.130,.102,.119,-.318],[.220,.095,.139,-.350],[.290,.073,.113,-.384],[.343,.043,.070,-.426],[.370,0,0,-.443]],{steps:72,radial:40});bodyGeometry.rotateX(Math.PI/2);
  const body=new THREE.Mesh(bodyGeometry,fur);body.name='cat-body';body.castShadow=body.receiveShadow=true;torso.add(body);
  const fineFur=new THREE.MeshStandardMaterial({color:'#1b1d1e',roughness:1,side:THREE.DoubleSide});shortFur(body,fineFur,1300,51831);
  const head=new THREE.Group();head.name='cat-head-rig';root.add(head);
- const headGeometry=loftGeometry([[.351,0,0,.329],[.370,.042,.041,.331],[.405,.072,.067,.310],[.447,.085,.087,.285],[.480,.079,.086,.278],[.509,.057,.062,.277],[.536,0,0,.277]],{steps:40});
+ const headGeometry=loftGeometry([[.371,0,0,.333],[.384,.039,.042,.320],[.412,.070,.067,.301],[.430,.080,.081,.294],[.452,.083,.080,.280],[.487,.077,.074,.273],[.516,.051,.050,.270],[.534,0,0,.270]],{steps:56,radial:40});
  headGeometry.translate(0,-.431,-.285);const skull=new THREE.Mesh(headGeometry,faceFur);skull.name='cat-head';skull.position.set(0,.431,.285);skull.castShadow=skull.receiveShadow=true;head.add(skull);shortFur(skull,fineFur,600,68145);
  for(const side of [-1,1]){
-  ellipsoid(head,'cat-muzzle',[side*.016,.407,.368],[.023,.018,.026],faceFur);
+  ellipsoid(head,'cat-muzzle',[side*.014,.407,.372],[.019,.015,.022],faceFur);
   ear(head,side,faceFur,inner);almond(head,side,black,iris,black);
  }
- // A narrow nasal bridge joins the brow and nose, rather than two spherical cheeks.
- ellipsoid(head,'cat-nose-bridge',[0,.435,.360],[.014,.029,.021],faceFur);
+ // The nasal bridge is part of the head surface instead of a separate oval
+ // sitting between the eyes. Keep the small black nose and original whiskers.
  const noseShape=new THREE.Shape();noseShape.moveTo(-.011,.003);noseShape.lineTo(.011,.003);noseShape.quadraticCurveTo(.009,-.003,0,-.009);noseShape.quadraticCurveTo(-.009,-.003,-.011,.003);
  const nose=new THREE.Mesh(new THREE.ExtrudeGeometry(noseShape,{depth:.004,bevelEnabled:true,bevelThickness:.001,bevelSize:.001,bevelSegments:2}),black);nose.name='cat-nose';nose.position.set(0,.412,.394);head.add(nose);
  const lines=[];
@@ -146,11 +155,11 @@ export function drawBlackCat(c,project,pose){
  const head=headLocal(0,.431,.285),top=headLocal(0,.616,.27),bottom=local(0,0,0);if(!head||!top||!bottom)return false;
  const unit=Math.abs(top.y-bottom.y)/.616;c.save();c.globalAlpha=pose.opacity;c.strokeStyle='#151818';c.fillStyle='#141717';c.lineCap='round';
  const segment=(a,b,width)=>{const from=local(a.x,a.y,a.z),to=local(b.x,b.y,b.z);if(from&&to){c.lineWidth=width*unit;c.beginPath();c.moveTo(from.x,from.y);c.lineTo(to.x,to.y);c.stroke();}};
- segment({x:0,y:.284,z:-.19},{x:0,y:.284,z:.16},.26);segment({x:0,y:.285,z:.22},{x:0,y:.431,z:.285},.13);
- for(const side of [-1,1])for(const front of [true,false]){const {hip,knee,paw}=catLimbPose(pose,side,front);segment(hip,knee,front?.052:.067);segment(knee,paw,.035);const foot=local(paw.x,paw.y,paw.z);if(foot){c.beginPath();c.ellipse(foot.x,foot.y,.032*unit,.019*unit,0,0,Math.PI*2);c.fill();}}
+ segment({x:0,y:.293,z:-.19},{x:0,y:.297,z:.16},.24);segment({x:0,y:.318,z:.22},{x:0,y:.431,z:.285},.14);
+ for(const side of [-1,1])for(const front of [true,false]){const {hip,knee,paw}=catLimbPose(pose,side,front);segment(hip,knee,front?.046:.060);segment(knee,paw,front?.032:.038);const foot=local(paw.x,paw.y,paw.z);if(foot){c.beginPath();c.ellipse(foot.x,foot.y,.032*unit,.019*unit,0,0,Math.PI*2);c.fill();}}
  const tail=[[0,.294,-.261],[.012,.379,-.315],[.015,.496,-.335],[.009,.621,-.327],[.020,.716,-.318]].map(p=>local(...p));if(tail.every(Boolean)){c.lineWidth=.032*unit;c.beginPath();tail.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();}
- c.beginPath();c.ellipse(head.x,head.y,.088*unit,.094*unit,0,0,Math.PI*2);c.fill();
- for(const side of [-1,1]){const points=[[side*.052-.041,.49,.29],[side*.052+.040,.49,.29],[side*.065,.589,.27]].map(p=>headLocal(...p));if(points.every(Boolean)){c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill();}}
+ c.beginPath();c.ellipse(head.x,head.y,.083*unit,.081*unit,0,0,Math.PI*2);c.fill();
+ for(const side of [-1,1]){const points=[[side*(.052-.041),.481,.30],[side*(.052+.040),.481,.30],[side*.046,.576,.274]].map(p=>headLocal(...p));if(points.every(Boolean)){c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill();}}
  // Eyes are visible from the forward half of the head, never through its back.
  const face=headLocal(0,.449,.379),back=headLocal(0,.449,.27),eyes=[headLocal(-.044,.449,.379),headLocal(.044,.449,.379)];
  if(face&&back&&face.d<=back.d+.005)for(const [i,eye] of eyes.entries()){
